@@ -261,14 +261,155 @@ class MillenniumFalcon(Spieler):
             self.height * 0.70
         )
 
-# Schiff auswählen
-# spieler = XWing(WIDTH, HEIGHT)
+running = True
 
-spieler = MillenniumFalcon(WIDTH, HEIGHT)
+# =========================
+# Schiffsauswahl
+# =========================
+
+spieler = None
+running = False
+schiffauswahl = True
+
+preview_xwing = pygame.transform.scale_by(
+    x_wing_img,
+    0.5
+)
+
+preview_falcon = pygame.transform.scale_by(
+    millennium_falcon_img,
+    0.5
+)
+
+font = pygame.font.Font(None, 40)
+title_font = pygame.font.Font(None, 60)
+
+while schiffauswahl:
+
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        if event.type == pygame.KEYDOWN:
+
+            if event.key == pygame.K_1:
+                spieler = XWing(WIDTH, HEIGHT)
+                schiffauswahl = False
+                running = True
+
+            elif event.key == pygame.K_2:
+                spieler = MillenniumFalcon(WIDTH, HEIGHT)
+                schiffauswahl = False
+                running = True
+
+    # Hintergrund
+    screen.fill(BLACK)
+
+    # Titel
+    titel = title_font.render(
+        "Schiff auswaehlen",
+        True,
+        (255, 255, 255)
+    )
+
+    screen.blit(
+        titel,
+        (
+            WIDTH // 2 - titel.get_width() // 2,
+            50
+        )
+    )
+
+    # X-Wing
+    pygame.draw.rect(
+        screen,
+        (255, 255, 255),
+        (
+            100,
+            150,
+            250,
+            250
+        ),
+        2
+    )
+
+    screen.blit(
+        preview_xwing,
+        (
+            125,
+            180
+        )
+    )
+
+    text_xwing = font.render(
+        "1 - X-Wing",
+        True,
+        (255, 255, 255)
+    )
+
+    screen.blit(
+        text_xwing,
+        (
+            140,
+            360
+        )
+    )
+
+    # Millennium Falcon
+    pygame.draw.rect(
+        screen,
+        (255, 255, 255),
+        (
+            450,
+            150,
+            250,
+            250
+        ),
+        2
+    )
+
+    screen.blit(
+        preview_falcon,
+        (
+            475,
+            180
+        )
+    )
+
+    text_falcon = font.render(
+        "2 - Millennium Falcon",
+        True,
+        (255, 255, 255)
+    )
+
+    screen.blit(
+        text_falcon,
+        (
+            470,
+            360
+        )
+    )
+
+    info = font.render(
+        "Druecke 1 oder 2",
+        True,
+        (255, 255, 0)
+    )
+
+    screen.blit(
+        info,
+        (
+            WIDTH // 2 - info.get_width() // 2,
+            500
+        )
+    )
+
+    pygame.display.flip()
+    clock.tick(60)
 
 asteroid_spawn_timer = 0
-
-running = True
 
 while running:
 
