@@ -29,7 +29,7 @@ x_wing_img = pygame.image.load(
 millennium_falcon_img = pygame.image.load(
     "Pixelarts/millennium.png"
 ).convert_alpha()
-a
+
 asteroid_images = [
     pygame.image.load("Pixelarts/Astroids/frame_00.png").convert_alpha(),
     pygame.image.load("Pixelarts/Astroids/frame_01.png").convert_alpha(),
