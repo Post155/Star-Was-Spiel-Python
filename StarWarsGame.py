@@ -5,10 +5,10 @@ import random
 pygame.init()
 
 # Fenster
-width = 800
-height = 600
+WIDTH = 800
+HEIGHT = 600
 
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Star Wars")
 
 clock = pygame.time.Clock()
@@ -31,18 +31,8 @@ millennium_falcon_img = pygame.image.load(
 ).convert_alpha()
 
 asteroid_images = [
-    pygame.image.load("Pixelarts/Astroids/frame_00.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_01.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_02.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_03.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_04.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_05.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_06.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_07.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_08.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_09.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_10.png").convert_alpha(),
-    pygame.image.load("Pixelarts/Astroids/frame_11.png").convert_alpha()
+    pygame.image.load(f"Pixelarts/Astroids/frame_{i:02d}.png").convert_alpha()
+    for i in range(12)
 ]
 
 
@@ -50,7 +40,7 @@ class Asteroid:
 
     def __init__(self):
 
-        self.scale = 0.2
+        self.scale = random.choice([0.25, 0.5, 0.75, 1.0])
 
         self.frame = 0
         self.frame_counter = 0
@@ -65,7 +55,7 @@ class Asteroid:
 
         self.x = random.randint(
             0,
-            width - self.width
+            WIDTH - self.width
         )
 
         self.y = -self.height
@@ -76,7 +66,6 @@ class Asteroid:
 
         self.y += self.speed
 
-        # Animation
         self.frame_counter += 1
 
         if self.frame_counter >= self.frame_delay:
@@ -102,10 +91,10 @@ class Asteroid:
     def get_rect(self):
 
         return pygame.Rect(
-            self.x,
-            self.y,
-            self.width,
-            self.height
+            self.x + self.width * 0.15,
+            self.y + self.height * 0.15,
+            self.width * 0.7,
+            self.height * 0.7
         )
 
 
@@ -141,14 +130,15 @@ class Spieler:
         self,
         bild,
         fenster_breite,
-        fenster_hoehe
+        fenster_hoehe,
+        scale
     ):
 
         self.show_hitbox = False
 
         self.image = pygame.transform.scale_by(
             bild,
-            0.25
+            scale
         )
 
         self.width, self.height = self.image.get_size()
@@ -166,6 +156,14 @@ class Spieler:
 
         self.speed = 10
 
+        self.hitbox_offset_x = 0
+        self.hitbox_offset_y = 0
+
+    def update_hitbox(self):
+
+        self.hitbox.x = self.x + self.hitbox_offset_x
+        self.hitbox.y = self.y + self.hitbox_offset_y
+
     def move_left(self):
 
         self.x -= self.speed
@@ -173,35 +171,30 @@ class Spieler:
         if self.x < 0:
             self.x = 0
 
+        self.update_hitbox()
+
     def move_right(self):
 
         self.x += self.speed
 
-        if self.x > width - self.width:
-            self.x = width - self.width
+        if self.x > WIDTH - self.width:
+            self.x = WIDTH - self.width
 
-    def get_rect(self):
-
-        return pygame.Rect(
-            self.x,
-            self.y,
-            self.width,
-            self.height
-        )
+        self.update_hitbox()
 
     def shoot(self):
 
         laser_list.append(
             Laser(
-                self.x + (self.width * 0.87) // 5,
-                self.y + self.height // 3
+                self.x + self.width * 0.18,
+                self.y + self.height * 0.3
             )
         )
 
         laser_list.append(
             Laser(
-                self.x + (self.width * 4.25) // 5,
-                self.y + self.height // 3
+                self.x + self.width * 0.82,
+                self.y + self.height * 0.3
             )
         )
 
@@ -217,17 +210,61 @@ class Spieler:
             pygame.draw.rect(
                 screen,
                 RED,
-                self.get_rect(),
+                self.hitbox,
                 2
             )
 
 
-# Spieler erzeugen
-spieler = Spieler(
-    x_wing_img,
-    width,
-    height
-)
+class XWing(Spieler):
+
+    def __init__(self, fenster_breite, fenster_hoehe):
+
+        super().__init__(
+            x_wing_img,
+            fenster_breite,
+            fenster_hoehe,
+            0.20      # eigener Scale
+        )
+
+        self.speed = 12
+
+        self.hitbox_offset_x = self.width * 0.35
+        self.hitbox_offset_y = self.height * 0.15
+
+        self.hitbox = pygame.Rect(
+            self.x + self.hitbox_offset_x,
+            self.y + self.hitbox_offset_y,
+            self.width * 0.30,
+            self.height * 0.70
+        )
+
+class MillenniumFalcon(Spieler):
+
+    def __init__(self, fenster_breite, fenster_hoehe):
+
+        super().__init__(
+            millennium_falcon_img,
+            fenster_breite,
+            fenster_hoehe,
+            0.75      # eigener Scale
+        )
+
+        self.speed = 8
+
+        self.hitbox_offset_x = self.width * 0.15
+        self.hitbox_offset_y = self.height * 0.15
+
+        self.hitbox = pygame.Rect(
+            self.x + self.hitbox_offset_x,
+            self.y + self.hitbox_offset_y,
+            self.width * 0.70,
+            self.height * 0.70
+        )
+
+    # Schiff auswählen
+    # spieler = XWing(WIDTH, HEIGHT)
+
+    spieler = MillenniumFalcon(WIDTH, HEIGHT)
 
 asteroid_spawn_timer = 0
 
@@ -235,7 +272,6 @@ running = True
 
 while running:
 
-    # Events
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -244,18 +280,15 @@ while running:
         if event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_h:
-                spieler.show_hitbox = (
-                    not spieler.show_hitbox
-                )
+                spieler.show_hitbox = not spieler.show_hitbox
 
-            if (
-                event.key == pygame.K_SPACE
-                or event.key == pygame.K_w
-                or event.key == pygame.K_UP
+            if event.key in (
+                pygame.K_SPACE,
+                pygame.K_w,
+                pygame.K_UP
             ):
                 spieler.shoot()
 
-    # Tastatur
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_a] or keys[pygame.K_LEFT]:
@@ -275,7 +308,7 @@ while running:
         if laser.rect.bottom < 0:
             laser_list.remove(laser)
 
-    # Asteroiden spawnen
+    # Asteroiden erzeugen
     asteroid_spawn_timer += 1
 
     if asteroid_spawn_timer >= 60:
@@ -291,11 +324,8 @@ while running:
 
         asteroid.update()
 
-        if asteroid.y > height:
-
-            asteroid_list.remove(
-                asteroid
-            )
+        if asteroid.y > HEIGHT:
+            asteroid_list.remove(asteroid)
 
     # Laser trifft Asteroid
     for asteroid in asteroid_list[:]:
@@ -306,9 +336,10 @@ while running:
                 laser.rect
             ):
 
-                asteroid_list.remove(
-                    asteroid
-                )
+                if asteroid in asteroid_list:
+                    asteroid_list.remove(
+                        asteroid
+                    )
 
                 if laser in laser_list:
                     laser_list.remove(
@@ -321,7 +352,7 @@ while running:
     for asteroid in asteroid_list[:]:
 
         if asteroid.get_rect().colliderect(
-            spieler.get_rect()
+            spieler.hitbox
         ):
 
             print("GAME OVER")
@@ -339,6 +370,7 @@ while running:
         asteroid.draw(screen)
 
     pygame.display.flip()
+
     clock.tick(60)
 
 pygame.quit()
