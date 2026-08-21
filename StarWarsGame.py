@@ -261,10 +261,10 @@ class MillenniumFalcon(Spieler):
             self.height * 0.70
         )
 
-    # Schiff auswählen
-    # spieler = XWing(WIDTH, HEIGHT)
+# Schiff auswählen
+# spieler = XWing(WIDTH, HEIGHT)
 
-    spieler = MillenniumFalcon(WIDTH, HEIGHT)
+spieler = MillenniumFalcon(WIDTH, HEIGHT)
 
 asteroid_spawn_timer = 0
 
