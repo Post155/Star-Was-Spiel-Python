@@ -27,7 +27,7 @@ x_wing_img = pygame.image.load(
 class Laser:
 
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, 4, 20)
+        self.rect = pygame.Rect(x, y, 3, 20)
         self.speed = 15
 
     def update(self):
@@ -79,18 +79,18 @@ class Spieler:
 
     def shoot(self):
 
-        # linker Laser (1/4 der Breite)
+        # linker Laser
         laser_list.append(
             Laser(
-                self.x + self.width // 4,
-                self.y + (self.height // 3)    
+                self.x + (self.width * 0.87) // 5,
+                self.y + (self.height // 3)
             )
         )
 
-        # rechter Laser (3/4 der Breite)
+        # rechter Laser
         laser_list.append(
             Laser(
-                self.x + (self.width * 3) // 4,
+                self.x + (self.width * 4.25) // 5,
                 self.y + (self.height // 3)
             )
         )
