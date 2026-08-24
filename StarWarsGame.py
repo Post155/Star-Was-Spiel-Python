@@ -1,8 +1,12 @@
 import pygame
 import sys
 import random
+import os
 
 pygame.init()
+
+score = 0
+asteroid_spawn_timer = 0
 
 # Fenster
 WIDTH = 800
@@ -34,8 +38,18 @@ millennium_falcon_img = pygame.image.load(
 ).convert_alpha()
 
 asteroid_images = [
-    pygame.image.load(f"Pixelarts/Astroids/frame_{i:02d}.png").convert_alpha()
-    for i in range(12)
+    pygame.image.load("Pixelarts/Astroids/frame_00.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_01.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_02.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_03.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_04.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_05.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_06.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_07.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_08.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_09.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_10.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Astroids/frame_11.png").convert_alpha()
 ]
 
 torpedo_img = pygame.image.load(
@@ -391,6 +405,214 @@ class MillenniumFalcon(Spieler):
     def torpedo(self):
         None  # Placeholder for torpedo functionality for Millennium Falcon 
 
+
+def death_screen(score):
+
+    title_font = pygame.font.Font(None, 100)
+    score_font = pygame.font.Font(None, 70)
+    button_font = pygame.font.Font(None, 45)
+    small_font = pygame.font.Font(None, 28)
+
+    restart_rect = pygame.Rect(
+        WIDTH // 2 - 175,
+        350,
+        350,
+        70
+    )
+
+    quit_rect = pygame.Rect(
+        WIDTH // 2 - 175,
+        450,
+        350,
+        70
+    )
+
+    while True:
+
+        mouse_pos = pygame.mouse.get_pos()
+
+        restart_hover = restart_rect.collidepoint(mouse_pos)
+        quit_hover = quit_rect.collidepoint(mouse_pos)
+
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_r:
+                    return True
+
+                if event.key == pygame.K_ESCAPE:
+                    return False
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                if event.button == 1:
+
+                    if restart_rect.collidepoint(event.pos):
+                        return True
+
+                    if quit_rect.collidepoint(event.pos):
+                        return False
+
+        # Hintergrund
+        screen.fill((8, 8, 20))
+
+        # Overlay
+        overlay = pygame.Surface(
+            (WIDTH, HEIGHT),
+            pygame.SRCALPHA
+        )
+
+        overlay.fill((0, 0, 0, 180))
+        screen.blit(overlay, (0, 0))
+
+        # Titel
+        title = title_font.render(
+            "GAME OVER",
+            True,
+            (255, 80, 80)
+        )
+
+        screen.blit(
+            title,
+            (
+                WIDTH // 2 - title.get_width() // 2,
+                60
+            )
+        )
+
+        # Karte für Punkte
+        score_card = pygame.Rect(
+            WIDTH // 2 - 200,
+            180,
+            400,
+            120
+        )
+
+        pygame.draw.rect(
+            screen,
+            (40, 40, 70),
+            score_card,
+            border_radius=20
+        )
+
+        pygame.draw.rect(
+            screen,
+            (255, 180, 0),
+            score_card,
+            3,
+            border_radius=20
+        )
+
+        score_title = small_font.render(
+            "DEINE PUNKTZAHL",
+            True,
+            (180, 180, 180)
+        )
+
+        score_text = score_font.render(
+            str(score),
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            score_title,
+            (
+                WIDTH // 2 - score_title.get_width() // 2,
+                200
+            )
+        )
+
+        screen.blit(
+            score_text,
+            (
+                WIDTH // 2 - score_text.get_width() // 2,
+                235
+            )
+        )
+
+        # Neustart Button
+        pygame.draw.rect(
+            screen,
+            (0, 180, 255) if restart_hover else (40, 40, 70),
+            restart_rect,
+            border_radius=20
+        )
+
+        pygame.draw.rect(
+            screen,
+            (120, 220, 255),
+            restart_rect,
+            3,
+            border_radius=20
+        )
+
+        restart_text = button_font.render(
+            "NEUSTART",
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            restart_text,
+            (
+                restart_rect.centerx - restart_text.get_width() // 2,
+                restart_rect.centery - restart_text.get_height() // 2
+            )
+        )
+
+        # Beenden Button
+        pygame.draw.rect(
+            screen,
+            (200, 60, 60) if quit_hover else (40, 40, 70),
+            quit_rect,
+            border_radius=20
+        )
+
+        pygame.draw.rect(
+            screen,
+            (255, 120, 120),
+            quit_rect,
+            3,
+            border_radius=20
+        )
+
+        quit_text = button_font.render(
+            "BEENDEN",
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            quit_text,
+            (
+                quit_rect.centerx - quit_text.get_width() // 2,
+                quit_rect.centery - quit_text.get_height() // 2
+            )
+        )
+
+        hint = small_font.render(
+            "Mausklick oder R / ESC verwenden",
+            True,
+            (180, 180, 180)
+        )
+
+        screen.blit(
+            hint,
+            (
+                WIDTH // 2 - hint.get_width() // 2,
+                550
+            )
+        )
+
+        pygame.display.flip()
+        clock.tick(60)
+
 running = True
 
 # =========================
@@ -603,8 +825,6 @@ while schiffauswahl:
     pygame.display.flip()
     clock.tick(60)
 
-asteroid_spawn_timer = 0
-
 while running:
 
     for event in pygame.event.get():
@@ -694,6 +914,7 @@ while running:
             if asteroid.get_rect().colliderect(
                 laser.rect
             ):
+                score += int(asteroid.scale * 100)
                 explosion_list.append(
                     Explosion(
                         asteroid.x + asteroid.width // 2,
@@ -721,6 +942,7 @@ while running:
             if asteroid.get_rect().colliderect(
                 torpedo.rect
             ):
+                score += int(asteroid.scale * 100)
                 explosion_list.append(
                     Explosion(
                         asteroid.x + asteroid.width // 2,
@@ -728,7 +950,7 @@ while running:
                         asteroid.scale
                     )
                 )
-            
+
                 asteroid_list.remove(asteroid)
                 torpedo_list.remove(torpedo)
 
@@ -740,8 +962,6 @@ while running:
         if asteroid.get_rect().colliderect(
             spieler.hitbox
         ):
-
-            print("GAME OVER")
             running = False
 
     # Zeichnen
@@ -762,9 +982,38 @@ while running:
         explosion.update()
         explosion.draw(screen)
 
+    score_text = font.render(
+        f"Punkte: {score}",
+        True,
+        (255, 255, 255)
+    )
+
+    screen.blit(
+        score_text,
+        (10, 10)
+    )
+
     pygame.display.flip()
 
     clock.tick(60)
+
+restart = death_screen(score)
+
+if restart:
+
+    laser_list.clear()
+    asteroid_list.clear()
+    torpedo_list.clear()
+    explosion_list.clear()
+
+    score = 0
+
+    python = sys.executable
+    os.execl(
+        python,
+        python,
+        *sys.argv
+    )
 
 pygame.quit()
 sys.exit()
