@@ -16,10 +16,12 @@ clock = pygame.time.Clock()
 # Farben
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
 
 # Listen
 laser_list = []
 asteroid_list = []
+torpedo_list = []
 
 # Bilder laden
 x_wing_img = pygame.image.load(
@@ -34,6 +36,10 @@ asteroid_images = [
     pygame.image.load(f"Pixelarts/Astroids/frame_{i:02d}.png").convert_alpha()
     for i in range(12)
 ]
+
+torpedo_img = pygame.image.load(
+    "Pixelarts/Torpedo.png"
+).convert_alpha()
 
 
 class Asteroid:
@@ -123,6 +129,31 @@ class Laser:
             self.rect
         )
 
+class Torpedo:
+
+    def __init__(self, x, y):
+
+        self.image = pygame.transform.scale_by(
+            torpedo_img,
+            0.50
+        )
+
+        self.rect = self.image.get_rect(
+            center=(x + 4, y + 10)
+        )
+
+        self.speed = 10
+
+    def update(self):
+
+        self.rect.y -= self.speed
+
+    def draw(self, screen):
+
+        screen.blit(
+            self.image,
+            self.rect
+        )
 
 class Spieler:
 
@@ -237,6 +268,15 @@ class XWing(Spieler):
                 )
             )
 
+    def torpedo(self):
+
+        torpedo_list.append(
+            Torpedo(
+                self.hitbox.centerx,
+                self.y
+            )
+        )
+            
 class MillenniumFalcon(Spieler):
 
     def __init__(self, fenster_breite, fenster_hoehe):
@@ -264,17 +304,20 @@ class MillenniumFalcon(Spieler):
         
             laser_list.append(
                 Laser(
-                    self.x + self.width * 0.45,
-                    self.y + self.height * 0.3
+                    self.x + self.width * 0.43,
+                    self.y + self.height * 0.06
                 )
             )
         
             laser_list.append(
                 Laser(
-                    self.x + self.width * 0.55,
-                    self.y + self.height * 0.3
+                    self.x + self.width * 0.58,
+                    self.y + self.height * 0.06
                 )
             )
+
+    def torpedo(self):
+        None  # Placeholder for torpedo functionality for Millennium Falcon 
 
 running = True
 
@@ -501,6 +544,16 @@ while running:
 
             if event.key == pygame.K_h:
                 spieler.show_hitbox = not spieler.show_hitbox
+    
+            if event.key == pygame.K_1:
+                spieler = XWing(WIDTH, HEIGHT)
+                schiffauswahl = False
+                running = True
+
+            elif event.key == pygame.K_2:
+                spieler = MillenniumFalcon(WIDTH, HEIGHT)
+                schiffauswahl = False
+                running = True
 
             if event.key in (
                 pygame.K_SPACE,
@@ -508,6 +561,12 @@ while running:
                 pygame.K_UP
             ):
                 spieler.shoot()
+
+            if event.key in (
+                pygame.K_s,
+                pygame.K_DOWN
+            ):
+                spieler.torpedo()
 
     keys = pygame.key.get_pressed()
 
@@ -527,6 +586,14 @@ while running:
 
         if laser.rect.bottom < 0:
             laser_list.remove(laser)
+
+    # Torpedo bewegen
+    for torpedo in torpedo_list[:]:
+
+        torpedo.update()
+
+        if torpedo.rect.bottom < 0:
+            torpedo_list.remove(torpedo)
 
     # Asteroiden erzeugen
     asteroid_spawn_timer += 1
@@ -568,6 +635,19 @@ while running:
 
                 break
 
+    for asteroid in asteroid_list[:]:
+
+        for torpedo in torpedo_list[:]:
+
+            if asteroid.get_rect().colliderect(
+                torpedo.rect
+            ):
+
+                asteroid_list.remove(asteroid)
+                torpedo_list.remove(torpedo)
+
+                break
+
     # Asteroid trifft Spieler
     for asteroid in asteroid_list[:]:
 
@@ -585,6 +665,9 @@ while running:
 
     for laser in laser_list:
         laser.draw(screen)
+
+    for torpedo in torpedo_list:
+        torpedo.draw(screen)
 
     for asteroid in asteroid_list:
         asteroid.draw(screen)
