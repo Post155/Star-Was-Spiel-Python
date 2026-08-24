@@ -182,22 +182,6 @@ class Spieler:
 
         self.update_hitbox()
 
-    def shoot(self):
-
-        laser_list.append(
-            Laser(
-                self.x + self.width * 0.18,
-                self.y + self.height * 0.3
-            )
-        )
-
-        laser_list.append(
-            Laser(
-                self.x + self.width * 0.82,
-                self.y + self.height * 0.3
-            )
-        )
-
     def draw(self, screen):
 
         screen.blit(
@@ -238,6 +222,21 @@ class XWing(Spieler):
             self.height * 0.70
         )
 
+    def shoot(self):
+            laser_list.append(
+                Laser(
+                    self.x + self.width * 0.18,
+                    self.y + self.height * 0.3
+                )
+            )
+        
+            laser_list.append(
+                Laser(
+                    self.x + self.width * 0.82,
+                    self.y + self.height * 0.3
+                )
+            )
+
 class MillenniumFalcon(Spieler):
 
     def __init__(self, fenster_breite, fenster_hoehe):
@@ -261,6 +260,22 @@ class MillenniumFalcon(Spieler):
             self.height * 0.70
         )
 
+    def shoot(self):
+        
+            laser_list.append(
+                Laser(
+                    self.x + self.width * 0.45,
+                    self.y + self.height * 0.3
+                )
+            )
+        
+            laser_list.append(
+                Laser(
+                    self.x + self.width * 0.55,
+                    self.y + self.height * 0.3
+                )
+            )
+
 running = True
 
 # =========================
@@ -271,20 +286,20 @@ spieler = None
 running = False
 schiffauswahl = True
 
-preview_xwing = pygame.transform.scale_by(
-    x_wing_img,
-    0.5
-)
-
-preview_falcon = pygame.transform.scale_by(
-    millennium_falcon_img,
-    0.5
-)
-
 font = pygame.font.Font(None, 40)
-title_font = pygame.font.Font(None, 60)
+small_font = pygame.font.Font(None, 28)
+title_font = pygame.font.Font(None, 70)
+
+# Karten
+xwing_rect = pygame.Rect(80, 140, 280, 320)
+falcon_rect = pygame.Rect(440, 140, 280, 320)
 
 while schiffauswahl:
+
+    mouse_pos = pygame.mouse.get_pos()
+
+    xwing_hover = xwing_rect.collidepoint(mouse_pos)
+    falcon_hover = falcon_rect.collidepoint(mouse_pos)
 
     for event in pygame.event.get():
 
@@ -292,6 +307,7 @@ while schiffauswahl:
             pygame.quit()
             sys.exit()
 
+        # Tastatur
         if event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_1:
@@ -304,12 +320,29 @@ while schiffauswahl:
                 schiffauswahl = False
                 running = True
 
+        # Maus
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+
+                if xwing_rect.collidepoint(event.pos):
+                    spieler = XWing(WIDTH, HEIGHT)
+                    schiffauswahl = False
+                    running = True
+
+                elif falcon_rect.collidepoint(event.pos):
+                    spieler = MillenniumFalcon(WIDTH, HEIGHT)
+                    schiffauswahl = False
+                    running = True
+
+    # =========================
     # Hintergrund
-    screen.fill(BLACK)
+    # =========================
+
+    screen.fill((8, 8, 20))
 
     # Titel
     titel = title_font.render(
-        "Schiff auswaehlen",
+        "SCHIFF AUSWÄHLEN",
         True,
         (255, 255, 255)
     )
@@ -318,91 +351,137 @@ while schiffauswahl:
         titel,
         (
             WIDTH // 2 - titel.get_width() // 2,
-            50
+            40
         )
     )
 
-    # X-Wing
-    pygame.draw.rect(
-        screen,
-        (255, 255, 255),
-        (
-            100,
-            150,
-            250,
-            250
-        ),
-        2
+    subtitle = small_font.render(
+        "Wähle dein Schiff für die Mission",
+        True,
+        (180, 180, 180)
     )
 
     screen.blit(
-        preview_xwing,
+        subtitle,
         (
-            125,
-            180
+            WIDTH // 2 - subtitle.get_width() // 2,
+            105
         )
     )
 
-    text_xwing = font.render(
-        "1 - X-Wing",
+    # =========================
+    # X-WING
+    # =========================
+
+    xwing_scale = 0.24 if xwing_hover else 0.20
+
+    xwing_preview = pygame.transform.scale_by(
+        x_wing_img,
+        xwing_scale
+    )
+
+    card_color = (40, 40, 70)
+
+    pygame.draw.rect(
+        screen,
+        card_color,
+        xwing_rect,
+        border_radius=20
+    )
+
+    pygame.draw.rect(
+        screen,
+        (0, 180, 255) if xwing_hover else (120, 120, 120),
+        xwing_rect,
+        3,
+        border_radius=20
+    )
+
+    screen.blit(
+        xwing_preview,
+        (
+            xwing_rect.centerx - xwing_preview.get_width() // 2,
+            xwing_rect.y + 60
+        )
+    )
+
+    text = font.render(
+        "X-Wing",
         True,
         (255, 255, 255)
     )
 
     screen.blit(
-        text_xwing,
+        text,
         (
-            140,
-            360
+            xwing_rect.centerx - text.get_width() // 2,
+            xwing_rect.bottom - 70
         )
     )
 
-    # Millennium Falcon
+    # =========================
+    # FALCON
+    # =========================
+
+    falcon_scale = 0.75 if falcon_hover else 0.65
+
+    falcon_preview = pygame.transform.scale_by(
+        millennium_falcon_img,
+        falcon_scale
+    )
+
     pygame.draw.rect(
         screen,
-        (255, 255, 255),
-        (
-            450,
-            150,
-            250,
-            250
-        ),
-        2
+        card_color,
+        falcon_rect,
+        border_radius=20
+    )
+
+    pygame.draw.rect(
+        screen,
+        (255, 180, 0) if falcon_hover else (120, 120, 120),
+        falcon_rect,
+        3,
+        border_radius=20
     )
 
     screen.blit(
-        preview_falcon,
+        falcon_preview,
         (
-            475,
-            180
+            falcon_rect.centerx - falcon_preview.get_width() // 2,
+            falcon_rect.y + 10
         )
     )
 
-    text_falcon = font.render(
-        "2 - Millennium Falcon",
+    text = font.render(
+        "Millennium Falcon",
         True,
         (255, 255, 255)
     )
 
     screen.blit(
-        text_falcon,
+        text,
         (
-            470,
-            360
+            falcon_rect.centerx - text.get_width() // 2,
+            falcon_rect.bottom - 70
         )
     )
 
-    info = font.render(
-        "Druecke 1 oder 2",
+    # =========================
+    # Hinweis
+    # =========================
+
+    info = small_font.render(
+        "Klicke auf ein Schiff oder drücke 1 bzw. 2",
         True,
-        (255, 255, 0)
+        (220, 220, 220)
     )
 
     screen.blit(
         info,
         (
             WIDTH // 2 - info.get_width() // 2,
-            500
+            HEIGHT - 50
         )
     )
 
