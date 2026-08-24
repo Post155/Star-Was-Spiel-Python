@@ -22,6 +22,7 @@ GREEN = (0, 255, 0)
 laser_list = []
 asteroid_list = []
 torpedo_list = []
+explosion_list = []
 
 # Bilder laden
 x_wing_img = pygame.image.load(
@@ -39,6 +40,10 @@ asteroid_images = [
 
 torpedo_img = pygame.image.load(
     "Pixelarts/Torpedo.png"
+).convert_alpha()
+
+Explosion_img = pygame.image.load(
+    "Pixelarts/Explosion.png"
 ).convert_alpha()
 
 
@@ -147,6 +152,73 @@ class Torpedo:
     def update(self):
 
         self.rect.y -= self.speed
+
+    def draw(self, screen):
+
+        screen.blit(
+            self.image,
+            self.rect
+        )
+
+class Explosion:
+
+    def __init__(self, x, y, asteroid_scale):
+
+        self.x = x
+        self.y = y
+
+        self.scale = asteroid_scale
+
+        self.timer = 20
+
+    def update(self):
+
+        self.timer -= 1
+
+        if self.timer <= 0:
+            explosion_list.remove(self)
+
+    def draw(self, screen):
+
+        img = pygame.transform.scale_by(
+            Explosion_img,
+            self.scale * 1.5
+        )
+
+        rect = img.get_rect(
+            center=(self.x, self.y)
+        )
+
+        screen.blit(img, rect)
+
+    def __init__(self, x, y, asteroid_scale):
+
+        self.x = x
+        self.y = y
+
+        self.scale = asteroid_scale / 2
+        self.timer = 20
+
+        self.image = pygame.transform.scale_by(
+            Explosion_img,
+            asteroid_scale / 2
+        )
+
+        self.rect = self.image.get_rect(
+            center=(x, y)
+        )
+
+        self.image = pygame.transform.scale_by(
+            Explosion_img,
+            asteroid_scale / 2
+        )
+
+    def update(self):
+
+        self.timer -= 1
+
+        if self.timer <= 0:
+            explosion_list.remove(self)
 
     def draw(self, screen):
 
@@ -622,6 +694,13 @@ while running:
             if asteroid.get_rect().colliderect(
                 laser.rect
             ):
+                explosion_list.append(
+                    Explosion(
+                        asteroid.x + asteroid.width // 2,
+                        asteroid.y + asteroid.height // 2,
+                        asteroid.scale
+                    )
+                )
 
                 if asteroid in asteroid_list:
                     asteroid_list.remove(
@@ -642,7 +721,14 @@ while running:
             if asteroid.get_rect().colliderect(
                 torpedo.rect
             ):
-
+                explosion_list.append(
+                    Explosion(
+                        asteroid.x + asteroid.width // 2,
+                        asteroid.y + asteroid.height // 2,
+                        asteroid.scale
+                    )
+                )
+            
                 asteroid_list.remove(asteroid)
                 torpedo_list.remove(torpedo)
 
@@ -671,6 +757,10 @@ while running:
 
     for asteroid in asteroid_list:
         asteroid.draw(screen)
+    
+    for explosion in explosion_list[:]:
+        explosion.update()
+        explosion.draw(screen)
 
     pygame.display.flip()
 
