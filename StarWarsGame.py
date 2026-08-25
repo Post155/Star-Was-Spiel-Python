@@ -203,7 +203,7 @@ class Explosion:
 
         self.image = pygame.transform.scale_by(
             Explosion_img,
-            self.asteroid_scale * 1.5
+            self.asteroid_scale * 0.5
         )
 
         self.rect = self.image.get_rect(
@@ -216,14 +216,12 @@ class Explosion:
 
         self.image = pygame.transform.scale_by(
             Explosion_img,
-            self.asteroid_scale * 1.5
+            self.asteroid_scale * 0.5
         )
 
         self.rect = self.image.get_rect(
             center=(self.x, self.y)
         )
-
-        if event.type == pygame.VIDEORESIZE:
 
     def update(self):
 
