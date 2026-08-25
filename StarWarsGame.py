@@ -10,6 +10,9 @@ from game.ui import death_screen, ship_selection
 
 pygame.init()
 
+icon = pygame.image.load(os.path.join("Pixelarts", "icon.ico"))
+pygame.display.set_icon(icon)
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption(SCREEN_TITLE)
 clock = pygame.time.Clock()
