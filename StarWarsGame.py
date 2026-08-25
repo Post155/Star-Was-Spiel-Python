@@ -64,8 +64,8 @@ Explosion_img = pygame.image.load(
     "Pixelarts/Explosion.png"
 ).convert_alpha()
 
-
 class Asteroid:
+    base_scale = HEIGHT / 600
 
     def __init__(self):
 
@@ -77,7 +77,7 @@ class Asteroid:
 
         self.image = pygame.transform.scale_by(
             asteroid_images[self.frame],
-            self.scale
+            self.scale * (HEIGHT / 600)
         )
 
         self.width, self.height = self.image.get_size()
@@ -125,7 +125,21 @@ class Asteroid:
             self.width * 0.7,
             self.height * 0.7
         )
+    
+    def resize(self):
 
+        center_x = self.x + self.width / 2
+        center_y = self.y + self.height / 2
+
+        self.image = pygame.transform.scale_by(
+            asteroid_images[self.frame],
+            self.scale * (HEIGHT / 600)
+        )
+
+        self.width, self.height = self.image.get_size()
+
+        self.x = center_x - self.width / 2
+        self.y = center_y - self.height / 2
 
 class Laser:
 
@@ -179,30 +193,46 @@ class Torpedo:
         )
 
 class Explosion:
+
     def __init__(self, x, y, asteroid_scale):
 
         self.x = x
         self.y = y
 
-        self.scale = asteroid_scale / 2
-        self.timer = 20
+        self.asteroid_scale = asteroid_scale
+
         self.image = pygame.transform.scale_by(
             Explosion_img,
-            asteroid_scale * 1.5
+            self.asteroid_scale * 1.5
         )
 
         self.rect = self.image.get_rect(
-            center=(x, y)
+            center=(self.x, self.y)
         )
 
         self.timer = 20
+
+    def resize(self):
+
+        self.image = pygame.transform.scale_by(
+            Explosion_img,
+            self.asteroid_scale * 1.5
+        )
+
+        self.rect = self.image.get_rect(
+            center=(self.x, self.y)
+        )
+
+        if event.type == pygame.VIDEORESIZE:
 
     def update(self):
 
         self.timer -= 1
 
         if self.timer <= 0:
-            explosion_list.remove(self)
+
+            if self in explosion_list:
+                explosion_list.remove(self)
 
     def draw(self, screen):
 
@@ -296,7 +326,6 @@ class Spieler:
                 2
             )
 
-
 class XWing(Spieler):
 
     def __init__(self, fenster_breite, fenster_hoehe):
@@ -385,8 +414,6 @@ class MillenniumFalcon(Spieler):
 
     def torpedo(self):
         None  # Platzhalter
-
-
 
 def death_screen(score):
     global WIDTH
@@ -635,7 +662,6 @@ schiffauswahl = True
 font = pygame.font.Font(None, 40)
 small_font = pygame.font.Font(None, 28)
 title_font = pygame.font.Font(None, 70)
-
 
 while schiffauswahl:
     card_width = int(WIDTH * 0.30)
@@ -914,13 +940,11 @@ while running:
             if spieler:
                 spieler.resize()
 
-            spieler.x = max(
-                0,
-                min(
-                    spieler.x,
-                    WIDTH - spieler.width
-                )
-            )
+            for asteroid in asteroid_list:
+                asteroid.resize()
+
+            for explosion in explosion_list:
+                explosion.resize()
 
         if event.type == pygame.QUIT:
             running = False
