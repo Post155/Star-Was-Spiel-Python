@@ -3,17 +3,15 @@ import sys
 
 import pygame
 
-from game.assets import load_assets
+from game.assets import load_assets, set_window_icon
 from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
 from game.entities import Asteroid, Explosion, MillenniumFalcon, XWing
 from game.ui import death_screen, ship_selection
 
 pygame.init()
 
-icon = pygame.image.load(os.path.join("Pixelarts", "icon.ico"))
-pygame.display.set_icon(icon)
-
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+set_window_icon()
 pygame.display.set_caption(SCREEN_TITLE)
 clock = pygame.time.Clock()
 
@@ -49,6 +47,7 @@ while True:
                 WIDTH = event.w
                 HEIGHT = event.h
                 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+                set_window_icon()
 
                 if spieler:
                     spieler.resize(WIDTH, HEIGHT)

@@ -7,6 +7,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
 ASSET_PATHS = {
+    "window_icon": "Pixelarts/icon.ico",
     "x_wing": "Pixelarts/x_wing.png",
     "millennium_falcon": "Pixelarts/millennium.png",
     "torpedo": "Pixelarts/Torpedo.png",
