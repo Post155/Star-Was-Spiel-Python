@@ -12,7 +12,11 @@ asteroid_spawn_timer = 0
 WIDTH = 800
 HEIGHT = 600
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode(
+    (WIDTH, HEIGHT),
+    pygame.RESIZABLE
+)
+
 pygame.display.set_caption("Star Wars")
 
 clock = pygame.time.Clock()
@@ -80,7 +84,7 @@ class Asteroid:
 
         self.x = random.randint(
             0,
-            WIDTH - self.width
+            max(0, WIDTH - self.width)
         )
 
         self.y = -self.height
@@ -175,36 +179,6 @@ class Torpedo:
         )
 
 class Explosion:
-
-    def __init__(self, x, y, asteroid_scale):
-
-        self.x = x
-        self.y = y
-
-        self.scale = asteroid_scale
-
-        self.timer = 20
-
-    def update(self):
-
-        self.timer -= 1
-
-        if self.timer <= 0:
-            explosion_list.remove(self)
-
-    def draw(self, screen):
-
-        img = pygame.transform.scale_by(
-            Explosion_img,
-            self.scale * 1.5
-        )
-
-        rect = img.get_rect(
-            center=(self.x, self.y)
-        )
-
-        screen.blit(img, rect)
-
     def __init__(self, x, y, asteroid_scale):
 
         self.x = x
@@ -212,20 +186,16 @@ class Explosion:
 
         self.scale = asteroid_scale / 2
         self.timer = 20
-
         self.image = pygame.transform.scale_by(
             Explosion_img,
-            asteroid_scale / 2
+            asteroid_scale * 1.5
         )
 
         self.rect = self.image.get_rect(
             center=(x, y)
         )
 
-        self.image = pygame.transform.scale_by(
-            Explosion_img,
-            asteroid_scale / 2
-        )
+        self.timer = 20
 
     def update(self):
 
@@ -280,6 +250,17 @@ class Spieler:
 
         self.hitbox.x = self.x + self.hitbox_offset_x
         self.hitbox.y = self.y + self.hitbox_offset_y
+
+    def resize(self):
+        self.y = HEIGHT - self.height - 20
+        self.x = max(
+            0,
+            min(
+                self.x,
+                WIDTH - self.width
+            )
+        )
+        self.update_hitbox()
 
     def move_left(self):
 
@@ -403,31 +384,50 @@ class MillenniumFalcon(Spieler):
             )
 
     def torpedo(self):
-        None  # Placeholder for torpedo functionality for Millennium Falcon 
+        None  # Platzhalter
+
 
 
 def death_screen(score):
-
-    title_font = pygame.font.Font(None, 100)
-    score_font = pygame.font.Font(None, 70)
-    button_font = pygame.font.Font(None, 45)
-    small_font = pygame.font.Font(None, 28)
-
-    restart_rect = pygame.Rect(
-        WIDTH // 2 - 175,
-        350,
-        350,
-        70
-    )
-
-    quit_rect = pygame.Rect(
-        WIDTH // 2 - 175,
-        450,
-        350,
-        70
-    )
+    global WIDTH
+    global HEIGHT
+    global screen
 
     while True:
+
+        title_font = pygame.font.Font(
+            None,
+            int(HEIGHT * 0.16)
+        )
+
+        score_font = pygame.font.Font(
+            None,
+            int(HEIGHT * 0.10)
+        )
+
+        button_font = pygame.font.Font(
+            None,
+            int(HEIGHT * 0.06)
+        )
+
+        small_font = pygame.font.Font(
+            None,
+            int(HEIGHT * 0.03)
+        )
+
+        restart_rect = pygame.Rect(
+            WIDTH // 2 - 175,
+            350,
+            350,
+            70
+        )
+
+        quit_rect = pygame.Rect(
+            WIDTH // 2 - 175,
+            450,
+            350,
+            70
+        )
 
         mouse_pos = pygame.mouse.get_pos()
 
@@ -435,28 +435,37 @@ def death_screen(score):
         quit_hover = quit_rect.collidepoint(mouse_pos)
 
         for event in pygame.event.get():
+                if event.type == pygame.VIDEORESIZE:
+                    WIDTH = event.w
+                    HEIGHT = event.h
 
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                    screen = pygame.display.set_mode(
+                        (WIDTH, HEIGHT),
+                        pygame.RESIZABLE
+                    )
 
-            if event.type == pygame.KEYDOWN:
 
-                if event.key == pygame.K_r:
-                    return True
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
-                if event.key == pygame.K_ESCAPE:
-                    return False
+                if event.type == pygame.KEYDOWN:
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-
-                if event.button == 1:
-
-                    if restart_rect.collidepoint(event.pos):
+                    if event.key == pygame.K_r:
                         return True
 
-                    if quit_rect.collidepoint(event.pos):
+                    if event.key == pygame.K_ESCAPE:
                         return False
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+
+                    if event.button == 1:
+
+                        if restart_rect.collidepoint(event.pos):
+                            return True
+
+                        if quit_rect.collidepoint(event.pos):
+                            return False
 
         # Hintergrund
         screen.fill((8, 8, 20))
@@ -627,11 +636,54 @@ font = pygame.font.Font(None, 40)
 small_font = pygame.font.Font(None, 28)
 title_font = pygame.font.Font(None, 70)
 
-# Karten
-xwing_rect = pygame.Rect(80, 140, 280, 320)
-falcon_rect = pygame.Rect(440, 140, 280, 320)
 
 while schiffauswahl:
+    card_width = int(WIDTH * 0.30)
+    card_height = int(HEIGHT * 0.50)
+
+    xwing_rect = pygame.Rect(
+        int(WIDTH * 0.10),
+        int(HEIGHT * 0.25),
+        card_width,
+        card_height
+    )
+
+    falcon_rect = pygame.Rect(
+        int(WIDTH * 0.60),
+        int(HEIGHT * 0.25),
+        card_width,
+        card_height
+    )
+
+    font = pygame.font.Font(
+        None,
+        int(HEIGHT * 0.05)
+    )
+
+    small_font = pygame.font.Font(
+        None,
+        int(HEIGHT * 0.035)
+    )
+
+    title_font = pygame.font.Font(
+        None,
+        int(HEIGHT * 0.12)
+    )
+
+    font = pygame.font.Font(
+        None,
+        int(HEIGHT * 0.05)
+    )
+
+    small_font = pygame.font.Font(
+        None,
+        int(HEIGHT * 0.035)
+    )
+
+    title_font = pygame.font.Font(
+        None,
+        int(HEIGHT * 0.12)
+    )
 
     mouse_pos = pygame.mouse.get_pos()
 
@@ -639,6 +691,16 @@ while schiffauswahl:
     falcon_hover = falcon_rect.collidepoint(mouse_pos)
 
     for event in pygame.event.get():
+        if event.type == pygame.VIDEORESIZE:
+
+            WIDTH = event.w
+            HEIGHT = event.h
+
+            screen = pygame.display.set_mode(
+                (WIDTH, HEIGHT),
+                pygame.RESIZABLE
+            )   
+
 
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -710,7 +772,13 @@ while schiffauswahl:
     # X-WING
     # =========================
 
-    xwing_scale = 0.24 if xwing_hover else 0.20
+    base_scale = HEIGHT / 600
+
+    xwing_scale = (
+        0.24 * base_scale
+        if xwing_hover
+        else 0.20 * base_scale
+    )
 
     xwing_preview = pygame.transform.scale_by(
         x_wing_img,
@@ -738,7 +806,7 @@ while schiffauswahl:
         xwing_preview,
         (
             xwing_rect.centerx - xwing_preview.get_width() // 2,
-            xwing_rect.y + 60
+            xwing_rect.y + int(HEIGHT * 0.08)
         )
     )
 
@@ -760,7 +828,11 @@ while schiffauswahl:
     # FALCON
     # =========================
 
-    falcon_scale = 0.75 if falcon_hover else 0.65
+    falcon_scale = (
+    0.75 * base_scale
+    if falcon_hover
+    else 0.65 * base_scale
+    )
 
     falcon_preview = pygame.transform.scale_by(
         millennium_falcon_img,
@@ -786,7 +858,7 @@ while schiffauswahl:
         falcon_preview,
         (
             falcon_rect.centerx - falcon_preview.get_width() // 2,
-            falcon_rect.y + 10
+            falcon_rect.y + int(HEIGHT * 0.02)
         )
     )
 
@@ -828,6 +900,27 @@ while schiffauswahl:
 while running:
 
     for event in pygame.event.get():
+
+        if event.type == pygame.VIDEORESIZE:
+
+            WIDTH = event.w
+            HEIGHT = event.h
+
+            screen = pygame.display.set_mode(
+                (WIDTH, HEIGHT),
+                pygame.RESIZABLE
+            )
+
+            if spieler:
+                spieler.resize()
+
+            spieler.x = max(
+                0,
+                min(
+                    spieler.x,
+                    WIDTH - spieler.width
+                )
+            )
 
         if event.type == pygame.QUIT:
             running = False
@@ -942,7 +1035,9 @@ while running:
             if asteroid.get_rect().colliderect(
                 torpedo.rect
             ):
+
                 score += int(asteroid.scale * 100)
+
                 explosion_list.append(
                     Explosion(
                         asteroid.x + asteroid.width // 2,
