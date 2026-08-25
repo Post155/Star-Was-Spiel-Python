@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+from game.assets import set_window_icon
 from game.constants import BLACK
 
 
@@ -26,6 +27,7 @@ def ship_selection(screen, clock, width, height, x_wing_img, millennium_falcon_i
                 width = event.w
                 height = event.h
                 screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                set_window_icon()
 
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -100,6 +102,7 @@ def death_screen(screen, clock, score, WIDTH, HEIGHT):
                 WIDTH = event.w
                 HEIGHT = event.h
                 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+                set_window_icon()
 
             if event.type == pygame.QUIT:
                 pygame.quit()
