@@ -143,10 +143,42 @@ class Spieler:
 
         self.speed = 10
 
-        self.hitbox_offset_x = 0
-        self.hitbox_offset_y = 0
+        hitbox_rect = self._calculate_alpha_hitbox()
+        self.hitbox_offset_x = int(round(hitbox_rect.x))
+        self.hitbox_offset_y = int(round(hitbox_rect.y))
+        self.hitbox = pygame.Rect(
+            self.x + self.hitbox_offset_x,
+            self.y + self.hitbox_offset_y,
+            int(round(hitbox_rect.width)),
+            int(round(hitbox_rect.height)),
+        )
 
-        self.hitbox = pygame.Rect(self.x, self.y, self.width, self.height)
+    def _calculate_alpha_hitbox(self):
+        width, height = self.image.get_size()
+        pixel_data = pygame.image.tostring(self.image, "RGBA", False)
+        min_x = width
+        min_y = height
+        max_x = -1
+        max_y = -1
+
+        for y in range(height):
+            row_offset = y * width * 4
+            for x in range(width):
+                alpha_index = row_offset + x * 4 + 3
+                if pixel_data[alpha_index] > 0:
+                    if x < min_x:
+                        min_x = x
+                    if y < min_y:
+                        min_y = y
+                    if x > max_x:
+                        max_x = x
+                    if y > max_y:
+                        max_y = y
+
+        if max_x < 0:
+            return pygame.Rect(0, 0, 0, 0)
+
+        return pygame.Rect(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
 
     def update_hitbox(self):
         self.hitbox.x = self.x + self.hitbox_offset_x
@@ -178,18 +210,8 @@ class Spieler:
 class XWing(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, x_wing_img, torpedo_img=None):
         super().__init__(x_wing_img, fenster_breite, fenster_hoehe, 0.20)
-        self.speed = 12
+        self.speed = 10
         self.torpedo_img = torpedo_img
-
-        self.hitbox_offset_x = self.width * 0.35
-        self.hitbox_offset_y = self.height * 0.15
-
-        self.hitbox = pygame.Rect(
-            self.x + self.hitbox_offset_x,
-            self.y + self.hitbox_offset_y,
-            self.width * 0.30,
-            self.height * 0.70,
-        )
 
     def shoot(self):
         l1 = Laser(self.x + self.width * 0.18, self.y + self.height * 0.3)
@@ -205,18 +227,8 @@ class XWing(Spieler):
 class MillenniumFalcon(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, millennium_falcon_img, torpedo_img=None):
         super().__init__(millennium_falcon_img, fenster_breite, fenster_hoehe, 0.75)
-        self.speed = 8
+        self.speed = 12
         self.torpedo_img = torpedo_img
-
-        self.hitbox_offset_x = self.width * 0.15
-        self.hitbox_offset_y = self.height * 0.15
-
-        self.hitbox = pygame.Rect(
-            self.x + self.hitbox_offset_x,
-            self.y + self.hitbox_offset_y,
-            self.width * 0.70,
-            self.height * 0.70,
-        )
 
     def shoot(self):
         l1 = Laser(self.x + self.width * 0.43, self.y + self.height * 0.06)
