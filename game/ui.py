@@ -180,7 +180,7 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             text = font.render("TIE Fighter", True, (255, 255, 255))
             screen.blit(text, (tie_rect.centerx - text.get_width() // 2, tie_rect.bottom - 70))
 
-            desired_width = int(card_width * (0.82 if battle_hover else 0.72))
+            desired_width = int(card_width * (0.50 if battle_hover else 0.40))
             orig_width = battle_droid_img.get_width()
             droid_scale = (desired_width / orig_width) if orig_width > 0 else (0.30 * base_scale)
             droid_preview = pygame.transform.scale_by(battle_droid_img, droid_scale)

@@ -248,19 +248,17 @@ class Tiefighter(Spieler):
             return None
         return Torpedo(self.x + self.width * 0.47, self.y + self.height * 0.12, self.torpedo_img)
 
-class Battledroid(Spieler):
-    def __init__(self, fenster_breite, fenster_hoehe, battle_drioid_img, torpedo_img=None):
-            super().__init__(battle_drioid_img, fenster_breite, fenster_hoehe, 0.30)
-            self.speed = 10
-            self.torpedo_img = torpedo_img
-    
+class BattleDroid(Spieler):
+    def __init__(self, fenster_breite, fenster_hoehe, battle_droid_img, torpedo_img=None):
+        super().__init__(battle_droid_img, fenster_breite, fenster_hoehe, 0.15)
+        self.speed = 11
+        self.torpedo_img = torpedo_img
+
     def shoot(self):
         l1 = Laser(self.x + self.width * 0.44, self.y + self.height * 0.30)
         l2 = Laser(self.x + self.width * 0.55, self.y + self.height * 0.30)
         return [l1, l2]
-    
+
     def torpedo(self):
-        if self.torpedo_img is None:
-            return None
-        return Torpedo(self.x + self.width * 0.47, self.y + self.height * 0.12, self.torpedo_img)
+        return None
     
