@@ -11,6 +11,8 @@ ASSET_PATHS = {
     "tie_fighter": "Pixelarts/tie-fighter.png",
     "x_wing": "Pixelarts/x_wing.png",
     "millennium_falcon": "Pixelarts/millennium.png",
+    "rebel_logo": "Pixelarts/Star-Wars-Rebel-Logo.png",
+    "empire_logo": "Pixelarts/Galactic-Empire-Logo.png",
     "torpedo": "Pixelarts/Torpedo.png",
     "explosion": "Pixelarts/Explosion.png",
     "asteroid_frames": [

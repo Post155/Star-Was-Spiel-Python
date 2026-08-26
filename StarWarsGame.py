@@ -6,7 +6,7 @@ import pygame
 from game.assets import load_assets, set_window_icon
 from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
 from game.entities import Asteroid, Explosion, MillenniumFalcon, XWing, Tiefighter
-from game.ui import death_screen, ship_selection
+from game.ui import death_screen, faction_selection, ship_selection
 
 pygame.init()
 
@@ -20,6 +20,8 @@ assets = load_assets()
 x_wing_img = assets['x_wing_img']
 millennium_falcon_img = assets['millennium_falcon_img']
 tiefighter_img = assets['tie_fighter_img']
+rebel_logo_img = assets['rebel_logo_img']
+empire_logo_img = assets['empire_logo_img']
 asteroid_images = assets['asteroid_images']
 torpedo_img = assets['torpedo_img']
 explosion_img = assets['explosion_img']
@@ -27,7 +29,12 @@ explosion_img = assets['explosion_img']
 font = pygame.font.Font(None, 40)
 
 while True:
-    ship_choice = ship_selection(screen, clock, WIDTH, HEIGHT, x_wing_img, millennium_falcon_img, tiefighter_img)
+    faction_choice = faction_selection(screen, clock, WIDTH, HEIGHT, rebel_logo_img, empire_logo_img)
+    if faction_choice == 'rebels':
+        faction_logo_img = rebel_logo_img
+    else:
+        faction_logo_img = empire_logo_img
+    ship_choice = ship_selection(screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img, x_wing_img, millennium_falcon_img, tiefighter_img)
 
     if ship_choice == 'xwing':
         spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)
