@@ -5,7 +5,7 @@ import pygame
 
 from game.assets import load_assets, set_window_icon
 from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
-from game.entities import Asteroid, Explosion, MillenniumFalcon, XWing, Tiefighter
+from game.entities import Asteroid, BattleDroid, Explosion, MillenniumFalcon, XWing, Tiefighter
 from game.ui import death_screen, faction_selection, ship_selection
 
 pygame.init()
@@ -20,6 +20,7 @@ assets = load_assets()
 x_wing_img = assets['x_wing_img']
 millennium_falcon_img = assets['millennium_falcon_img']
 tiefighter_img = assets['tie_fighter_img']
+battle_droid_img = assets['battle_droid_img']
 rebel_logo_img = assets['rebel_logo_img']
 empire_logo_img = assets['empire_logo_img']
 asteroid_images = assets['asteroid_images']
@@ -34,7 +35,7 @@ while True:
         faction_logo_img = rebel_logo_img
     else:
         faction_logo_img = empire_logo_img
-    ship_choice = ship_selection(screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img, x_wing_img, millennium_falcon_img, tiefighter_img)
+    ship_choice = ship_selection(screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img, x_wing_img, millennium_falcon_img, tiefighter_img, battle_droid_img)
 
     if ship_choice == 'xwing':
         spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)
@@ -42,6 +43,8 @@ while True:
         spieler = MillenniumFalcon(WIDTH, HEIGHT, millennium_falcon_img, torpedo_img)
     elif ship_choice == 'tiefighter':
         spieler = Tiefighter(WIDTH, HEIGHT, tiefighter_img, torpedo_img)
+    elif ship_choice == 'battledroid':
+        spieler = BattleDroid(WIDTH, HEIGHT, battle_droid_img, torpedo_img)
 
     score = 0
     asteroid_spawn_timer = 0
@@ -81,6 +84,8 @@ while True:
                     spieler = MillenniumFalcon(WIDTH, HEIGHT, millennium_falcon_img, torpedo_img)
                 elif event.key == pygame.K_3:
                     spieler = Tiefighter(WIDTH, HEIGHT, tiefighter_img, torpedo_img)
+                elif event.key == pygame.K_4:
+                    spieler = BattleDroid(WIDTH, HEIGHT, battle_droid_img, torpedo_img)
 
                 if event.key in (pygame.K_SPACE, pygame.K_w, pygame.K_UP):
                     new_lasers = spieler.shoot()

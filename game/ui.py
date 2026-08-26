@@ -54,7 +54,7 @@ def faction_selection(screen, clock, width, height, rebel_logo_img, empire_logo_
 
         for rect, fill_color, border_color, label, accent, logo_img, logo_text in [
             (rebel_rect, (22, 58, 86), (0, 180, 255), "REBELLEN", (0, 180, 255), rebel_logo_img, "X-Wing / Millennium Falcon"),
-            (empire_rect, (52, 30, 48), (200, 120, 120), "IMPERIUM", (200, 120, 120), empire_logo_img, "TIE Fighter / bald mehr"),
+            (empire_rect, (52, 30, 48), (200, 120, 120), "IMPERIUM", (200, 120, 120), empire_logo_img, "TIE Fighter / Battle Droid"),
         ]:
             pygame.draw.rect(screen, fill_color, rect, border_radius=22)
             pygame.draw.rect(screen, border_color if (rebel_hover if rect == rebel_rect else empire_hover) else (120, 120, 120), rect, 4, border_radius=22)
@@ -73,7 +73,7 @@ def faction_selection(screen, clock, width, height, rebel_logo_img, empire_logo_
         clock.tick(60)
 
 
-def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wing_img, millennium_falcon_img, tie_fighter_img):
+def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wing_img, millennium_falcon_img, tie_fighter_img, battle_droid_img):
     """Display the ship selection screen for the chosen faction and return the chosen ship key."""
     while True:
         card_width = int(width * 0.30)
@@ -86,7 +86,7 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             xwing_rect = pygame.Rect(int(width * 0.5 - card_width - gap / 2), card_top, card_width, card_height)
             falcon_rect = pygame.Rect(int(width * 0.5 + gap / 2), card_top, card_width, card_height)
             tie_rect = None
-            upcoming_rect = None
+            battle_rect = None
             title_text = "REBELLEN - SCHIFF AUSWÄHLEN"
             subtitle_text = "Wähle dein Schiff für die Mission"
             key_mapping = {pygame.K_1: "xwing", pygame.K_2: "milleniumfalcon"}
@@ -94,10 +94,10 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             xwing_rect = None
             falcon_rect = None
             tie_rect = pygame.Rect(int(width * 0.5 - card_width - gap / 2), card_top, card_width, card_height)
-            upcoming_rect = pygame.Rect(int(width * 0.5 + gap / 2), card_top, card_width, card_height)
+            battle_rect = pygame.Rect(int(width * 0.5 + gap / 2), card_top, card_width, card_height)
             title_text = "IMPERIUM - SCHIFF AUSWÄHLEN"
             subtitle_text = "Wähle dein Schiff für die Mission"
-            key_mapping = {pygame.K_1: "tiefighter"}
+            key_mapping = {pygame.K_1: "tiefighter", pygame.K_2: "battledroid"}
 
         font = pygame.font.Font(None, max(24, int(min(width, height) * 0.05)))
         small_font = pygame.font.Font(None, max(18, int(min(width, height) * 0.035)))
@@ -107,7 +107,7 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
         xwing_hover = xwing_rect.collidepoint(mouse_pos) if xwing_rect else False
         falcon_hover = falcon_rect.collidepoint(mouse_pos) if falcon_rect else False
         tie_hover = tie_rect.collidepoint(mouse_pos) if tie_rect else False
-        upcoming_hover = upcoming_rect.collidepoint(mouse_pos) if upcoming_rect else False
+        battle_hover = battle_rect.collidepoint(mouse_pos) if battle_rect else False
 
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
@@ -131,6 +131,8 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
                     return "milleniumfalcon"
                 if tie_rect and tie_rect.collidepoint(event.pos):
                     return "tiefighter"
+                if battle_rect and battle_rect.collidepoint(event.pos):
+                    return "battledroid"
 
         screen.fill((8, 8, 20))
 
@@ -178,14 +180,18 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             text = font.render("TIE Fighter", True, (255, 255, 255))
             screen.blit(text, (tie_rect.centerx - text.get_width() // 2, tie_rect.bottom - 70))
 
-            pygame.draw.rect(screen, (30, 30, 40), upcoming_rect, border_radius=20)
-            pygame.draw.rect(screen, (120, 120, 120) if not upcoming_hover else (180, 180, 180), upcoming_rect, 3, border_radius=20)
-            soon_text = font.render("Bald", True, (180, 180, 180))
-            screen.blit(soon_text, (upcoming_rect.centerx - soon_text.get_width() // 2, upcoming_rect.centery - 20))
-            soon_text_2 = small_font.render("verfügbar", True, (180, 180, 180))
-            screen.blit(soon_text_2, (upcoming_rect.centerx - soon_text_2.get_width() // 2, upcoming_rect.centery + 25))
+            desired_width = int(card_width * (0.82 if battle_hover else 0.72))
+            orig_width = battle_droid_img.get_width()
+            droid_scale = (desired_width / orig_width) if orig_width > 0 else (0.30 * base_scale)
+            droid_preview = pygame.transform.scale_by(battle_droid_img, droid_scale)
 
-            info = small_font.render("Klicke auf TIE Fighter oder drücke 1", True, (220, 220, 220))
+            pygame.draw.rect(screen, (30, 30, 40), battle_rect, border_radius=20)
+            pygame.draw.rect(screen, (180, 120, 80) if battle_hover else (120, 120, 120), battle_rect, 3, border_radius=20)
+            screen.blit(droid_preview, (battle_rect.centerx - droid_preview.get_width() // 2, battle_rect.y + int(height * 0.05)))
+            droid_text = font.render("Battle Droid", True, (255, 255, 255))
+            screen.blit(droid_text, (battle_rect.centerx - droid_text.get_width() // 2, battle_rect.bottom - 70))
+
+            info = small_font.render("Klicke auf ein Schiff oder drücke 1 oder 2", True, (220, 220, 220))
             screen.blit(info, (width // 2 - info.get_width() // 2, height - 50))
 
         pygame.display.flip()

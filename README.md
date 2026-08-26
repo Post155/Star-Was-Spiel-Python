@@ -1,13 +1,6 @@
 # 🚀 Star Wars – Raumschiff vs. Asteroiden 
 Ein actiongeladenes **2D-Arcade-Spiel im Star-Wars-Stil**. Steuere dein Raumschiff durch ein gefährliches Asteroidenfeld, zerstöre Hindernisse mit Blastern und Torpedos und versuche, den Highscore zu knacken.
 
- # 🎮 Features 
-- Tastatursteuerung
-- Zwei Waffentypen: **Blaster** & **Torpedos**
-- Zufällige Asteroidenbewegungen
-- Explosionseffekte & Sound
-- Game-Over-Bildschirm mit Score & Highscore
-
 # ⌨️ Steuerung
 
 | Taste         | Aktion                  |
