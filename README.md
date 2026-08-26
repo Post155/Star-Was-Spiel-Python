@@ -1,6 +1,27 @@
-# Star Wars Spiel
+# 🚀 Star Wars – Raumschiff vs. Asteroiden 
+Ein actiongeladenes **2D-Arcade-Spiel im Star-Wars-Stil**. Steuere dein Raumschiff durch ein gefährliches Asteroidenfeld, zerstöre Hindernisse mit Blastern und Torpedos und versuche, den Highscore zu knacken.
 
-Dieses Projekt ist ein kleines Pygame-Spiel mit Sternen, Asteroiden und Raumschiff-Auswahl.
+ # 🎮 Features 
+- Tastatursteuerung
+- Zwei Waffentypen: **Blaster** & **Torpedos**
+- Zufällige Asteroidenbewegungen
+- Explosionseffekte & Sound
+- Game-Over-Bildschirm mit Score & Highscore
+
+# ⌨️ Steuerung
+
+| Taste         | Aktion                  |
+| ------------- | ----------------------- |
+| A / ←         | Nach links bewegen      |
+| D / →         | Nach rechts bewegen     |
+| W / ↑         | Blaster schießen        |
+| S / ↓         | Torpedo schießen        |
+
+## Starten
+
+```bash
+python StarWarsGame.py
+```
 
 ## Struktur
 
@@ -11,16 +32,9 @@ Dieses Projekt ist ein kleines Pygame-Spiel mit Sternen, Asteroiden und Raumschi
 - `game/constants.py` — zentrale Konstanten wie Auflösung, Farbcodes und Asset-Pfade
 - `Pixelarts/` — alle Grafiken des Spiels
 
-## Starten
+## 📄 Hinweis
+Dieses Projekt dient Lernzwecken.  
+Alle Star-Wars-bezogenen Inhalte gehören ihren jeweiligen Rechteinhabern.
+## 
 
-```bash
-python StarWarsGame.py
-```
-
-## Steuerung
-
-- A / D oder Links / Rechts: Schiff bewegen
-- Leertaste / W / Hoch: Schießen
-- S / Runter: Torpedo
-- H: Hitbox ein-/ausblenden
-- Escape: Spiel beenden
+<p align="center"> <em> “Sir, the possibility of successfully navigating an asteroid field is approximately<br> three thousand seven hundred and twenty to one!” </em><br> — C-3PO </p>
