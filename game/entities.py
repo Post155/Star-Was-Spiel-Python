@@ -73,7 +73,6 @@ class Asteroid:
         self.x = center_x - self.width / 2
         self.y = center_y - self.height / 2
 
-
 class Laser:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x, y, 3, 20)
@@ -84,7 +83,6 @@ class Laser:
 
     def draw(self, screen):
         pygame.draw.rect(screen, (255, 0, 0), self.rect)
-
 
 class Torpedo:
     def __init__(self, x, y, torpedo_img):
@@ -97,7 +95,6 @@ class Torpedo:
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
-
 
 class Explosion:
     def __init__(self, x, y, asteroid_scale, explosion_img, window_height=None):
@@ -129,7 +126,6 @@ class Explosion:
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
-
 
 class Spieler:
     def __init__(self, bild, fenster_breite, fenster_hoehe, scale):
@@ -206,7 +202,6 @@ class Spieler:
         if self.show_hitbox:
             pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)
 
-
 class XWing(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, x_wing_img, torpedo_img=None):
         super().__init__(x_wing_img, fenster_breite, fenster_hoehe, 0.20)
@@ -222,7 +217,6 @@ class XWing(Spieler):
         if self.torpedo_img is None:
             return None
         return Torpedo(self.hitbox.centerx, self.y, self.torpedo_img)
-
 
 class MillenniumFalcon(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, millennium_falcon_img, torpedo_img=None):
@@ -254,19 +248,19 @@ class Tiefighter(Spieler):
             return None
         return Torpedo(self.x + self.width * 0.47, self.y + self.height * 0.12, self.torpedo_img)
 
-
-class BattleDroid(Spieler):
-    def __init__(self, fenster_breite, fenster_hoehe, battle_droid_img, torpedo_img=None):
-        super().__init__(battle_droid_img, fenster_breite, fenster_hoehe, 0.32)
-        self.speed = 11
-        self.torpedo_img = torpedo_img
-
+class Battledroid(Spieler):
+    def __init__(self, fenster_breite, fenster_hoehe, battle_drioid_img, torpedo_img=None):
+            super().__init__(battle_drioid_img, fenster_breite, fenster_hoehe, 0.30)
+            self.speed = 10
+            self.torpedo_img = torpedo_img
+    
     def shoot(self):
-        l1 = Laser(self.x + self.width * 0.35, self.y + self.height * 0.25)
-        l2 = Laser(self.x + self.width * 0.65, self.y + self.height * 0.25)
+        l1 = Laser(self.x + self.width * 0.44, self.y + self.height * 0.30)
+        l2 = Laser(self.x + self.width * 0.55, self.y + self.height * 0.30)
         return [l1, l2]
-
+    
     def torpedo(self):
         if self.torpedo_img is None:
             return None
-        return Torpedo(self.x + self.width * 0.47, self.y + self.height * 0.10, self.torpedo_img)
+        return Torpedo(self.x + self.width * 0.47, self.y + self.height * 0.12, self.torpedo_img)
+    
