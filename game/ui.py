@@ -5,14 +5,15 @@ from game.assets import set_window_icon
 from game.constants import BLACK
 
 
-def ship_selection(screen, clock, width, height, x_wing_img, millennium_falcon_img):
+def ship_selection(screen, clock, width, height, x_wing_img, millennium_falcon_img, tie_fighter_img):
     """Display ship selection screen and return the chosen ship key."""
     while True:
         card_width = int(width * 0.30)
         card_height = int(height * 0.50)
 
-        xwing_rect = pygame.Rect(int(width * 0.10), int(height * 0.25), card_width, card_height)
-        falcon_rect = pygame.Rect(int(width * 0.60), int(height * 0.25), card_width, card_height)
+        xwing_rect = pygame.Rect(int(width * 0.05), int(height * 0.25), card_width, card_height)
+        falcon_rect = pygame.Rect(int(width * 0.37), int(height * 0.25), card_width, card_height)
+        tie_rect = pygame.Rect(int(width * 0.69), int(height * 0.25), card_width, card_height)
 
         font = pygame.font.Font(None, int(height * 0.05))
         small_font = pygame.font.Font(None, int(height * 0.035))
@@ -21,6 +22,7 @@ def ship_selection(screen, clock, width, height, x_wing_img, millennium_falcon_i
         mouse_pos = pygame.mouse.get_pos()
         xwing_hover = xwing_rect.collidepoint(mouse_pos)
         falcon_hover = falcon_rect.collidepoint(mouse_pos)
+        tie_hover = tie_rect.collidepoint(mouse_pos)
 
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
@@ -37,13 +39,17 @@ def ship_selection(screen, clock, width, height, x_wing_img, millennium_falcon_i
                 if event.key == pygame.K_1:
                     return "xwing"
                 if event.key == pygame.K_2:
-                    return "falcon"
+                    return "milleniumfalcon"
+                if event.key == pygame.K_3:
+                    return "tiefighter"
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if xwing_rect.collidepoint(event.pos):
                     return "xwing"
                 if falcon_rect.collidepoint(event.pos):
-                    return "falcon"
+                    return "milleniumfalcon"
+                if tie_rect.collidepoint(event.pos):
+                    return "tiefighter"
 
         screen.fill((8, 8, 20))
 
@@ -75,7 +81,23 @@ def ship_selection(screen, clock, width, height, x_wing_img, millennium_falcon_i
         text = font.render("Millennium Falcon", True, (255, 255, 255))
         screen.blit(text, (falcon_rect.centerx - text.get_width() // 2, falcon_rect.bottom - 70))
 
-        info = small_font.render("Klicke auf ein Schiff oder drücke 1 bzw. 2", True, (220, 220, 220))
+        # Dynamically scale the Tie-Fighter preview to better fill its card
+        # Zielbreite = Anteil der Kartenbreite (größer bei Hover)
+        desired_width = int(card_width * (1.2 if tie_hover else 1.0))
+        # Originalbreite des Bildes
+        orig_width = tie_fighter_img.get_width()
+        # Vermeide Division durch Null (sehr unwahrscheinlich für gültige Bilder)
+        tie_scale = (desired_width / orig_width) if orig_width > 0 else (0.20 * base_scale)
+        tie_preview = pygame.transform.scale_by(tie_fighter_img, tie_scale)
+
+        pygame.draw.rect(screen, card_color, tie_rect, border_radius=20)
+        pygame.draw.rect(screen, (200, 100, 200) if tie_hover else (120, 120, 120), tie_rect, 3, border_radius=20)
+        screen.blit(tie_preview, (tie_rect.centerx - tie_preview.get_width() // 2, tie_rect.y + int(height * 0.06)))
+
+        text = font.render("Tiefighter", True, (255, 255, 255))
+        screen.blit(text, (tie_rect.centerx - text.get_width() // 2, tie_rect.bottom - 70))
+
+        info = small_font.render("Klicke auf ein Schiff oder drücke 1, 2 oder 3", True, (220, 220, 220))
         screen.blit(info, (width // 2 - info.get_width() // 2, height - 50))
 
         pygame.display.flip()

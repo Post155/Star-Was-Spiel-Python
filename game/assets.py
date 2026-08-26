@@ -20,6 +20,7 @@ def load_assets():
     assets['window_icon_img'] = pygame.image.load(ASSET_PATHS['window_icon'])
     assets['x_wing_img'] = pygame.image.load(ASSET_PATHS['x_wing']).convert_alpha()
     assets['millennium_falcon_img'] = pygame.image.load(ASSET_PATHS['millennium_falcon']).convert_alpha()
+    assets['tie_fighter_img'] = pygame.image.load(ASSET_PATHS['tie_fighter']).convert_alpha()
     assets['asteroid_images'] = [
         pygame.image.load(path).convert_alpha() for path in ASSET_PATHS['asteroid_frames']
     ]

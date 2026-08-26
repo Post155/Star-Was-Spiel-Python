@@ -5,7 +5,7 @@ import pygame
 
 from game.assets import load_assets, set_window_icon
 from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
-from game.entities import Asteroid, Explosion, MillenniumFalcon, XWing
+from game.entities import Asteroid, Explosion, MillenniumFalcon, XWing, Tiefighter
 from game.ui import death_screen, ship_selection
 
 pygame.init()
@@ -19,6 +19,7 @@ assets = load_assets()
 
 x_wing_img = assets['x_wing_img']
 millennium_falcon_img = assets['millennium_falcon_img']
+tiefighter_img = assets['tie_fighter_img']
 asteroid_images = assets['asteroid_images']
 torpedo_img = assets['torpedo_img']
 explosion_img = assets['explosion_img']
@@ -26,12 +27,14 @@ explosion_img = assets['explosion_img']
 font = pygame.font.Font(None, 40)
 
 while True:
-    ship_choice = ship_selection(screen, clock, WIDTH, HEIGHT, x_wing_img, millennium_falcon_img)
+    ship_choice = ship_selection(screen, clock, WIDTH, HEIGHT, x_wing_img, millennium_falcon_img, tiefighter_img)
 
     if ship_choice == 'xwing':
         spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)
-    else:
+    elif ship_choice == 'milleniumfalcon':
         spieler = MillenniumFalcon(WIDTH, HEIGHT, millennium_falcon_img, torpedo_img)
+    elif ship_choice == 'tiefighter':
+        spieler = Tiefighter(WIDTH, HEIGHT, tiefighter_img, torpedo_img)
 
     score = 0
     asteroid_spawn_timer = 0
@@ -69,6 +72,8 @@ while True:
                     spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)
                 elif event.key == pygame.K_2:
                     spieler = MillenniumFalcon(WIDTH, HEIGHT, millennium_falcon_img, torpedo_img)
+                elif event.key == pygame.K_3:
+                    spieler = Tiefighter(WIDTH, HEIGHT, tiefighter_img, torpedo_img)
 
                 if event.key in (pygame.K_SPACE, pygame.K_w, pygame.K_UP):
                     new_lasers = spieler.shoot()

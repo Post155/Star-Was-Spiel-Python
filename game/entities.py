@@ -237,3 +237,19 @@ class MillenniumFalcon(Spieler):
 
     def torpedo(self):
         return None
+
+class Tiefighter(Spieler):
+    def __init__(self, fenster_breite, fenster_hoehe, tie_fighter_img, torpedo_img=None):
+        super().__init__(tie_fighter_img, fenster_breite, fenster_hoehe, 0.30)
+        self.speed = 10
+        self.torpedo_img = torpedo_img
+
+    def shoot(self):
+        l1 = Laser(self.x + self.width * 0.44, self.y + self.height * 0.30)
+        l2 = Laser(self.x + self.width * 0.55, self.y + self.height * 0.30)
+        return [l1, l2]
+
+    def torpedo(self):
+        if self.torpedo_img is None:
+            return None
+        return Torpedo(self.x + self.width * 0.47, self.y + self.height * 0.12, self.torpedo_img)
