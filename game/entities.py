@@ -255,8 +255,8 @@ class BattleDroid(Spieler):
         self.torpedo_img = torpedo_img
 
     def shoot(self):
-        l1 = Laser(self.x + self.width * 0.44, self.y + self.height * 0.30)
-        l2 = Laser(self.x + self.width * 0.55, self.y + self.height * 0.30)
+        l1 = Laser(self.x + self.width * 0.05, self.y + self.height * 0.01)
+        l2 = Laser(self.x + self.width * 0.94, self.y + self.height * 0.01)
         return [l1, l2]
 
     def torpedo(self):
