@@ -250,7 +250,7 @@ class Tiefighter(Spieler):
 
 class BattleDroid(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, battle_droid_img, torpedo_img=None):
-        super().__init__(battle_droid_img, fenster_breite, fenster_hoehe, 0.15)
+        super().__init__(battle_droid_img, fenster_breite, fenster_hoehe, 0.12)
         self.speed = 11
         self.torpedo_img = torpedo_img
 
