@@ -73,7 +73,7 @@ class Planet:
     def __init__(self, image, width, height):
         self.original = image
         # scale planet randomly
-        scale = random.uniform(1.5, 3.5)
+        scale = random.uniform(0.25, 0.5)
         self.img = pygame.transform.scale(
             self.original,
             (
