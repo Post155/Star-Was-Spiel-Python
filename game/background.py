@@ -84,26 +84,23 @@ class Planet:
         self.height = height
         self.x = random.uniform(-self.img.get_width() * 0.75, width + self.img.get_width() * 0.75)
         self.y = -self.img.get_height() - random.randint(0, height // 2)
-        self.speed = random.uniform(2.0, 4.6)
+        self.speed = random.uniform(1.0, 2.0)
         self.drift_x = random.uniform(-0.8, 0.8)
-        self.linger = random.randint(280, 680)
 
     def update(self):
         self.y += self.speed
         self.x += self.drift_x
-        self.linger -= 1
 
     def draw(self, screen):
         screen.blit(self.img, (int(self.x), int(self.y)))
 
     def expired(self):
-        return self.y > self.height + self.img.get_height() or self.linger <= 0
-
+        return self.y > self.height + self.img.get_height() 
 
 class ForegroundObject:
     def __init__(self, image, width, height):
         self.original = image
-        scale = random.uniform(0.5, 1.8)
+        scale = random.uniform(0.3, 1.0)
         self.img = pygame.transform.scale(
             self.original,
             (
