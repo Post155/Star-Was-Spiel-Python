@@ -172,7 +172,11 @@ while True:
                 running = False
 
         screen.fill(BLACK)
-        background.update()
+        dt = clock.tick(60) / 1000.0
+
+        background.update(dt)
+        background.draw(screen)
+        
         background.draw(screen)
         spieler.draw(screen)
 
