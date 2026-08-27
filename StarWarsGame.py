@@ -7,6 +7,7 @@ from game.assets import load_assets, set_window_icon
 from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
 from game.entities import Asteroid, BattleDroid, Explosion, MillenniumFalcon, XWing, Tiefighter
 from game.ui import death_screen, faction_selection, ship_selection
+from game.background import BackgroundManager
 
 pygame.init()
 
@@ -16,6 +17,8 @@ pygame.display.set_caption(SCREEN_TITLE)
 clock = pygame.time.Clock()
 
 assets = load_assets()
+
+background = BackgroundManager(WIDTH, HEIGHT, assets)
 
 x_wing_img = assets['x_wing_img']
 millennium_falcon_img = assets['millennium_falcon_img']
@@ -70,6 +73,9 @@ while True:
 
                 for explosion in explosion_list:
                     explosion.resize(HEIGHT)
+
+                # resize background layers to match new window
+                background.resize(WIDTH, HEIGHT)
 
             if event.type == pygame.QUIT:
                 running = False
@@ -166,6 +172,8 @@ while True:
                 running = False
 
         screen.fill(BLACK)
+        background.update()
+        background.draw(screen)
         spieler.draw(screen)
 
         for laser in laser_list:
