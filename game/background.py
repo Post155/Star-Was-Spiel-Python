@@ -20,22 +20,22 @@ class Star:
         # size and speed depend on layer (far, mid, near)
         if layer == 1:
             self.size = random.choice([1, 1, 1, 1])
-            base_speed = 0.1
-            self.brightness_min = 120
+            base_speed = 0.18
+            self.brightness_min = 110
             self.brightness_max = 220
         elif layer == 2:
             self.size = random.choice([1, 1, 2, 2, 3])
-            base_speed = 0.3
+            base_speed = 0.45
             self.brightness_min = 140
             self.brightness_max = 255
         else:
             self.size = random.choice([2, 3, 4])
-            base_speed = 0.6
+            base_speed = 0.9
             self.brightness_min = 180
             self.brightness_max = 255
 
         # speed scales with size slightly (gives depth feel)
-        self.speed = base_speed * (self.size / 1.5) * (0.5 + random.random())
+        self.speed = base_speed * (self.size / 1.5) * (0.6 + random.random())
 
         b = random.randint(self.brightness_min, self.brightness_max)
         # for some mid-layer stars, give slight color tint
@@ -85,19 +85,20 @@ class Planet:
         self.h = height
         self.x = random.randint(-self.img.get_width() // 2, max(0, width - self.img.get_width() // 2))
         self.y = -self.img.get_height() - random.randint(0, height // 3)
-        self.speed = random.uniform(0.05, 0.25)
-        # linger time to keep visible
-        self.linger = random.randint(600, 2400)
+        self.speed = random.uniform(0.9, 1.8)
+        self.drift_x = random.uniform(-0.45, 0.45)
+        self.linger = random.randint(260, 620)
 
     def update(self):
         self.y += self.speed
+        self.x += self.drift_x
         self.linger -= 1
 
     def draw(self, screen):
         screen.blit(self.img, (int(self.x), int(self.y)))
 
     def expired(self):
-        return self.y > self.h or self.linger <= 0
+        return self.y > self.h + self.img.get_height() or self.linger <= 0
 
 
 class ForegroundObject:
@@ -120,18 +121,30 @@ class ForegroundObject:
         self.h = height
         self.x = random.randint(0, max(0, width - self.img.get_width()))
         self.y = -self.img.get_height()
-        self.speed = random.uniform(0.6, 1.6)
+        self.speed = random.uniform(1.8, 3.5)
+        self.drift_x = random.uniform(-0.6, 0.6)
 
     def _to_silhouette(self, surf):
-        s = surf.copy()
-        arr = pygame.surfarray.pixels3d(s)
-        # darken all pixels (silhouette)
-        arr[:, :, :] = (20, 20, 20)
-        del arr
-        return s
+        # Create a silhouette surface using the alpha mask so numpy isn't required.
+        try:
+            mask = pygame.mask.from_surface(surf)
+            # setcolor includes alpha to make opaque silhouette, unsetcolor fully transparent
+            s = mask.to_surface(setcolor=(8, 8, 12, 255), unsetcolor=(0, 0, 0, 0))
+            s = s.convert_alpha()
+            return s
+        except Exception:
+            # Fallback: darken copy using blending if mask-based approach fails
+            s = surf.copy()
+            try:
+                s.fill((8, 8, 12, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            except Exception:
+                # Final fallback: plain fill (may lose transparency)
+                s.fill((8, 8, 12))
+            return s
 
     def update(self):
         self.y += self.speed
+        self.x += self.drift_x
 
     def draw(self, screen):
         screen.blit(self.img, (int(self.x), int(self.y)))
@@ -204,11 +217,11 @@ class BackgroundManager:
                 s.reset(self.width, self.height, 2)
                 s.y = -s.size
 
-        # planets: spawn rarely
-        if self.planet_spawn_cooldown <= 0 and self.planet_images and random.randint(1, 4000) == 1:
+        # planets: pass through the scene as a calmer background element, but spawn more often
+        if self.planet_spawn_cooldown <= 0 and self.planet_images and random.random() < 0.08:
             img = random.choice(self.planet_images)
             self.layer3_planets.append(Planet(img, self.width, self.height))
-            self.planet_spawn_cooldown = random.randint(600, 2400)
+            self.planet_spawn_cooldown = random.randint(150, 480)
         else:
             self.planet_spawn_cooldown = max(0, self.planet_spawn_cooldown - 1)
 
@@ -217,11 +230,11 @@ class BackgroundManager:
             if p.expired():
                 self.layer3_planets.remove(p)
 
-        # foreground objects: more frequent
-        if self.foreground_spawn_cooldown <= 0 and self.near_images and random.randint(1, 200) == 1:
+        # foreground objects: faster, darker and a bit more frequent for closer depth
+        if self.foreground_spawn_cooldown <= 0 and self.near_images and random.random() < 0.12:
             img = random.choice(self.near_images)
             self.layer4_objects.append(ForegroundObject(img, self.width, self.height))
-            self.foreground_spawn_cooldown = random.randint(20, 200)
+            self.foreground_spawn_cooldown = random.randint(30, 180)
         else:
             self.foreground_spawn_cooldown = max(0, self.foreground_spawn_cooldown - 1)
 
