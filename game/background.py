@@ -1,5 +1,6 @@
-import random
 import os
+import random
+
 import pygame
 
 from game.constants import WIDTH as DEFAULT_WIDTH, HEIGHT as DEFAULT_HEIGHT
@@ -7,56 +8,49 @@ from game.constants import WIDTH as DEFAULT_WIDTH, HEIGHT as DEFAULT_HEIGHT
 
 class Star:
     def __init__(self, width, height, layer=1):
-        self.reset(width, height, layer)
-
-    def reset(self, width, height, layer=1):
         self.width = width
         self.height = height
         self.layer = layer
-
         self.x = random.uniform(0, width)
         self.y = random.uniform(0, height)
 
-        # size and speed depend on layer (far, mid, near)
         if layer == 1:
             self.size = random.choice([1, 1, 1, 1])
-            base_speed = 0.18
+            self.base_speed = 0.12
             self.brightness_min = 110
             self.brightness_max = 220
         elif layer == 2:
-            self.size = random.choice([1, 1, 2, 2, 3])
-            base_speed = 0.45
+            self.size = random.choice([1, 2, 2, 3])
+            self.base_speed = 0.35
             self.brightness_min = 140
             self.brightness_max = 255
         else:
             self.size = random.choice([2, 3, 4])
-            base_speed = 0.9
+            self.base_speed = 0.7
             self.brightness_min = 180
             self.brightness_max = 255
 
-        # speed scales with size slightly (gives depth feel)
-        self.speed = base_speed * (self.size / 1.5) * (0.6 + random.random())
+        self.speed = self.base_speed * (self.size / 1.5) * (0.6 + random.random())
+        brightness = random.randint(self.brightness_min, self.brightness_max)
 
-        b = random.randint(self.brightness_min, self.brightness_max)
-        # for some mid-layer stars, give slight color tint
-        if layer == 2 and random.random() < 0.25:
+        if layer == 2 and random.random() < 0.3:
             tint = random.choice([(180, 200, 255), (255, 200, 200)])
             self.color = (
-                min(255, int(b * tint[0] / 255)),
-                min(255, int(b * tint[1] / 255)),
-                min(255, int(b * tint[2] / 255)),
+                min(255, int(brightness * tint[0] / 255)),
+                min(255, int(brightness * tint[1] / 255)),
+                min(255, int(brightness * tint[2] / 255)),
             )
         else:
-            self.color = (b, b, b)
+            self.color = (brightness, brightness, brightness)
 
-        # twinkle
         self.twinkle = random.random() < 0.25
         self.brightness_change = random.choice([-1, 1]) if self.twinkle else 0
 
     def update(self):
         self.y += self.speed
-        if self.twinkle and self.brightness_change != 0:
-            r = self.color[0] + self.brightness_change * random.randint(0, 3)
+        if self.twinkle:
+            step = random.randint(0, 3)
+            r = self.color[0] + self.brightness_change * step
             if r > self.brightness_max:
                 r = self.brightness_max
                 self.brightness_change = -1
@@ -64,6 +58,10 @@ class Star:
                 r = self.brightness_min
                 self.brightness_change = 1
             self.color = (r, r, r)
+
+        if self.y > self.height:
+            self.y = -self.size - 2
+            self.x = random.uniform(0, self.width)
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, (int(self.x), int(self.y), self.size, self.size))
@@ -77,17 +75,18 @@ class Planet:
         self.img = pygame.transform.scale(
             self.original,
             (
-                max(8, int(self.original.get_width() * scale)),
-                max(8, int(self.original.get_height() * scale)),
+                max(16, int(self.original.get_width() * scale)),
+                max(16, int(self.original.get_height() * scale)),
             ),
         )
-        self.w = width
-        self.h = height
-        self.x = random.randint(-self.img.get_width() // 2, max(0, width - self.img.get_width() // 2))
-        self.y = -self.img.get_height() - random.randint(0, height // 3)
-        self.speed = random.uniform(0.9, 1.8)
-        self.drift_x = random.uniform(-0.45, 0.45)
-        self.linger = random.randint(260, 620)
+
+        self.width = width
+        self.height = height
+        self.x = random.uniform(-self.img.get_width() * 0.75, width + self.img.get_width() * 0.75)
+        self.y = -self.img.get_height() - random.randint(0, height // 2)
+        self.speed = random.uniform(2.0, 4.6)
+        self.drift_x = random.uniform(-0.8, 0.8)
+        self.linger = random.randint(280, 680)
 
     def update(self):
         self.y += self.speed
@@ -98,12 +97,10 @@ class Planet:
         screen.blit(self.img, (int(self.x), int(self.y)))
 
     def expired(self):
-        return self.y > self.h + self.img.get_height() or self.linger <= 0
+        return self.y > self.height + self.img.get_height() or self.linger <= 0
 
 
 class ForegroundObject:
-    """Simple near-object using a surface (e.g., asteroid silhouette)."""
-
     def __init__(self, image, width, height):
         self.original = image
         scale = random.uniform(0.5, 1.8)
@@ -114,31 +111,25 @@ class ForegroundObject:
                 max(6, int(self.original.get_height() * scale)),
             ),
         )
-        # tint to silhouette (dark)
         self.img = self._to_silhouette(self.img)
 
-        self.w = width
-        self.h = height
+        self.width = width
+        self.height = height
         self.x = random.randint(0, max(0, width - self.img.get_width()))
         self.y = -self.img.get_height()
         self.speed = random.uniform(1.8, 3.5)
         self.drift_x = random.uniform(-0.6, 0.6)
 
     def _to_silhouette(self, surf):
-        # Create a silhouette surface using the alpha mask so numpy isn't required.
         try:
             mask = pygame.mask.from_surface(surf)
-            # setcolor includes alpha to make opaque silhouette, unsetcolor fully transparent
             s = mask.to_surface(setcolor=(8, 8, 12, 255), unsetcolor=(0, 0, 0, 0))
-            s = s.convert_alpha()
-            return s
+            return s.convert_alpha()
         except Exception:
-            # Fallback: darken copy using blending if mask-based approach fails
             s = surf.copy()
             try:
                 s.fill((8, 8, 12, 0), special_flags=pygame.BLEND_RGBA_MULT)
             except Exception:
-                # Final fallback: plain fill (may lose transparency)
                 s.fill((8, 8, 12))
             return s
 
@@ -150,7 +141,7 @@ class ForegroundObject:
         screen.blit(self.img, (int(self.x), int(self.y)))
 
     def expired(self):
-        return self.y > self.h
+        return self.y > self.height
 
 
 class BackgroundManager:
@@ -159,104 +150,104 @@ class BackgroundManager:
         self.height = height
         self.assets = assets or {}
 
-        # layer populations
-        self.layer1 = [Star(width, height, layer=1) for _ in range(max(40, int((width * height) / 8000)))]
-        self.layer2 = [Star(width, height, layer=2) for _ in range(max(20, int((width * height) / 16000)))]
+        self.layer1 = [Star(width, height, layer=1) for _ in range(max(80, int((width * height) / 6000)))]
+        self.layer2 = [Star(width, height, layer=2) for _ in range(max(35, int((width * height) / 12000)))]
         self.layer3_planets = []
         self.layer4_objects = []
 
-        # pre-load possible planet images if provided in assets
         self.planet_images = []
         if assets:
-            for k in ('planet_blue', 'planet_red', 'planet_green', 'planet_desert'):
-                img = assets.get(k + '_img') if assets.get(k + '_img') is not None else None
-                if img:
-                    self.planet_images.append(img)
+            for key in ('planet_blue', 'planet_red', 'planet_green', 'planet_desert'):
+                image = assets.get(f'{key}_img')
+                if image is not None:
+                    self.planet_images.append(image)
 
-        # fallback: try to load any images in Pixelarts/Planets folder
-        planets_dir = os.path.join(os.getcwd(), 'Pixelarts', 'Planets')
-        if os.path.isdir(planets_dir):
-            for fname in os.listdir(planets_dir):
-                fpath = os.path.join(planets_dir, fname)
-                try:
-                    img = pygame.image.load(fpath).convert_alpha()
-                    self.planet_images.append(img)
-                except Exception:
-                    pass
+        if not self.planet_images:
+            planets_dir = os.path.join(os.getcwd(), 'Pixelarts', 'Planets')
+            if os.path.isdir(planets_dir):
+                for fname in sorted(os.listdir(planets_dir)):
+                    path = os.path.join(planets_dir, fname)
+                    try:
+                        self.planet_images.append(pygame.image.load(path).convert_alpha())
+                    except Exception:
+                        pass
 
-        # near object candidates: try asteroid frames from assets
+        if not self.planet_images:
+            self.planet_images = self._generate_planet_images()
+
         self.near_images = []
         if assets and 'asteroid_images' in assets:
             self.near_images = assets['asteroid_images']
 
-        # control spawn timers
         self.planet_spawn_cooldown = 0
         self.foreground_spawn_cooldown = 0
+        self.planet_max_visible = 1
+
+    def _generate_planet_images(self):
+        palette = [
+            (80, 150, 255),
+            (255, 110, 90),
+            (110, 220, 140),
+            (215, 190, 120),
+        ]
+        images = []
+        for color in palette:
+            surface = pygame.Surface((64, 64), pygame.SRCALPHA)
+            pygame.draw.circle(surface, color, (32, 32), 24)
+            pygame.draw.circle(surface, (255, 255, 255, 80), (24, 20), 9)
+            images.append(surface)
+        return images
 
     def resize(self, width, height):
         self.width = width
         self.height = height
-        # optionally repopulate layers to match new area
-        desired1 = max(40, int((width * height) / 8000))
-        desired2 = max(20, int((width * height) / 16000))
+
+        desired1 = max(80, int((width * height) / 6000))
+        desired2 = max(35, int((width * height) / 12000))
         while len(self.layer1) < desired1:
             self.layer1.append(Star(width, height, 1))
         while len(self.layer2) < desired2:
             self.layer2.append(Star(width, height, 2))
 
     def update(self):
-        # update stars
-        for s in self.layer1[:]:
-            s.update()
-            if s.y > self.height:
-                s.reset(self.width, self.height, 1)
-                s.y = -s.size
-        for s in self.layer2[:]:
-            s.update()
-            if s.y > self.height:
-                s.reset(self.width, self.height, 2)
-                s.y = -s.size
+        for star in self.layer1:
+            star.update()
+        for star in self.layer2:
+            star.update()
 
-        # planets: pass through the scene as a calmer background element, but spawn more often
-        if self.planet_spawn_cooldown <= 0 and self.planet_images and random.random() < 0.08:
-            img = random.choice(self.planet_images)
-            self.layer3_planets.append(Planet(img, self.width, self.height))
-            self.planet_spawn_cooldown = random.randint(150, 480)
+        if self.planet_spawn_cooldown <= 0 and self.planet_images and len(self.layer3_planets) < self.planet_max_visible:
+            if random.random() < 0.35:
+                planet = Planet(random.choice(self.planet_images), self.width, self.height)
+                self.layer3_planets.append(planet)
+                self.planet_spawn_cooldown = random.randint(720, 1700)
         else:
             self.planet_spawn_cooldown = max(0, self.planet_spawn_cooldown - 1)
 
-        for p in self.layer3_planets[:]:
-            p.update()
-            if p.expired():
-                self.layer3_planets.remove(p)
+        for planet in self.layer3_planets[:]:
+            planet.update()
+            if planet.expired():
+                self.layer3_planets.remove(planet)
 
-        # foreground objects: faster, darker and a bit more frequent for closer depth
-        if self.foreground_spawn_cooldown <= 0 and self.near_images and random.random() < 0.12:
-            img = random.choice(self.near_images)
-            self.layer4_objects.append(ForegroundObject(img, self.width, self.height))
-            self.foreground_spawn_cooldown = random.randint(30, 180)
+        if self.foreground_spawn_cooldown <= 0 and self.near_images and random.random() < 0.18:
+            obj = ForegroundObject(random.choice(self.near_images), self.width, self.height)
+            self.layer4_objects.append(obj)
+            self.foreground_spawn_cooldown = random.randint(60, 240)
         else:
             self.foreground_spawn_cooldown = max(0, self.foreground_spawn_cooldown - 1)
 
-        for o in self.layer4_objects[:]:
-            o.update()
-            if o.expired():
-                self.layer4_objects.remove(o)
+        for obj in self.layer4_objects[:]:
+            obj.update()
+            if obj.expired():
+                self.layer4_objects.remove(obj)
 
     def draw(self, screen):
-        # draw far background first
-        for s in self.layer1:
-            s.draw(screen)
-        for s in self.layer2:
-            s.draw(screen)
+        for star in self.layer1:
+            star.draw(screen)
+        for star in self.layer2:
+            star.draw(screen)
 
-        # planets behind gameplay but in front of far stars
-        for p in self.layer3_planets:
-            p.draw(screen)
+        for planet in self.layer3_planets:
+            planet.draw(screen)
 
-        # near objects on top of planets but behind player (depending on game layering)
-        for o in self.layer4_objects:
-            o.draw(screen)
-
-
-# end of file
+        for obj in self.layer4_objects:
+            obj.draw(screen)

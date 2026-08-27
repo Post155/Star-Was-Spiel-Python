@@ -30,4 +30,12 @@ def load_assets():
     assets['torpedo_img'] = pygame.image.load(ASSET_PATHS['torpedo']).convert_alpha()
     assets['explosion_img'] = pygame.image.load(ASSET_PATHS['explosion']).convert_alpha()
 
+    planet_images = [
+    pygame.image.load("Pixelarts/Planets/planet_blue.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Planets/planet_orange.png").convert_alpha(),
+    pygame.image.load("Pixelarts/Planets/planet_gray.png").convert_alpha(),
+    ]
+
+    assets["planet_images"] = planet_images
+
     return assets
