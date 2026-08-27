@@ -1,5 +1,19 @@
 import pygame
 import random
+from game.constants import (
+    PLAYER_BASE_SPEED,
+    SHIP_SPEED_XWING,
+    SHIP_SPEED_MILLENNIUM,
+    SHIP_SPEED_TIEFIGHTER,
+    SHIP_SPEED_BATTLEDROID,
+    SHIP_SCALE_XWING,
+    SHIP_SCALE_MILLENNIUM,
+    SHIP_SCALE_TIEFIGHTER,
+    SHIP_SCALE_BATTLEDROID,
+    ASTEROID_SPEED_RANGE,
+)
+
+# Adjustable gameplay values are defined in game.constants.py
 
 
 class Asteroid:
@@ -29,7 +43,8 @@ class Asteroid:
 
         self.y = -self.height
 
-        self.speed = random.randint(2, 8)
+        # asteroid speed is chosen from ASTEROID_SPEED_RANGE in constants.py
+        self.speed = random.randint(ASTEROID_SPEED_RANGE[0], ASTEROID_SPEED_RANGE[1])
 
     def update(self):
         self.y += self.speed
@@ -137,7 +152,7 @@ class Spieler:
         self.x = (fenster_breite // 2 - self.width // 2)
         self.y = (fenster_hoehe - self.height - 20)
 
-        self.speed = 10
+        self.speed = PLAYER_BASE_SPEED
 
         hitbox_rect = self._calculate_alpha_hitbox()
         self.hitbox_offset_x = int(round(hitbox_rect.x))
@@ -204,8 +219,8 @@ class Spieler:
 
 class XWing(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, x_wing_img, torpedo_img=None):
-        super().__init__(x_wing_img, fenster_breite, fenster_hoehe, 0.20)
-        self.speed = 10
+        super().__init__(x_wing_img, fenster_breite, fenster_hoehe, SHIP_SCALE_XWING)
+        self.speed = SHIP_SPEED_XWING
         self.torpedo_img = torpedo_img
 
     def shoot(self):
@@ -220,8 +235,8 @@ class XWing(Spieler):
 
 class MillenniumFalcon(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, millennium_falcon_img, torpedo_img=None):
-        super().__init__(millennium_falcon_img, fenster_breite, fenster_hoehe, 0.75)
-        self.speed = 12
+        super().__init__(millennium_falcon_img, fenster_breite, fenster_hoehe, SHIP_SCALE_MILLENNIUM)
+        self.speed = SHIP_SPEED_MILLENNIUM
         self.torpedo_img = torpedo_img
 
     def shoot(self):
@@ -234,8 +249,8 @@ class MillenniumFalcon(Spieler):
 
 class Tiefighter(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, tie_fighter_img, torpedo_img=None):
-        super().__init__(tie_fighter_img, fenster_breite, fenster_hoehe, 0.30)
-        self.speed = 10
+        super().__init__(tie_fighter_img, fenster_breite, fenster_hoehe, SHIP_SCALE_TIEFIGHTER)
+        self.speed = SHIP_SPEED_TIEFIGHTER
         self.torpedo_img = torpedo_img
 
     def shoot(self):
@@ -250,8 +265,8 @@ class Tiefighter(Spieler):
 
 class BattleDroid(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, battle_droid_img, torpedo_img=None):
-        super().__init__(battle_droid_img, fenster_breite, fenster_hoehe, 0.12)
-        self.speed = 11
+        super().__init__(battle_droid_img, fenster_breite, fenster_hoehe, SHIP_SCALE_BATTLEDROID)
+        self.speed = SHIP_SPEED_BATTLEDROID
         self.torpedo_img = torpedo_img
 
     def shoot(self):
