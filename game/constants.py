@@ -30,10 +30,36 @@ ASSET_PATHS = {
         "Pixelarts/Astroids/frame_10.png",
         "Pixelarts/Astroids/frame_11.png",
     ],
+
+    # Star system specific assets (optional - loader ignores missing files)
+    "earth": "Pixelarts/Systems/earth.png",
+    "coruscant": "Pixelarts/Systems/coruscant.png",
+    "satellites": "Pixelarts/Systems/satellites.png",
+    "tatooine_planet": "Pixelarts/Systems/tatooine_planet.png",
+    "sun_1": "Pixelarts/Systems/sun_1.png",
+    "sun_2": "Pixelarts/Systems/sun_2.png",
+    "gelber_nebel": "Pixelarts/Systems/gelber_nebel.png",
+    "hoth_planet": "Pixelarts/Systems/hoth_planet.png",
+    "blue_nebula": "Pixelarts/Systems/blue_nebula.png",
+    "endor": "Pixelarts/Systems/endor.png",
+    "forest_moon": "Pixelarts/Systems/forest_moon.png",
+    "death_star": "Pixelarts/Systems/death_star.png",
+    "imperial_station": "Pixelarts/Systems/imperial_station.png",
+    "star_destroyer": "Pixelarts/Systems/star_destroyer.png",
+    "nebula_red": "Pixelarts/Systems/nebula_red.png",
+    "nebula_blue": "Pixelarts/Systems/nebula_blue.png",
+    "nebula_purple": "Pixelarts/Systems/nebula_purple.png",
+    "xwing_squadron": "Pixelarts/Systems/xwing_squadron.png",
+    "tie_fighter": "Pixelarts/tie-fighter.png",
+    "battle_explosion": "Pixelarts/Systems/battle_explosion.png",
 }
 
 # How often (frames) a new asteroid is spawned. Increase to spawn less often, decrease to spawn more often.
 ASTEROID_SPAWN_INTERVAL = 60
+
+# Default system switch thresholds
+SYSTEM_SWITCH_POINTS = 5000
+SYSTEM_SWITCH_TIME_MS = 120000  # 2 minutes in milliseconds
 
 # Player and ship speeds (change these to adjust how fast ships move)
 PLAYER_BASE_SPEED = 10  # default base speed for generic player

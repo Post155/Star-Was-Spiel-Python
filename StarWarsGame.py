@@ -75,6 +75,12 @@ while True:
     explosion_list = []
     running = True
 
+    # anchor background system timers/score for this run
+    try:
+        background.notify_score_anchor(score)
+    except Exception:
+        pass
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
@@ -213,7 +219,7 @@ while True:
                 break
 
         screen.fill(BLACK)
-        background.update()
+        background.update(score)
         background.draw(screen)
         spieler.draw(screen)
 
