@@ -35,7 +35,7 @@ lightsaber_blue_img = assets.get('lightsaber_blue_img')
 lightsaber_red_img = assets.get('lightsaber_red_img')
 
 
-def draw_lives(screen, lives, faction='rebels', size=26, padding=10):
+def draw_lives(screen, lives, faction='rebels', size=24, padding=8):
     """Draw the faction-specific lightsaber sprite as the life indicator."""
     saber_img = lightsaber_blue_img if faction == 'rebels' else lightsaber_red_img
     if saber_img is None:
@@ -43,13 +43,13 @@ def draw_lives(screen, lives, faction='rebels', size=26, padding=10):
 
     target_height = max(14, size)
     scale = target_height / saber_img.get_height()
-    scaled_width = max(58, int(saber_img.get_width() * scale))
+    scaled_width = max(60, int(saber_img.get_width() * scale))
     scaled_saber = pygame.transform.smoothscale(saber_img, (scaled_width, target_height))
 
-    icon_y = 18
+    start_x = 6
+    start_y = 30
     for i in range(lives):
-        x = 12 + i * (scaled_width + padding)
-        screen.blit(scaled_saber, (x, icon_y))
+        screen.blit(scaled_saber, (start_x, start_y + i * (target_height + padding)))
 
 
 while True:
