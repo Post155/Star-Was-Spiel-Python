@@ -66,7 +66,7 @@ class Star:
 
 
 class Planet:
-    def __init__(self, image, width, height, speed_range=(0.6, 1.8), scale_range=(0.25, 0.6)):
+    def __init__(self, image, width, height, speed_range=(0.6, 1.8), scale_range=(0.25, 0.6), linger_range=(900, 1800)):
         self.original = image
         scale = random.uniform(scale_range[0], scale_range[1])
         self.img = pygame.transform.scale(
@@ -83,7 +83,7 @@ class Planet:
         self.y = -self.img.get_height() - random.randint(0, height // 2)
         self.speed = random.uniform(speed_range[0], speed_range[1])
         self.drift_x = random.uniform(-0.8, 0.8)
-        self.linger = random.randint(280, 680)
+        self.linger = random.randint(linger_range[0], linger_range[1])
 
     def update(self):
         self.y += self.speed

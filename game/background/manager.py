@@ -38,7 +38,7 @@ class BackgroundManager:
         # spawn cooldowns
         self.planet_spawn_cooldown = 0
         self.foreground_spawn_cooldown = 0
-        self.planet_max_visible = 1
+        self.planet_max_visible = 2
 
         # system switching
         self.switch_points = switch_points
@@ -60,6 +60,10 @@ class BackgroundManager:
         self.visited = set()
         self.current_system = self.order[self.order_index]
         self.current_level_name = self.current_system.id_name
+        self.planet_spawn_range = (700, 1400)
+        self.planet_speed_range = (0.6, 1.6)
+        self.planet_linger_range = (1200, 2200)
+        self._apply_system_visuals()
 
         # transition state
         self.transitioning = False
@@ -136,6 +140,20 @@ class BackgroundManager:
 
         return planets, fore, nebula
 
+    def _planet_spawn_settings(self):
+        # Sector-specific tuning: increase visible planets and extend lifetime for
+        # the bigger/featured sectors so they feel like real background worlds.
+        settings = {
+            'CORE WORLDS': {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.6, 1.4), 'linger_range': (1200, 2200)},
+            'TATOOINE': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.8, 1.6), 'linger_range': (1300, 2300)},
+            'HOTH': {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.7, 1.5), 'linger_range': (1400, 2400)},
+            'ENDOR': {'max_visible': 3, 'spawn_cooldown': (300, 800), 'speed_range': (0.8, 1.8), 'linger_range': (1600, 2600)},
+            'DEATH STAR SECTOR': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.7, 1.4), 'linger_range': (1500, 2500)},
+            'NEBULA': {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.7, 1.5), 'linger_range': (1200, 2200)},
+            'KRIEGSGEBIET': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.8, 1.6), 'linger_range': (1200, 2200)},
+        }
+        return settings.get(self.current_system.id_name, {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.6, 1.6), 'linger_range': (1200, 2200)})
+
     def request_switch_if_needed(self, current_score: int = 0):
         """Check timers / score and start a transition when threshold reached.
 
@@ -172,6 +190,10 @@ class BackgroundManager:
             self.level_index = 0
         self.current_system = self.order[self.order_index]
         self.current_level_name = self.current_system.id_name
+        self.layer3_planets.clear()
+        self.layer4_objects.clear()
+        self.planet_spawn_cooldown = 0
+        self.foreground_spawn_cooldown = 0
         self.last_switch_time = pygame.time.get_ticks()
         self.transitioning = False
 
@@ -188,12 +210,11 @@ class BackgroundManager:
         self.planet_images = planets if planets else self._generate_planet_images()
         self.near_images = fore if fore else self.near_images
 
-        if sys.id_name == 'CORE WORLDS':
-            self.planet_max_visible = 1
-        elif sys.id_name == 'ENDOR':
-            self.planet_max_visible = 2
-        else:
-            self.planet_max_visible = 1
+        settings = self._planet_spawn_settings()
+        self.planet_max_visible = settings['max_visible']
+        self.planet_spawn_range = settings['spawn_cooldown']
+        self.planet_speed_range = settings['speed_range']
+        self.planet_linger_range = settings['linger_range']
 
     def notify_score_anchor(self, score: int):
         """Call from game when a system switch happens to anchor score/time tracking."""
@@ -225,10 +246,16 @@ class BackgroundManager:
             star.update()
 
         if self.planet_spawn_cooldown <= 0 and self.planet_images and len(self.layer3_planets) < self.planet_max_visible:
-            if random.random() < 0.35:
-                planet = Planet(random.choice(self.planet_images), self.width, self.height)
+            if random.random() < 0.9:
+                planet = Planet(
+                    random.choice(self.planet_images),
+                    self.width,
+                    self.height,
+                    speed_range=self.planet_speed_range,
+                    linger_range=self.planet_linger_range,
+                )
                 self.layer3_planets.append(planet)
-                self.planet_spawn_cooldown = random.randint(720, 1700)
+                self.planet_spawn_cooldown = random.randint(*self.planet_spawn_range)
         else:
             self.planet_spawn_cooldown = max(0, self.planet_spawn_cooldown - 1)
 
