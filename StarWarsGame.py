@@ -32,6 +32,24 @@ explosion_img = assets['explosion_img']
 
 font = pygame.font.Font(None, 40)
 
+
+def draw_lives(screen, lives, size=28, padding=8):
+    """Draw simple heart icons for the player's remaining lives at top-left."""
+    # small helper to draw a heart-shaped icon onto the main screen
+    for i in range(lives):
+        x = 10 + i * (size + padding)
+        y = 50
+        heart = pygame.Surface((size, size), pygame.SRCALPHA)
+        r = max(2, size // 4)
+        # left circle
+        pygame.draw.circle(heart, (255, 0, 0), (r + 1, r + 1), r)
+        # right circle
+        pygame.draw.circle(heart, (255, 0, 0), (size - r - 1, r + 1), r)
+        # bottom triangle/polygon
+        pygame.draw.polygon(heart, (255, 0, 0), [(0, r), (size, r), (size // 2, size)])
+        screen.blit(heart, (x, y))
+
+
 while True:
     faction_choice = faction_selection(screen, clock, WIDTH, HEIGHT, rebel_logo_img, empire_logo_img)
     if faction_choice == 'rebels':
@@ -169,7 +187,30 @@ while True:
 
         for asteroid in asteroid_list[:]:
             if asteroid.get_rect().colliderect(spieler.hitbox):
-                running = False
+                # Ignore collision while player is invulnerable
+                if getattr(spieler, 'is_invulnerable', lambda: False)():
+                    continue
+
+                # Apply damage; take_damage returns True when player has no lives left
+                died = spieler.take_damage()
+
+                # spawn explosion at collision point
+                explosion_list.append(
+                    Explosion(
+                        asteroid.x + asteroid.width // 2,
+                        asteroid.y + asteroid.height // 2,
+                        asteroid.scale,
+                        explosion_img,
+                        HEIGHT,
+                    )
+                )
+
+                if asteroid in asteroid_list:
+                    asteroid_list.remove(asteroid)
+
+                if died:
+                    running = False
+                break
 
         screen.fill(BLACK)
         background.update()
@@ -191,6 +232,9 @@ while True:
 
         score_text = font.render(f"Punkte: {score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
+        # draw hearts for lives
+        if spieler:
+            draw_lives(screen, getattr(spieler, 'lives', 0))
 
         pygame.display.flip()
         clock.tick(60)
@@ -201,5 +245,3 @@ while True:
 
 pygame.quit()
 sys.exit()
-
-# Hier wir Programmiert

@@ -154,6 +154,12 @@ class Spieler:
 
         self.speed = PLAYER_BASE_SPEED
 
+        # Lives and invulnerability
+        self.lives = 3
+        self.invulnerable_until = 0  # pygame.time.get_ticks() value until which player is invulnerable
+        self.invulnerable_duration_ms = 2000  # 2 seconds of invulnerability after a hit
+        self.invulnerable_blink_interval = 200  # ms blink interval while invulnerable
+
         hitbox_rect = self._calculate_alpha_hitbox()
         self.hitbox_offset_x = int(round(hitbox_rect.x))
         self.hitbox_offset_y = int(round(hitbox_rect.y))
@@ -195,6 +201,22 @@ class Spieler:
         self.hitbox.x = self.x + self.hitbox_offset_x
         self.hitbox.y = self.y + self.hitbox_offset_y
 
+    def is_invulnerable(self):
+        return pygame.time.get_ticks() < getattr(self, 'invulnerable_until', 0)
+
+    def take_damage(self):
+        """Apply damage to the player if not currently invulnerable.
+        Returns True if the player has no lives left (dead), False otherwise or when hit was ignored.
+        """
+        now = pygame.time.get_ticks()
+        if now < getattr(self, 'invulnerable_until', 0):
+            # still invulnerable, ignore
+            return False
+        # lose one life and start invulnerability
+        self.lives = max(0, self.lives - 1)
+        self.invulnerable_until = now + getattr(self, 'invulnerable_duration_ms', 2000)
+        return self.lives <= 0
+
     def resize(self, window_width, window_height):
         self.y = window_height - self.height - 20
         self.x = max(0, min(self.x, window_width - self.width))
@@ -213,7 +235,14 @@ class Spieler:
         self.update_hitbox()
 
     def draw(self, screen):
-        screen.blit(self.image, (self.x, self.y))
+        # If currently invulnerable, blink the ship by skipping draws on alternate intervals
+        if self.is_invulnerable():
+            blink_on = (pygame.time.get_ticks() // self.invulnerable_blink_interval) % 2 == 0
+            if blink_on:
+                screen.blit(self.image, (self.x, self.y))
+        else:
+            screen.blit(self.image, (self.x, self.y))
+
         if self.show_hitbox:
             pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)
 
