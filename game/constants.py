@@ -16,6 +16,7 @@ ASSET_PATHS = {
     "empire_logo": "Pixelarts/Galactic-Empire-Logo.png",
     "torpedo": "Pixelarts/Torpedo.png",
     "explosion": "Pixelarts/Explosion.png",
+    "lightsabers": "Pixelarts/lichtschwerter.png",
     "asteroid_frames": [
         "Pixelarts/Astroids/frame_00.png",
         "Pixelarts/Astroids/frame_01.png",

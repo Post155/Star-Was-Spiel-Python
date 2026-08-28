@@ -31,23 +31,25 @@ torpedo_img = assets['torpedo_img']
 explosion_img = assets['explosion_img']
 
 font = pygame.font.Font(None, 40)
+lightsaber_blue_img = assets.get('lightsaber_blue_img')
+lightsaber_red_img = assets.get('lightsaber_red_img')
 
 
-def draw_lives(screen, lives, size=28, padding=8):
-    """Draw simple heart icons for the player's remaining lives at top-left."""
-    # small helper to draw a heart-shaped icon onto the main screen
+def draw_lives(screen, lives, faction='rebels', size=26, padding=10):
+    """Draw the faction-specific lightsaber sprite as the life indicator."""
+    saber_img = lightsaber_blue_img if faction == 'rebels' else lightsaber_red_img
+    if saber_img is None:
+        return
+
+    target_height = max(14, size)
+    scale = target_height / saber_img.get_height()
+    scaled_width = max(58, int(saber_img.get_width() * scale))
+    scaled_saber = pygame.transform.smoothscale(saber_img, (scaled_width, target_height))
+
+    icon_y = 18
     for i in range(lives):
-        x = 10 + i * (size + padding)
-        y = 50
-        heart = pygame.Surface((size, size), pygame.SRCALPHA)
-        r = max(2, size // 4)
-        # left circle
-        pygame.draw.circle(heart, (255, 0, 0), (r + 1, r + 1), r)
-        # right circle
-        pygame.draw.circle(heart, (255, 0, 0), (size - r - 1, r + 1), r)
-        # bottom triangle/polygon
-        pygame.draw.polygon(heart, (255, 0, 0), [(0, r), (size, r), (size // 2, size)])
-        screen.blit(heart, (x, y))
+        x = 12 + i * (scaled_width + padding)
+        screen.blit(scaled_saber, (x, icon_y))
 
 
 while True:
@@ -242,9 +244,9 @@ while True:
 
         score_text = font.render(f"Punkte: {score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
-        # draw hearts for lives
+        # draw lightsabers for lives (color depends on faction)
         if spieler:
-            draw_lives(screen, getattr(spieler, 'lives', 0))
+            draw_lives(screen, getattr(spieler, 'lives', 0), faction_choice)
 
         pygame.display.flip()
         clock.tick(60)

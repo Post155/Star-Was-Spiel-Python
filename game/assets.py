@@ -101,6 +101,11 @@ def load_assets():
     assets['explosion'] = _safe_load(ASSET_PATHS.get('explosion'))
     assets['explosion_img'] = assets['explosion']
 
+    lightsabers_sheet = _safe_load(ASSET_PATHS.get('lightsabers'))
+    if lightsabers_sheet is not None:
+        assets['lightsaber_blue_img'] = lightsabers_sheet.subsurface((0, 0, 1536, 512)).copy()
+        assets['lightsaber_red_img'] = lightsabers_sheet.subsurface((0, 512, 1536, 512)).copy()
+
     # load system/planet assets if available
     system_keys = [
         'earth', 'coruscant', 'satellites',
