@@ -16,20 +16,21 @@ class StarSystem:
     nebula_keys: List[str] = field(default_factory=list)
     extra_flags: Dict[str, object] = field(default_factory=dict)
     difficulty: int = 1
+    visual_filter: tuple = (0, 0, 0, 0)
 
 
 # LEVEL CONFIGURATION:
-# Change the list order below to change the level/sector progression.
-# One entry = one level. If you want to add a new sector, append a new StarSystem
-# and adjust the score/time threshold in game/constants.py.
-# The `difficulty` value controls how fast and frequent enemy/obstacle spawns become.
+# Every planet image in Pixelarts/Planets gets its own level/sector here.
+# Each level uses exactly one unique planet image, so a planet can appear only once
+# in a cycle. The visual_filter is a non-text indicator of the current system.
+# To change the progression, reorder this list or replace a planet key.
 
 def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
     systems = [
         StarSystem(
             'CORE WORLDS',
             ['SYSTEMWECHSEL', 'CORE WORLDS'],
-            planet_keys=['earth', 'coruscant'],
+            planet_keys=['earth'],
             foreground_keys=[],
             star_tint=None,
             star_density=1.0,

@@ -38,7 +38,7 @@ class BackgroundManager:
         # spawn cooldowns
         self.planet_spawn_cooldown = 0
         self.foreground_spawn_cooldown = 0
-        self.planet_max_visible = 2
+        self.planet_max_visible = 1
 
         # system switching
         self.switch_points = switch_points
@@ -48,13 +48,13 @@ class BackgroundManager:
 
         # define systems
         self.systems = self._build_systems()
-        core = next((s for s in self.systems if s.id_name == 'CORE WORLDS'), None)
-        others = [s for s in self.systems if s.id_name != 'CORE WORLDS']
+        first_system = self.systems[0] if self.systems else None
+        others = self.systems[1:] if self.systems else []
         random.shuffle(others)
-        if core:
-            self.order = [core] + others
+        if first_system:
+            self.order = [first_system] + others
         else:
-            self.order = others
+            self.order = []
         self.order_index = 0
         self.level_index = 0
         self.visited = set()
@@ -142,19 +142,20 @@ class BackgroundManager:
         return planets, fore, nebula
 
     def _planet_spawn_settings(self):
-        # Sector-specific tuning: increase visible planets and extend lifetime for
-        # the bigger/featured sectors so they feel like real background worlds.
-        # Change the values below to adjust the difficulty curve per sector.
+        # One planet per level: keep it simple and deterministic.
         settings = {
-            'CORE WORLDS': {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.6, 1.4), 'linger_range': (1200, 2200)},
-            'TATOOINE': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.8, 1.6), 'linger_range': (1300, 2300)},
-            'HOTH': {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.7, 1.5), 'linger_range': (1400, 2400)},
-            'ENDOR': {'max_visible': 3, 'spawn_cooldown': (300, 800), 'speed_range': (0.8, 1.8), 'linger_range': (1600, 2600)},
-            'DEATH STAR SECTOR': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.7, 1.4), 'linger_range': (1500, 2500)},
-            'NEBULA': {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.7, 1.5), 'linger_range': (1200, 2200)},
-            'KRIEGSGEBIET': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.8, 1.6), 'linger_range': (1200, 2200)},
+            'EARTH': {'max_visible': 1, 'spawn_cooldown': (600, 1200), 'speed_range': (0.6, 1.2), 'linger_range': (1200, 2200)},
+            'CORUSCANT': {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 1.3), 'linger_range': (1300, 2300)},
+            'TATOOINE': {'max_visible': 1, 'spawn_cooldown': (450, 900), 'speed_range': (0.8, 1.4), 'linger_range': (1400, 2400)},
+            'HOTH': {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 1.3), 'linger_range': (1400, 2400)},
+            'ENDOR': {'max_visible': 1, 'spawn_cooldown': (450, 900), 'speed_range': (0.8, 1.5), 'linger_range': (1500, 2500)},
+            'MUSTAFAR': {'max_visible': 1, 'spawn_cooldown': (400, 800), 'speed_range': (0.85, 1.55), 'linger_range': (1500, 2600)},
+            'KAMINO': {'max_visible': 1, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 1.4), 'linger_range': (1500, 2500)},
+            'SATURN': {'max_visible': 1, 'spawn_cooldown': (550, 1100), 'speed_range': (0.6, 1.2), 'linger_range': (1200, 2200)},
+            'PURPLE PLANET': {'max_visible': 1, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 1.6), 'linger_range': (1500, 2500)},
+            'DEATH STAR': {'max_visible': 1, 'spawn_cooldown': (350, 800), 'speed_range': (0.9, 1.7), 'linger_range': (1600, 2600)},
         }
-        return settings.get(self.current_system.id_name, {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.6, 1.6), 'linger_range': (1200, 2200)})
+        return settings.get(self.current_system.id_name, {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 1.4), 'linger_range': (1300, 2300)})
 
     def get_current_difficulty(self):
         """Return current sector difficulty values for gameplay tuning."""
@@ -201,10 +202,10 @@ class BackgroundManager:
         self.level_index = self.order_index
         if len(self.visited) >= len(self.order):
             self.visited.clear()
-            core = [s for s in self.order if s.id_name == 'CORE WORLDS']
-            others = [s for s in self.order if s.id_name != 'CORE WORLDS']
+            first_system = self.order[0] if self.order else None
+            others = self.order[1:] if self.order else []
             random.shuffle(others)
-            self.order = core + others if core else others
+            self.order = ([first_system] if first_system else []) + others
             self.order_index = 0
             self.level_index = 0
         self.current_system = self.order[self.order_index]
@@ -314,6 +315,16 @@ class BackgroundManager:
         for obj in self.layer4_objects:
             obj.draw(screen)
 
+        filter_color = self.current_system.visual_filter
+        if filter_color and filter_color != (0, 0, 0, 0):
+            filter_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            filter_surface.fill((filter_color[0], filter_color[1], filter_color[2], filter_color[3]))
+            screen.blit(filter_surface, (0, 0))
+
+            indicator = pygame.Surface((110, 110), pygame.SRCALPHA)
+            pygame.draw.circle(indicator, (filter_color[0], filter_color[1], filter_color[2], 120), (55, 55), 52)
+            screen.blit(indicator, (self.width - 120, 20))
+
         if self.transitioning:
             now = pygame.time.get_ticks()
             elapsed = now - self.transition_start
@@ -325,19 +336,6 @@ class BackgroundManager:
             alpha = max(0, min(255, alpha))
             self.overlay_surface.set_alpha(alpha)
             screen.blit(self.overlay_surface, (0, 0))
-
-            if alpha > 20:
-                title = self.current_system.display_lines[0] if self.current_system.display_lines else ''
-                subtitle = self.current_system.display_lines[1] if len(self.current_system.display_lines) > 1 else ''
-                if self.font_title:
-                    title_surf = self.font_title.render(title, True, (255, 255, 255))
-                    sub_surf = self.font_sub.render(subtitle, True, (230, 230, 230)) if self.font_sub else None
-                    tx = (self.width - title_surf.get_width()) // 2
-                    ty = (self.height - title_surf.get_height()) // 2 - 20
-                    screen.blit(title_surf, (tx, ty))
-                    if sub_surf:
-                        sx = (self.width - sub_surf.get_width()) // 2
-                        screen.blit(sub_surf, (sx, ty + title_surf.get_height() + 6))
 
     def get_current_system_name(self) -> str:
         return self.current_system.id_name
