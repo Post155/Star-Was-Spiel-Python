@@ -3,6 +3,7 @@ import sys
 
 from game.assets import set_window_icon
 from game.constants import BLACK
+from game.highscore import load_highscore, save_highscore
 
 
 def faction_selection(screen, clock, width, height, rebel_logo_img, empire_logo_img):
@@ -199,7 +200,25 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
 
 
 def death_screen(screen, clock, score, WIDTH, HEIGHT):
-    """Show death screen and return True to restart or False to quit."""
+    """Show death screen and return True to restart or False to quit.
+
+    The function loads the personal highscore from disk, updates it if the
+    current score is higher and persists the new record. The death screen
+    displays the current points and the personal record.
+    """
+    # Load highscore once when entering the death screen
+    personal_record = load_highscore()
+    new_record = False
+    if score > personal_record:
+        personal_record = score
+        try:
+            save_highscore(personal_record)
+            new_record = True
+        except Exception:
+            # Ignore save errors to avoid crashing the game during the death
+            # screen; the best-effort save above is adequate.
+            new_record = False
+
     while True:
         title_font = pygame.font.Font(None, int(HEIGHT * 0.16))
         score_font = pygame.font.Font(None, int(HEIGHT * 0.10))
@@ -244,15 +263,28 @@ def death_screen(screen, clock, score, WIDTH, HEIGHT):
         title = title_font.render("GAME OVER", True, (255, 80, 80))
         screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 60))
 
-        score_card = pygame.Rect(WIDTH // 2 - 200, 180, 400, 120)
+        # Score card (shows current score and personal record)
+        score_card = pygame.Rect(WIDTH // 2 - 200, 180, 400, 160)
         pygame.draw.rect(screen, (40, 40, 70), score_card, border_radius=20)
         pygame.draw.rect(screen, (255, 180, 0), score_card, 3, border_radius=20)
 
         score_title = small_font.render("DEINE PUNKTZAHL", True, (180, 180, 180))
         score_text = score_font.render(str(score), True, (255, 255, 255))
 
-        screen.blit(score_title, (WIDTH // 2 - score_title.get_width() // 2, 200))
-        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 235))
+        # Personal record
+        record_title = small_font.render("PERSÖNLICHER REKORD", True, (180, 180, 180))
+        record_text = small_font.render(str(personal_record), True, (255, 255, 255))
+
+        screen.blit(score_title, (WIDTH // 2 - score_title.get_width() // 2, 190))
+        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 225))
+
+        screen.blit(record_title, (WIDTH // 2 - record_title.get_width() // 2, 270))
+        screen.blit(record_text, (WIDTH // 2 - record_text.get_width() // 2, 300))
+
+        if new_record:
+            # Celebrate new record
+            badge = small_font.render("NEUER REKORD!", True, (255, 200, 0))
+            screen.blit(badge, (WIDTH // 2 - badge.get_width() // 2, 330))
 
         pygame.draw.rect(screen, (0, 180, 255) if restart_hover else (40, 40, 70), restart_rect, border_radius=20)
         pygame.draw.rect(screen, (120, 220, 255), restart_rect, 3, border_radius=20)
