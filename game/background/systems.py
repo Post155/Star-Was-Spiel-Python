@@ -15,23 +15,26 @@ class StarSystem:
     asteroid_speed_mul: float = 1.0
     nebula_keys: List[str] = field(default_factory=list)
     extra_flags: Dict[str, object] = field(default_factory=dict)
+    difficulty: int = 1
 
 
 # LEVEL CONFIGURATION:
 # Change the list order below to change the level/sector progression.
 # One entry = one level. If you want to add a new sector, append a new StarSystem
 # and adjust the score/time threshold in game/constants.py.
+# The `difficulty` value controls how fast and frequent enemy/obstacle spawns become.
 
 def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
     systems = [
         StarSystem(
             'CORE WORLDS',
             ['SYSTEMWECHSEL', 'CORE WORLDS'],
-            planet_keys=['earth', 'coruscant', 'satellites'],
+            planet_keys=['earth', 'coruscant'],
             foreground_keys=[],
             star_tint=None,
             star_density=1.0,
             asteroid_speed_mul=1.0,
+            difficulty=1,
         ),
         StarSystem(
             'TATOOINE',
@@ -41,6 +44,7 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
             star_tint=(255, 230, 160),
             star_density=0.9,
             asteroid_speed_mul=1.25,
+            difficulty=2,
         ),
         StarSystem(
             'HOTH',
@@ -48,16 +52,18 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
             planet_keys=['hoth_planet'],
             star_tint=(200, 220, 255),
             star_density=1.1,
-            asteroid_speed_mul=0.95,
+            asteroid_speed_mul=1.4,
+            difficulty=2,
         ),
         StarSystem(
             'ENDOR',
             ['WARNUNG', 'ENDOR-SEKTOR ERREICHT'],
-            planet_keys=['endor', 'forest_moon'],
+            planet_keys=['endor'],
             star_tint=(180, 230, 180),
             star_density=1.3,
-            asteroid_speed_mul=1.0,
+            asteroid_speed_mul=1.6,
             extra_flags={'more_enemies': True},
+            difficulty=3,
         ),
         StarSystem(
             'DEATH STAR SECTOR',
@@ -65,8 +71,9 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
             planet_keys=['death_star', 'imperial_station', 'star_destroyer'],
             star_tint=(120, 120, 120),
             star_density=0.6,
-            asteroid_speed_mul=0.8,
+            asteroid_speed_mul=1.8,
             extra_flags={'imperial_presence': True},
+            difficulty=4,
         ),
         StarSystem(
             'KRIEGSGEBIET',
@@ -74,8 +81,9 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
             foreground_keys=['star_destroyer', 'xwing_squadron', 'tie_fighter', 'battle_explosion'],
             star_tint=None,
             star_density=0.8,
-            asteroid_speed_mul=1.0,
+            asteroid_speed_mul=2.0,
             extra_flags={'battle': True},
+            difficulty=5,
         ),
     ]
     return systems

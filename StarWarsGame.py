@@ -145,9 +145,13 @@ while True:
             if current_torpedo.rect.bottom < 0:
                 torpedo_list.remove(current_torpedo)
 
+        difficulty = background.get_current_difficulty()
+        asteroid_interval = max(10, int(ASTEROID_SPAWN_INTERVAL / max(1.0, difficulty['asteroid_speed_multiplier'])))
         asteroid_spawn_timer += 1
-        if asteroid_spawn_timer >= ASTEROID_SPAWN_INTERVAL:
-            asteroid_list.append(Asteroid(WIDTH, HEIGHT, asteroid_images))
+        if asteroid_spawn_timer >= asteroid_interval:
+            asteroid = Asteroid(WIDTH, HEIGHT, asteroid_images)
+            asteroid.speed = max(2, int(asteroid.speed * difficulty['asteroid_speed_multiplier']))
+            asteroid_list.append(asteroid)
             asteroid_spawn_timer = 0
 
         for asteroid in asteroid_list[:]:

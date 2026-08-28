@@ -63,6 +63,7 @@ class BackgroundManager:
         self.planet_spawn_range = (700, 1400)
         self.planet_speed_range = (0.6, 1.6)
         self.planet_linger_range = (1200, 2200)
+        self.current_difficulty = self.current_system.difficulty
         self._apply_system_visuals()
 
         # transition state
@@ -143,6 +144,7 @@ class BackgroundManager:
     def _planet_spawn_settings(self):
         # Sector-specific tuning: increase visible planets and extend lifetime for
         # the bigger/featured sectors so they feel like real background worlds.
+        # Change the values below to adjust the difficulty curve per sector.
         settings = {
             'CORE WORLDS': {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.6, 1.4), 'linger_range': (1200, 2200)},
             'TATOOINE': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.8, 1.6), 'linger_range': (1300, 2300)},
@@ -153,6 +155,23 @@ class BackgroundManager:
             'KRIEGSGEBIET': {'max_visible': 2, 'spawn_cooldown': (350, 900), 'speed_range': (0.8, 1.6), 'linger_range': (1200, 2200)},
         }
         return settings.get(self.current_system.id_name, {'max_visible': 2, 'spawn_cooldown': (400, 1000), 'speed_range': (0.6, 1.6), 'linger_range': (1200, 2200)})
+
+    def get_current_difficulty(self):
+        """Return current sector difficulty values for gameplay tuning."""
+        return {
+            'level': self.current_difficulty,
+            'planet_max_visible': self.planet_max_visible,
+            'asteroid_speed_multiplier': self.current_system.asteroid_speed_mul,
+            'asteroid_spawn_interval': max(18, int(60 / max(1, self.current_difficulty))),
+        }
+
+    def _can_spawn_planet(self, candidate):
+        for existing in self.layer3_planets:
+            if existing.is_exiting:
+                continue
+            if candidate.get_rect().colliderect(existing.get_rect()):
+                return False
+        return True
 
     def request_switch_if_needed(self, current_score: int = 0):
         """Check timers / score and start a transition when threshold reached.
@@ -190,7 +209,10 @@ class BackgroundManager:
             self.level_index = 0
         self.current_system = self.order[self.order_index]
         self.current_level_name = self.current_system.id_name
-        self.layer3_planets.clear()
+        self.current_difficulty = self.current_system.difficulty
+        for planet in self.layer3_planets:
+            planet.is_exiting = True
+            planet.speed = max(planet.speed, 2.0)
         self.layer4_objects.clear()
         self.planet_spawn_cooldown = 0
         self.foreground_spawn_cooldown = 0
@@ -201,6 +223,7 @@ class BackgroundManager:
 
     def _apply_system_visuals(self):
         sys = self.current_system
+        self.current_difficulty = sys.difficulty
         desired1 = max(50, int((self.width * self.height) / 6000 * sys.star_density))
         desired2 = max(20, int((self.width * self.height) / 12000 * sys.star_density))
         self.layer1 = [Star(self.width, self.height, layer=1, tint=sys.star_tint) for _ in range(desired1)]
@@ -254,8 +277,11 @@ class BackgroundManager:
                     speed_range=self.planet_speed_range,
                     linger_range=self.planet_linger_range,
                 )
-                self.layer3_planets.append(planet)
-                self.planet_spawn_cooldown = random.randint(*self.planet_spawn_range)
+                if self._can_spawn_planet(planet):
+                    self.layer3_planets.append(planet)
+                    self.planet_spawn_cooldown = random.randint(*self.planet_spawn_range)
+                else:
+                    self.planet_spawn_cooldown = max(15, min(self.planet_spawn_range))
         else:
             self.planet_spawn_cooldown = max(0, self.planet_spawn_cooldown - 1)
 

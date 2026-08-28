@@ -84,14 +84,24 @@ class Planet:
         self.speed = random.uniform(speed_range[0], speed_range[1])
         self.drift_x = random.uniform(-0.8, 0.8)
         self.linger = random.randint(linger_range[0], linger_range[1])
+        self.is_exiting = False
 
     def update(self):
+        if self.is_exiting:
+            self.y += self.speed * 2.6
+            self.x += self.drift_x * 2.2
+            self.linger -= 1
+            return
+
         self.y += self.speed
         self.x += self.drift_x
         self.linger -= 1
 
     def draw(self, screen):
         screen.blit(self.img, (int(self.x), int(self.y)))
+
+    def get_rect(self):
+        return pygame.Rect(int(self.x), int(self.y), self.img.get_width(), self.img.get_height())
 
     def expired(self):
         return self.y > self.height + self.img.get_height() or self.linger <= 0
