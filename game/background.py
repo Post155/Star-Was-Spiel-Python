@@ -84,7 +84,7 @@ class Planet:
         self.height = height
         self.x = random.uniform(-self.img.get_width() * 0.75, width + self.img.get_width() * 0.75)
         self.y = -self.img.get_height() - random.randint(0, height // 2)
-        self.speed = random.uniform(2.0, 4.6)
+        self.speed = random.uniform(1.0, 2.6)
         self.drift_x = random.uniform(-0.8, 0.8)
         self.linger = random.randint(280, 680)
 
