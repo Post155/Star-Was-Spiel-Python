@@ -56,8 +56,10 @@ class BackgroundManager:
         else:
             self.order = others
         self.order_index = 0
+        self.level_index = 0
         self.visited = set()
         self.current_system = self.order[self.order_index]
+        self.current_level_name = self.current_system.id_name
 
         # transition state
         self.transitioning = False
@@ -159,6 +161,7 @@ class BackgroundManager:
     def _complete_transition(self):
         self.visited.add(self.current_system.id_name)
         self.order_index = (self.order_index + 1) % len(self.order)
+        self.level_index = self.order_index
         if len(self.visited) >= len(self.order):
             self.visited.clear()
             core = [s for s in self.order if s.id_name == 'CORE WORLDS']
@@ -166,7 +169,9 @@ class BackgroundManager:
             random.shuffle(others)
             self.order = core + others if core else others
             self.order_index = 0
+            self.level_index = 0
         self.current_system = self.order[self.order_index]
+        self.current_level_name = self.current_system.id_name
         self.last_switch_time = pygame.time.get_ticks()
         self.transitioning = False
 
@@ -283,3 +288,9 @@ class BackgroundManager:
 
     def get_current_system_name(self) -> str:
         return self.current_system.id_name
+
+    def get_current_level_name(self) -> str:
+        return self.current_level_name
+
+    def get_current_level_index(self) -> int:
+        return self.level_index

@@ -58,8 +58,10 @@ ASSET_PATHS = {
 ASTEROID_SPAWN_INTERVAL = 60
 
 # Default system switch thresholds
-SYSTEM_SWITCH_POINTS = 5000
-SYSTEM_SWITCH_TIME_MS = 120000  # 2 minutes in milliseconds
+# LEVEL SETTINGS: change these values to adjust how quickly the game advances to the next sector.
+# The actual level order is defined in game/background/systems.py.
+SYSTEM_SWITCH_POINTS = 500
+SYSTEM_SWITCH_TIME_MS = 30000  # 2 minutes in milliseconds
 
 # Player and ship speeds (change these to adjust how fast ships move)
 PLAYER_BASE_SPEED = 10  # default base speed for generic player

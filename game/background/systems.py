@@ -17,6 +17,11 @@ class StarSystem:
     extra_flags: Dict[str, object] = field(default_factory=dict)
 
 
+# LEVEL CONFIGURATION:
+# Change the list order below to change the level/sector progression.
+# One entry = one level. If you want to add a new sector, append a new StarSystem
+# and adjust the score/time threshold in game/constants.py.
+
 def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
     systems = [
         StarSystem(
@@ -36,7 +41,6 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
             star_tint=(255, 230, 160),
             star_density=0.9,
             asteroid_speed_mul=1.25,
-            nebula_keys=['gelber_nebel'],
         ),
         StarSystem(
             'HOTH',
@@ -45,7 +49,6 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
             star_tint=(200, 220, 255),
             star_density=1.1,
             asteroid_speed_mul=0.95,
-            nebula_keys=['blue_nebula'],
         ),
         StarSystem(
             'ENDOR',
@@ -64,14 +67,6 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
             star_density=0.6,
             asteroid_speed_mul=0.8,
             extra_flags={'imperial_presence': True},
-        ),
-        StarSystem(
-            'NEBULA',
-            ['WARNUNG', 'NEBELSEKTOR ERREICHT'],
-            nebula_keys=['nebula_red', 'nebula_blue', 'nebula_purple'],
-            star_tint=None,
-            star_density=1.0,
-            asteroid_speed_mul=0.9,
         ),
         StarSystem(
             'KRIEGSGEBIET',
