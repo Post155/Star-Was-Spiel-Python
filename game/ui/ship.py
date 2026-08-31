@@ -6,7 +6,7 @@ from game.assets import set_window_icon
 
 
 def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wing_img, millennium_falcon_img, tie_fighter_img, battle_droid_img):
-    """Display the ship selection screen for the chosen faction and return the chosen ship key."""
+    """Display the ship selection screen for the chosen faction and return the chosen ship key plus the active window size."""
     while True:
         card_width = int(width * 0.30)
         card_height = int(height * 0.50)
@@ -54,17 +54,17 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
 
             if event.type == pygame.KEYDOWN:
                 if event.key in key_mapping:
-                    return key_mapping[event.key]
+                    return key_mapping[event.key], width, height
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if xwing_rect and xwing_rect.collidepoint(event.pos):
-                    return "xwing"
+                    return "xwing", width, height
                 if falcon_rect and falcon_rect.collidepoint(event.pos):
-                    return "milleniumfalcon"
+                    return "milleniumfalcon", width, height
                 if tie_rect and tie_rect.collidepoint(event.pos):
-                    return "tiefighter"
+                    return "tiefighter", width, height
                 if battle_rect and battle_rect.collidepoint(event.pos):
-                    return "battledroid"
+                    return "battledroid", width, height
 
         screen.fill((8, 8, 20))
 

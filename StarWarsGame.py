@@ -53,12 +53,16 @@ def draw_lives(screen, lives, faction='rebels', size=24, padding=8):
 
 
 while True:
-    faction_choice = faction_selection(screen, clock, WIDTH, HEIGHT, rebel_logo_img, empire_logo_img)
+    faction_choice, WIDTH, HEIGHT = faction_selection(screen, clock, WIDTH, HEIGHT, rebel_logo_img, empire_logo_img)
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    set_window_icon()
     if faction_choice == 'rebels':
         faction_logo_img = rebel_logo_img
     else:
         faction_logo_img = empire_logo_img
-    ship_choice = ship_selection(screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img, x_wing_img, millennium_falcon_img, tiefighter_img, battle_droid_img)
+    ship_choice, WIDTH, HEIGHT = ship_selection(screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img, x_wing_img, millennium_falcon_img, tiefighter_img, battle_droid_img)
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    set_window_icon()
 
     if ship_choice == 'xwing':
         spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)

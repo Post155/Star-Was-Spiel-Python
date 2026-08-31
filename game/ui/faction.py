@@ -6,7 +6,7 @@ from game.assets import set_window_icon
 
 
 def faction_selection(screen, clock, width, height, rebel_logo_img, empire_logo_img):
-    """Show the faction choice and return either 'rebels' or 'empire'."""
+    """Show the faction choice and return the choice plus the active window size."""
     while True:
         card_width = int(width * 0.32)
         card_height = int(height * 0.45)
@@ -34,15 +34,15 @@ def faction_selection(screen, clock, width, height, rebel_logo_img, empire_logo_
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    return "rebels"
+                    return "rebels", width, height
                 if event.key == pygame.K_2:
-                    return "empire"
+                    return "empire", width, height
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rebel_rect.collidepoint(event.pos):
-                    return "rebels"
+                    return "rebels", width, height
                 if empire_rect.collidepoint(event.pos):
-                    return "empire"
+                    return "empire", width, height
 
         screen.fill((8, 8, 20))
 
