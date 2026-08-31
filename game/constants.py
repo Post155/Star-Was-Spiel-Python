@@ -53,7 +53,14 @@ ASSET_PATHS = {
     "xwing_squadron": "Pixelarts/Systems/xwing_squadron.png",
     "tie_fighter": "Pixelarts/tie-fighter.png",
     "battle_explosion": "Pixelarts/Systems/battle_explosion.png",
+    "hyperraum": "Pixelarts/Hyperraum.png",
 }
+
+# Hyperraum (hyperspace) full cinematic sequence duration in milliseconds
+# Default set to 14000 (14 seconds) to allow multi-phase cinematic sequences
+# Can be adjusted between ~12000 and ~18000 for shorter/longer experiences.
+HYPERSPACE_DURATION_MS = 14000
+
 
 # How often (frames) a new asteroid is spawned. Increase to spawn less often, decrease to spawn more often.
 ASTEROID_SPAWN_INTERVAL = 60
@@ -61,7 +68,7 @@ ASTEROID_SPAWN_INTERVAL = 60
 # Default system switch thresholds
 # LEVEL SETTINGS: change these values to adjust how quickly the game advances to the next sector.
 # The actual level order is defined in game/background/systems.py.
-SYSTEM_SWITCH_POINTS = 1000
+SYSTEM_SWITCH_POINTS = 500
 SYSTEM_SWITCH_TIME_MS = 30000  # 2 minutes in milliseconds
 
 # Player and ship speeds (change these to adjust how fast ships move)

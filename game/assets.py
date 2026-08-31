@@ -114,7 +114,7 @@ def load_assets():
         'endor', 'forest_moon',
         'death_star', 'imperial_station', 'star_destroyer',
         'nebula_red', 'nebula_blue', 'nebula_purple',
-        'xwing_squadron', 'tie_fighter', 'battle_explosion'
+        'xwing_squadron', 'tie_fighter', 'battle_explosion', 'hyperraum'
     ]
 
     for key in system_keys:
