@@ -164,7 +164,7 @@ while True:
         for asteroid in asteroid_list[:]:
             for laser in laser_list[:]:
                 if asteroid.get_rect().colliderect(laser.rect):
-                    score += int(asteroid.scale * 100)
+                    score += asteroid.get_points()
                     explosion_list.append(
                         Explosion(
                             asteroid.x + asteroid.width // 2,
@@ -183,7 +183,7 @@ while True:
         for asteroid in asteroid_list[:]:
             for current_torpedo in torpedo_list[:]:
                 if asteroid.get_rect().colliderect(current_torpedo.rect):
-                    score += int(asteroid.scale * 100)
+                    score += asteroid.get_points()
                     explosion_list.append(
                         Explosion(
                             asteroid.x + asteroid.width // 2,

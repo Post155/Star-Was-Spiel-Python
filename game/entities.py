@@ -70,6 +70,13 @@ class Asteroid:
             self.height * 0.7
         )
 
+    def get_points(self):
+        if self.scale <= 0.5:
+            return 100
+        if self.scale <= 0.75:
+            return 75
+        return 50
+
     def resize(self, window_width, window_height):
         # keep center while resizing
         center_x = self.x + self.width / 2
