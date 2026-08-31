@@ -42,10 +42,64 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
 
     systems: List[StarSystem] = []
 
-    # Core canonical systems (use normalized keys that match asset loader behavior)
+    systems.append(StarSystem(
+        'EARTH',
+        ['EARTH', 'Milky-System'],
+        planet_keys=['earth'] if has_asset('earth') else [],
+        star_tint=(200, 120, 80),
+        star_density=0.5,
+        asteroid_speed_mul=0.5,
+        difficulty=1,
+        visual_filter=(80, 20, 8, 28),
+    ))
+
+    systems.append(StarSystem(
+        'SATURN',
+        ['SATURN', 'Milky-System'],
+        planet_keys=['saturn'] if has_asset('saturn') else [],
+        star_tint=(200, 120, 80),
+        star_density=0.6,
+        asteroid_speed_mul=1.3,
+        difficulty=2,
+        visual_filter=(80, 20, 8, 28),
+    ))    
+
+    systems.append(StarSystem(
+        'BLACKHOLE',
+        ['BLACKHOLE', 'ERROR'],
+        planet_keys=['blackhole'] if has_asset('blackhole') else [],
+        star_tint=(200, 120, 80),
+        star_density=2.0,
+        asteroid_speed_mul=2.5,
+        difficulty=5,
+        visual_filter=(80, 20, 8, 28),
+    )) 
+
+    systems.append(StarSystem(
+        'TODESSTERN',
+        ['TODESSTERN', 'Somewhere'],
+        planet_keys=['todesstern'] if has_asset('todesstern') else [],
+        star_tint=(200, 120, 80),
+        star_density=2.0,
+        asteroid_speed_mul=2.0,
+        difficulty=4,
+        visual_filter=(80, 20, 8, 28),
+    )) 
+
+    systems.append(StarSystem(
+        'STERNZERSTÖRER',
+        ['STERNZERSTÖRER', 'Somewhere'],
+        planet_keys=['sternzerstörer'] if has_asset('sternzerstörer') else [],
+        star_tint=(200, 120, 80),
+        star_density=2.0,
+        asteroid_speed_mul=2.0,
+        difficulty=4,
+        visual_filter=(80, 20, 8, 28),
+    )) 
+
     systems.append(StarSystem(
         'TATOOINE',
-        ['TATOOINE', 'Tatoo-System'],
+        ['TATOOINE', 'Tatooine-System'],
         planet_keys=['tatooine'] if has_asset('tatooine') else [],
         foreground_keys=['sun_1', 'sun_2'] if has_asset('sun_1') else [],
         star_tint=(255, 230, 160),
@@ -56,12 +110,12 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
     ))
 
     systems.append(StarSystem(
-        'NABOO',
-        ['NABOO', 'Chommell-Sektor'],
-        planet_keys=['naboo'] if has_asset('naboo') else [],
+        'PURPLE',
+        ['PURPLE', 'Strange-Sektor'],
+        planet_keys=['purple'] if has_asset('purple') else [],
         star_tint=(180, 200, 220),
         star_density=0.9,
-        asteroid_speed_mul=1.1,
+        asteroid_speed_mul=1.5,
         difficulty=2,
         visual_filter=(16, 24, 60, 12),
     ))
@@ -121,37 +175,5 @@ def build_systems(assets: Optional[dict] = None) -> List[StarSystem]:
         difficulty=3,
         visual_filter=(80, 20, 8, 28),
     ))
-
-    # Add any other discovered planets as single-planet systems so every planet
-    # under Pixelarts/Planets becomes a playable level.
-    discovered_planet_keys = set()
-    if assets:
-        for k in list(assets.keys()):
-            if k.endswith('_img'):
-                candidate = k[:-4]
-                # ignore known non-planet keys
-                if candidate in ('window_icon', 'torpedo', 'explosion', 'lightsaber_blue', 'lightsaber_red'):
-                    continue
-                discovered_planet_keys.add(candidate)
-            else:
-                # some loaders also put bare names
-                if k not in ('planet_images',) and not k.endswith('_img'):
-                    discovered_planet_keys.add(k)
-
-    # Remove keys already assigned above
-    known = {'tatooine', 'naboo', 'kamino', 'hoth', 'endor', 'coruscant', 'corusant', 'mustafar'}
-    extras = sorted([p for p in discovered_planet_keys if p not in known])
-
-    for p in extras:
-        systems.append(StarSystem(
-            p.upper(),
-            [p.upper(), f'{p.capitalize()}'],
-            planet_keys=[p],
-            star_tint=None,
-            star_density=1.0,
-            asteroid_speed_mul=1.0,
-            difficulty=1,
-            visual_filter=(0, 0, 0, 0),
-        ))
 
     return systems

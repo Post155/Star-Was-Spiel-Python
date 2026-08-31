@@ -61,6 +61,9 @@ ASSET_PATHS = {
 # Can be adjusted between ~12000 and ~18000 for shorter/longer experiences.
 HYPERSPACE_DURATION_MS = 14000
 
+# Duration of the Galaxy Map (Phase 4) in milliseconds when using map-only transitions
+GALAXY_MAP_DURATION_MS = 5000
+
 
 # How often (frames) a new asteroid is spawned. Increase to spawn less often, decrease to spawn more often.
 ASTEROID_SPAWN_INTERVAL = 60

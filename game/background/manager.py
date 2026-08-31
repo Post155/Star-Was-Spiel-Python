@@ -157,16 +157,16 @@ class BackgroundManager:
     def _planet_spawn_settings(self):
         # One planet per level: keep it simple and deterministic.
         settings = {
-            'EARTH': {'max_visible': 1, 'spawn_cooldown': (600, 1200), 'speed_range': (0.6, 1.2), 'linger_range': (1200, 2200)},
-            'CORUSCANT': {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 1.3), 'linger_range': (1300, 2300)},
-            'TATOOINE': {'max_visible': 1, 'spawn_cooldown': (450, 900), 'speed_range': (0.8, 1.4), 'linger_range': (1400, 2400)},
-            'HOTH': {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 1.3), 'linger_range': (1400, 2400)},
-            'ENDOR': {'max_visible': 1, 'spawn_cooldown': (450, 900), 'speed_range': (0.8, 1.5), 'linger_range': (1500, 2500)},
-            'MUSTAFAR': {'max_visible': 1, 'spawn_cooldown': (400, 800), 'speed_range': (0.85, 1.55), 'linger_range': (1500, 2600)},
-            'KAMINO': {'max_visible': 1, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 1.4), 'linger_range': (1500, 2500)},
-            'SATURN': {'max_visible': 1, 'spawn_cooldown': (550, 1100), 'speed_range': (0.6, 1.2), 'linger_range': (1200, 2200)},
-            'PURPLE PLANET': {'max_visible': 1, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 1.6), 'linger_range': (1500, 2500)},
-            'DEATH STAR': {'max_visible': 1, 'spawn_cooldown': (350, 800), 'speed_range': (0.9, 1.7), 'linger_range': (1600, 2600)},
+            'EARTH': {'max_visible': 1, 'spawn_cooldown': (600, 1200), 'speed_range': (0.6, 0.7), 'linger_range': (1200, 2200)},
+            'CORUSCANT': {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 0.8), 'linger_range': (1300, 2300)},
+            'TATOOINE': {'max_visible': 1, 'spawn_cooldown': (450, 900), 'speed_range': (0.8, 0.9), 'linger_range': (1400, 2400)},
+            'HOTH': {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 0.8), 'linger_range': (1400, 2400)},
+            'ENDOR': {'max_visible': 1, 'spawn_cooldown': (450, 900), 'speed_range': (0.8, 0.9), 'linger_range': (1500, 2500)},
+            'MUSTAFAR': {'max_visible': 1, 'spawn_cooldown': (400, 800), 'speed_range': (0.85, 0.95), 'linger_range': (1500, 2600)},
+            'KAMINO': {'max_visible': 1, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 0.9), 'linger_range': (1500, 2500)},
+            'SATURN': {'max_visible': 1, 'spawn_cooldown': (550, 1100), 'speed_range': (0.6, 0.7), 'linger_range': (1200, 2200)},
+            'PURPLE PLANET': {'max_visible': 2, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 0.9), 'linger_range': (1500, 2500)},
+            'DEATH STAR': {'max_visible': 1, 'spawn_cooldown': (350, 800), 'speed_range': (0.9, 1.0), 'linger_range': (1600, 2600)},
         }
         return settings.get(self.current_system.id_name, {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 1.4), 'linger_range': (1300, 2300)})
 
@@ -215,63 +215,35 @@ class BackgroundManager:
         next_index = (self.order_index + 1) % len(self.order) if self.order else 0
         self.transition_to = self.order[next_index] if self.order else None
 
-        # compute phase durations using min/max constraints so total feels cinematic
-        total = max(12000, int(getattr(self, 'transition_duration', 14000)))  # enforce minimum 12s
-        # Phase min/max (ms): P1 warning, P2 prep, P3 jump, P4 map, P5 planet
-        mins = [2000, 2000, 4000, 2000, 2000]
-        maxs = [2000, 3000, 6000, 3000, 4000]
-        # ensure total can be distributed within mins/maxs
-        total_min = sum(mins)
-        total_max = sum(maxs)
-        target = min(max(total, total_min), total_max)
+        # Map-only mode: user requested only Phase 4 (Galaxiekarte)
+        from game.constants import GALAXY_MAP_DURATION_MS
+        map_dur = int(GALAXY_MAP_DURATION_MS)
+        self.phase_durations = [map_dur]
+        self.phase_starts = [0]
+        self.total_transition_ms = map_dur
 
-        # start with mins, distribute remaining proportionally to (max-min)
-        remain = target - total_min
-        caps = [maxs[i] - mins[i] for i in range(len(mins))]
-        allocated = [mins[i] for i in range(len(mins))]
-        if remain > 0:
-            cap_sum = sum(caps)
-            for i in range(len(allocated)):
-                if cap_sum > 0:
-                    add = int(round(remain * (caps[i] / cap_sum)))
-                else:
-                    add = 0
-                add = min(add, caps[i])
-                allocated[i] += add
-
-            # if rounding left a small remainder, distribute
-            leftover = target - sum(allocated)
-            idx = 0
-            while leftover > 0 and idx < len(allocated):
-                if allocated[idx] < maxs[idx]:
-                    allocated[idx] += 1
-                    leftover -= 1
-                idx += 1
-
-        self.phase_durations = allocated  # [p1, p2, p3, p4, p5]
-        self.phase_starts = []
-        acc = 0
-        for d in self.phase_durations:
-            self.phase_starts.append(acc)
-            acc += d
-        self.total_transition_ms = acc
-
-        # prepare cached scaled hyper image for current resolution
+        # no hyperraum image usage for map-only sequence
         self._cached_hyper_scaled = None
 
-        # generate particles for subtle flashes/flares
+        # minimal particles for subtle map accents
         self._particles = []
-        for i in range(28):
+        for i in range(8):
             px = random.uniform(0, self.width)
             py = random.uniform(0, self.height)
-            life = random.randint(int(target * 0.15), int(target * 0.9))
-            self._particles.append({'x': px, 'y': py, 'life': life, 'max_life': life, 'size': random.uniform(1.2, 6.8), 'phase': random.choice([2, 3])})
+            life = random.randint(int(map_dur * 0.25), int(map_dur * 0.9))
+            self._particles.append({'x': px, 'y': py, 'life': life, 'max_life': life, 'size': random.uniform(1.2, 4.2), 'phase': 4})
 
         # camera/visual state
         self._camera_zoom = 0.0
         self._star_stretch = 0.0
         self._hyper_size_checked = False
         self._hyper_too_small = False
+        # mark mode so draw uses only Phase 4
+        self._map_only_mode = True
+
+        # capture available planet keys for from/to systems now so they don't change mid-transition
+        self.transition_from_planets = self._get_available_planet_keys(self.transition_from)
+        self.transition_to_planets = self._get_available_planet_keys(self.transition_to)
 
     def _complete_transition(self):
         # actually advance the system order and swap current system
@@ -299,6 +271,33 @@ class BackgroundManager:
         # keep transitioning True until the visual duration completes; _swapped handles swap state
 
         self._apply_system_visuals()
+
+    def _get_available_planet_keys(self, system):
+        """Return planet keys for the given StarSystem that have loaded assets.
+
+        Uses the loaded assets dict (self.assets) to verify existence. This ensures
+        thumbnails and displayed planets match the actual available images.
+        """
+        if system is None:
+            return []
+        keys = []
+        for k in getattr(system, 'planet_keys', []) or []:
+            # try several possible asset key forms
+            candidates = [f"{k}_img", k]
+            found = False
+            for c in candidates:
+                if c in self.assets and self.assets.get(c) is not None:
+                    keys.append(k)
+                    found = True
+                    break
+            if not found:
+                # also try normalized variants (strip common suffixes)
+                k2 = k.replace('_planet', '').replace('planet_', '')
+                for c in (f"{k2}_img", k2):
+                    if c in self.assets and self.assets.get(c) is not None:
+                        keys.append(k)
+                        break
+        return keys
 
     def _apply_system_visuals(self):
         sys = self.current_system
@@ -498,214 +497,23 @@ class BackgroundManager:
             filter_surface.fill((filter_color[0], filter_color[1], filter_color[2], filter_color[3]))
             screen.blit(filter_surface, (0, 0))
 
-            indicator = pygame.Surface((110, 110), pygame.SRCALPHA)
-            pygame.draw.circle(indicator, (filter_color[0], filter_color[1], filter_color[2], 120), (55, 55), 52)
-            screen.blit(indicator, (self.width - 120, 20))
+            # NOTE: removed top-right indicator circle — it had no functional purpose.
 
-        # If a system transition is in progress, render a cinematic multi-phase sequence
+        # If a system transition is in progress, render the simplified Galaxy-Map-only sequence
         if getattr(self, 'transitioning', False):
             now = pygame.time.get_ticks()
             elapsed = now - self.transition_start
 
-            # determine phase durations and starts
-            if hasattr(self, 'phase_durations'):
-                p = self.phase_durations
-                starts = self.phase_starts
-                total = self.total_transition_ms
-            else:
-                # fallback to a sensible single-phase sequence
-                p = [2000, 2000, 4000, 2000, 2000]
-                starts = [0, p[0], p[0] + p[1], p[0] + p[1] + p[2], p[0] + p[1] + p[2] + p[3]]
-                total = sum(p)
-                self.phase_durations = p
-                self.phase_starts = starts
-                self.total_transition_ms = total
+            # map-only mode branch
+            if getattr(self, '_map_only_mode', False):
+                dur = self.phase_durations[0]
+                phase_t = min(1.0, max(0.0, elapsed / max(1.0, dur)))
 
-            # swap systems at end of Phase 3 so galaxy map shows new system
-            swap_time = starts[0] + p[0] + p[1] + p[2]
-            if (elapsed >= swap_time) and (not getattr(self, '_swapped', False)):
-                self._complete_transition()
-                self._swapped = True
+                # near-seamless: dim current scene slightly instead of replacing it
+                dim_overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+                dim_overlay.fill((0, 0, 0, int(180 * (0.6 * phase_t))))
+                screen.blit(dim_overlay, (0, 0))
 
-            # end of whole sequence
-            if elapsed >= total:
-                self.transitioning = False
-                self._swapped = False
-
-            # current phase index
-            phase_idx = 0
-            for i in range(len(p)):
-                if elapsed >= starts[i] and elapsed < (starts[i] + p[i]):
-                    phase_idx = i + 1
-                    phase_local = elapsed - starts[i]
-                    phase_t = phase_local / max(1.0, p[i])
-                    break
-            else:
-                phase_idx = len(p)
-                phase_local = max(0, elapsed - starts[-1])
-                phase_t = min(1.0, phase_local / max(1.0, p[-1]))
-
-            title_font = self.font_title
-            sub_font = self.font_sub
-
-            # Phase 1: SYSTEMWARNUNG (dim background, large red warning)
-            if phase_idx == 1:
-                # dim but keep background visible
-                dim = int(200 * phase_t)
-                overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-                overlay.fill((0, 0, 0, dim))
-                screen.blit(overlay, (0, 0))
-
-                # big red warning title with soft pulse
-                if title_font:
-                    scale = 0.9 + 0.12 * (0.5 - abs(0.5 - phase_t))
-                    font_surf = title_font.render('ACHTUNG', True, (220, 50, 50))
-                    w, h = font_surf.get_size()
-                    s = pygame.transform.smoothscale(font_surf, (max(10, int(w * scale)), max(10, int(h * scale))))
-                    rect = s.get_rect(center=(self.width // 2, self.height // 2 - 80))
-                    screen.blit(s, rect)
-
-                if sub_font:
-                    lines = [
-                        'GALAKTISCHE GRENZE ERREICHT',
-                        'VERLASSE SYSTEM',
-                        f'[{getattr(self.transition_from, "id_name", self.current_system.id_name)}]'
-                    ]
-                    for i, text in enumerate(lines):
-                        t_surf = sub_font.render(text, True, (230, 230, 230))
-                        alpha = int(255 * phase_t)
-                        t_surf.set_alpha(alpha)
-                        r = t_surf.get_rect(center=(self.width // 2, self.height // 2 - 8 + i * 36))
-                        screen.blit(t_surf, r)
-
-                return
-
-            # Phase 2: HYPERRAUM VORBEREITUNG (star stretching, charge-up)
-            if phase_idx == 2:
-                # overlay slight darkening
-                overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-                overlay.fill((0, 0, 0, int(160 * (0.15 + 0.85 * phase_t))))
-                screen.blit(overlay, (0, 0))
-
-                # stretched starfield effect
-                streaks = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-                center = (self.width // 2, self.height // 2)
-                count = max(40, int(80 * (0.4 + 0.6 * phase_t)))
-                max_len = int(max(self.width, self.height) * (0.6 + 1.8 * phase_t))
-                for i in range(count):
-                    ang = random.random() * math.tau if hasattr(math, 'tau') else random.random() * 2 * math.pi
-                    l = random.uniform(max_len * 0.4, max_len)
-                    x2 = int(center[0] + l * math.cos(ang))
-                    y2 = int(center[1] + l * math.sin(ang))
-                    a = int(100 * (0.2 + 0.8 * random.random()) * phase_t)
-                    pygame.draw.aaline(streaks, (220, 220, 255, a), center, (x2, y2))
-                streaks.set_alpha(200)
-                screen.blit(streaks, (0, 0))
-
-                # charging texts
-                if sub_font:
-                    l1 = sub_font.render('KOORDINATEN BERECHNET', True, (200, 220, 255))
-                    l2 = sub_font.render('SPRUNG FREIGEGEBEN', True, (200, 220, 255))
-                    a = int(255 * phase_t)
-                    l1.set_alpha(a)
-                    l2.set_alpha(int(a * (0.8 + 0.2 * math.sin(phase_t * math.pi))))
-                    screen.blit(l1, l1.get_rect(center=(self.width // 2, self.height // 2 - 14)))
-                    screen.blit(l2, l2.get_rect(center=(self.width // 2, self.height // 2 + 26)))
-
-                # subtle grow of star stretch for use in Phase 3
-                self._star_stretch = min(1.0, 0.2 + 1.8 * phase_t)
-                return
-
-            # Phase 3: HYPERRAUMSPRUNG (show Hyperraum.png, no rotation, zoom, flashes)
-            if phase_idx == 3:
-                # compute progress within phase
-                phase_progress = phase_t
-
-                # black background fades into hyperraum image (image not rotated)
-                if self.hyper_img and self._cached_hyper_scaled is None:
-                    try:
-                        self._cached_hyper_scaled = pygame.transform.smoothscale(self.hyper_img, (self.width, self.height))
-                    except Exception:
-                        self._cached_hyper_scaled = self.hyper_img
-
-                # easing helper
-                def smoothstep(t):
-                    return max(0.0, min(1.0, t * t * (3.0 - 2.0 * t)))
-
-                # image alpha ramps up smoothly
-                img_alpha = int(255 * smoothstep(phase_progress))
-
-                # zoom effect: slight zoom-in during phase
-                zoom_amount = 0.12  # up to 12% zoom
-                zoom = 1.0 + zoom_amount * (0.5 + 0.5 * phase_progress)
-
-                if self._cached_hyper_scaled:
-                    try:
-                        # scale = smoothscale of cached to implement zoom
-                        sw = int(self.width * zoom)
-                        sh = int(self.height * zoom)
-                        img = pygame.transform.smoothscale(self._cached_hyper_scaled, (sw, sh))
-                        img.set_alpha(max(0, min(255, int(255 * (0.6 + 0.4 * phase_progress)))))
-                        r = img.get_rect(center=(self.width // 2, self.height // 2))
-
-                        # draw a faint motion-blur by blitting slightly offset translucent copies
-                        for i, off in enumerate([0, 2, -2]):
-                            tmp = img.copy()
-                            tmp.set_alpha(int( max(0, min(255, (180 - i*40) * phase_progress)) ))
-                            screen.blit(tmp, (r.x + off, r.y + off))
-
-                        # main blit
-                        screen.blit(img, r)
-                    except Exception:
-                        pass
-                else:
-                    # fallback star streaks if image missing
-                    streak_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-                    count = max(80, int(200 * phase_progress))
-                    center = (self.width // 2, self.height // 2)
-                    for i in range(count):
-                        angle = random.random() * (2 * math.pi)
-                        length = int(max(self.width, self.height) * (0.8 + random.random() * 1.8) * phase_progress)
-                        x2 = int(center[0] + length * math.cos(angle))
-                        y2 = int(center[1] + length * math.sin(angle))
-                        a = int(255 * (0.2 + 0.8 * random.random()) * phase_progress)
-                        pygame.draw.aaline(streak_surface, (255, 255, 255, a), center, (x2, y2))
-                    screen.blit(streak_surface, (0, 0))
-
-                # light flashes/energy particles
-                for p in self._particles:
-                    if p['phase'] == 3:
-                        life_ratio = 1.0 - max(0.0, min(1.0, p['life'] / p['max_life']))
-                        a = int(220 * (0.2 + 0.8 * life_ratio) * phase_progress)
-                        radius = int(2 + p['size'] * (1.0 + 4.0 * life_ratio) * phase_progress)
-                        s = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
-                        pygame.draw.circle(s, (255, 250, 220, a), (radius + 2, radius + 2), radius)
-                        screen.blit(s, (int(p['x']) - radius, int(p['y']) - radius))
-
-                # HUD: navigation / scanner info
-                nav = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-                if sub_font:
-                    lbl = sub_font.render('HYPERRAUMSPRUNG AKTIV', True, (180, 240, 255))
-                    nav.blit(lbl, (40, 40))
-
-                    target = getattr(self.transition_to, 'id_name', self.current_system.id_name)
-                    coord = sub_font.render(f'ZIEL: {target}', True, (220, 220, 240))
-                    nav.blit(coord, (40, 78))
-
-                    # scanner bar animation
-                    bar_w = int(self.width * 0.55)
-                    bar_h = 8
-                    bx = (self.width - bar_w) // 2
-                    by = int(self.height * 0.80)
-                    progress_bar = int(bar_w * phase_progress)
-                    pygame.draw.rect(nav, (40, 70, 90, 200), (bx, by, bar_w, bar_h))
-                    pygame.draw.rect(nav, (120, 220, 255, 220), (bx, by, progress_bar, bar_h))
-
-                screen.blit(nav, (0, 0))
-                return
-
-            # Phase 4: GALAXIEKARTE (animated line between systems)
-            if phase_idx == 4:
                 # simple map: text nodes left and right
                 map_surf = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
                 from_name = getattr(self.transition_from, 'id_name', '')
@@ -714,95 +522,98 @@ class BackgroundManager:
                 left_pos = (int(self.width * 0.30), int(self.height * 0.45))
                 right_pos = (int(self.width * 0.70), int(self.height * 0.45))
 
-                # connection progress
-                conn_progress = phase_t
-                steps = int(self.width * 0.35 * conn_progress)
-                # draw line progressively
-                pygame.draw.line(map_surf, (180, 220, 255), left_pos, (left_pos[0] + steps, left_pos[1]), 4)
+                # connection progress (ease)
+                def ease(t):
+                    return t * t * (3 - 2 * t)
+                conn_progress = ease(phase_t)
 
-                # highlight source and target
-                pygame.draw.circle(map_surf, (255, 200, 80), left_pos, 12)
-                pygame.draw.circle(map_surf, (80, 200, 255), right_pos, 12)
+                # animated connection line drawn progressively
+                end_x = left_pos[0] + int((right_pos[0] - left_pos[0]) * conn_progress)
+                pygame.draw.line(map_surf, (120, 200, 255, 220), left_pos, (end_x, left_pos[1]), 6)
 
-                if title_font:
-                    t1 = title_font.render(from_name, True, (220, 220, 220))
-                    t2 = title_font.render(to_name, True, (220, 220, 220))
-                    map_surf.blit(t1, t1.get_rect(center=(left_pos[0], left_pos[1] - 40)))
-                    map_surf.blit(t2, t2.get_rect(center=(right_pos[0], right_pos[1] - 40)))
+                # pulsing nodes
+                pulse = 1.0 + 0.25 * math.sin(phase_t * math.pi * 2.0)
+                pygame.draw.circle(map_surf, (255, 210, 100), left_pos, int(12 * pulse))
+                pygame.draw.circle(map_surf, (100, 210, 255), right_pos, int(12 * (0.7 + 0.3 * conn_progress)))
 
-                # zoom effect: scale map_surf slightly
-                zoom = 1.0 + 0.08 * (0.5 + 0.5 * phase_t)
+                # labels
+                if self.font_title:
+                    t1 = self.font_title.render(from_name, True, (220, 220, 220))
+                    t2 = self.font_title.render(to_name, True, (220, 220, 220))
+                    map_surf.blit(t1, t1.get_rect(center=(left_pos[0], left_pos[1] - 48)))
+                    map_surf.blit(t2, t2.get_rect(center=(right_pos[0], right_pos[1] - 48)))
+
+                # show planet thumbnails early so player notices system change
+                early_t = 0.35
+                if phase_t <= early_t:
+                    thumb_alpha = int(255 * ease(min(1.0, phase_t / early_t)))
+                    # left system planets (filtered to available assets and captured at transition start)
+                    left_keys = getattr(self, 'transition_from_planets', [])
+                    for idx, key in enumerate(left_keys[:3]):
+                        img = self.assets.get(f"{key}_img") or self.assets.get(key)
+                        if img:
+                            try:
+                                pw = int(min(self.width, self.height) * 0.12)
+                                ph = pw
+                                thumb = pygame.transform.smoothscale(img, (pw, ph))
+                                thumb.set_alpha(thumb_alpha)
+                                pos = (left_pos[0] - 100, left_pos[1] - 40 + idx * (ph + 8))
+                                map_surf.blit(thumb, thumb.get_rect(center=pos))
+                            except Exception:
+                                pass
+                    # right system planets (filtered to available assets and captured at transition start)
+                    right_keys = getattr(self, 'transition_to_planets', [])
+                    for idx, key in enumerate(right_keys[:3]):
+                        img = self.assets.get(f"{key}_img") or self.assets.get(key)
+                        if img:
+                            try:
+                                pw = int(min(self.width, self.height) * 0.12)
+                                ph = pw
+                                thumb = pygame.transform.smoothscale(img, (pw, ph))
+                                thumb.set_alpha(thumb_alpha)
+                                pos = (right_pos[0] + 100, right_pos[1] - 40 + idx * (ph + 8))
+                                map_surf.blit(thumb, thumb.get_rect(center=pos))
+                            except Exception:
+                                pass
+
+                # animate a slow zoom-in to the connection as phase progresses
+                zoom = 1.0 + 0.08 * conn_progress
                 msw = int(self.width * zoom)
                 msh = int(self.height * zoom)
                 map_scaled = pygame.transform.smoothscale(map_surf, (msw, msh))
                 r = map_scaled.get_rect(center=(self.width // 2, self.height // 2))
                 screen.blit(map_scaled, r)
 
-                # text overlay
-                if sub_font:
-                    txt = sub_font.render('ZIELSYSTEM ERREICHT', True, (200, 255, 200))
-                    txt2 = sub_font.render(f'[{to_name}]', True, (240, 240, 255))
+                # overlay text
+                if self.font_sub:
+                    txt = self.font_sub.render('ZIELSYSTEM ERREICHT', True, (200, 255, 200))
+                    txt2 = self.font_sub.render(f'[{to_name}]', True, (240, 240, 255))
+                    alpha = int(255 * phase_t)
+                    txt.set_alpha(alpha)
+                    txt2.set_alpha(alpha)
                     screen.blit(txt, txt.get_rect(center=(self.width // 2, int(self.height * 0.14))))
                     screen.blit(txt2, txt2.get_rect(center=(self.width // 2, int(self.height * 0.18))))
 
+                # subtle particle accents
+                for p in list(self._particles):
+                    life_ratio = 1.0 - (p['life'] / max(1, p['max_life']))
+                    a = int(200 * (0.3 + 0.7 * life_ratio) * phase_t)
+                    radius = int(max(1, p['size'] * (0.5 + life_ratio)))
+                    if a > 8:
+                        s = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
+                        pygame.draw.circle(s, (180, 220, 255, a), (radius + 2, radius + 2), radius)
+                        screen.blit(s, (int(p['x']) - radius, int(p['y']) - radius))
+                    p['life'] = max(0, p['life'] - 12)
+
+                # finish transition when duration elapsed
+                if elapsed >= dur:
+                    # advance to next system and end transition
+                    self._complete_transition()
+                    self.transitioning = False
+                    self._map_only_mode = False
                 return
 
-            # Phase 5: ZIELPLANET (planet preview, gentle bobbing)
-            if phase_idx == 5:
-                # background fade to system visuals
-                overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-                overlay.fill((0, 8, 16, int(220 * phase_t)))
-                screen.blit(overlay, (0, 0))
-
-                # draw target planet large
-                new_sys = self.current_system
-                planet_img = None
-                if getattr(self, 'transition_to', None):
-                    # try to select the first planet key for the target system
-                    keys = getattr(self.transition_to, 'planet_keys', [])
-                    if keys:
-                        img = self.assets.get(f"{keys[0]}_img") or self.assets.get(keys[0])
-                        if img:
-                            planet_img = img
-                # fallback to any planet image
-                if not planet_img and self.planet_images:
-                    planet_img = random.choice(self.planet_images)
-
-                # scale planet to occupy a good portion
-                if planet_img:
-                    pw = int(min(self.width, self.height) * 0.45)
-                    ph = pw
-                    try:
-                        scaled = pygame.transform.smoothscale(planet_img, (pw, ph))
-                    except Exception:
-                        scaled = planet_img
-                    # bobbing
-                    bob = int(8 * math.sin(elapsed / 180.0))
-                    rect = scaled.get_rect(center=(self.width // 2, self.height // 2 - 20 + bob))
-
-                    # subtle glow
-                    glow = pygame.Surface((rect.width + 60, rect.height + 60), pygame.SRCALPHA)
-                    pygame.draw.ellipse(glow, (30, 120, 200, int(80 * phase_t)), glow.get_rect())
-                    screen.blit(glow, glow.get_rect(center=rect.center))
-
-                    screen.blit(scaled, rect)
-
-                # system text
-                if title_font:
-                    txt1 = title_font.render('SYSTEM BETRETEN', True, (200, 255, 200))
-                    screen.blit(txt1, txt1.get_rect(center=(self.width // 2, int(self.height * 0.12))))
-
-                    sysname = getattr(self.transition_to, 'id_name', new_sys.id_name)
-                    name_txt = title_font.render(sysname, True, (255, 255, 255))
-                    screen.blit(name_txt, name_txt.get_rect(center=(self.width // 2, int(self.height * 0.20))))
-
-                if sub_font:
-                    count = len(getattr(self.transition_to, 'planet_keys', [])) if getattr(self, 'transition_to', None) else len(new_sys.planet_keys)
-                    txt2 = sub_font.render(f'{count} PLANET ERKANNT', True, (220, 220, 240))
-                    screen.blit(txt2, txt2.get_rect(center=(self.width // 2, int(self.height * 0.28))))
-
-                return
-
+            # otherwise fall back to generic behavior (not used)
             return
 
         # when not transitioning nothing special to do here
