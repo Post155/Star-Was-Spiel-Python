@@ -61,7 +61,7 @@ ASTEROID_SPAWN_INTERVAL = 60
 # Default system switch thresholds
 # LEVEL SETTINGS: change these values to adjust how quickly the game advances to the next sector.
 # The actual level order is defined in game/background/systems.py.
-SYSTEM_SWITCH_POINTS = 500
+SYSTEM_SWITCH_POINTS = 1000
 SYSTEM_SWITCH_TIME_MS = 30000  # 2 minutes in milliseconds
 
 # Player and ship speeds (change these to adjust how fast ships move)

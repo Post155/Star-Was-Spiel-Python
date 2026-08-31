@@ -325,18 +325,6 @@ class BackgroundManager:
             pygame.draw.circle(indicator, (filter_color[0], filter_color[1], filter_color[2], 120), (55, 55), 52)
             screen.blit(indicator, (self.width - 120, 20))
 
-        if self.transitioning:
-            now = pygame.time.get_ticks()
-            elapsed = now - self.transition_start
-            d = self.transition_duration
-            if elapsed < d // 2:
-                alpha = int(255 * (elapsed / (d / 2)))
-            else:
-                alpha = int(255 * (1 - ((elapsed - (d / 2)) / (d / 2))))
-            alpha = max(0, min(255, alpha))
-            self.overlay_surface.set_alpha(alpha)
-            screen.blit(self.overlay_surface, (0, 0))
-
     def get_current_system_name(self) -> str:
         return self.current_system.id_name
 
