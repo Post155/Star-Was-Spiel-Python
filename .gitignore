@@ -1,2 +1,22 @@
 __pycache__/
 *.pyc
+*.toc
+*.pyz
+*.zip
+xref-StarWarsGame.html
+*.exe
+StarWarsGame.spec
+StarWarsGame.exe
+
+# PyInstaller build artifacts
+/dist/
+/build/
+/*.spec
+# Exclude executables and one-file bundles
+*.exe
+# Other PyInstaller outputs
+*.manifest
+*.toc
+*.pyz
+# Egg/metadata
+*.egg-info/
