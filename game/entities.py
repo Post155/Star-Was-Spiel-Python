@@ -118,6 +118,22 @@ class Torpedo:
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
+class EnemyLaser:
+    """Projectile fired by enemies. Moves downward (positive y)."""
+    def __init__(self, x, y, vx=0.0, vy=6.0, color=(255, 200, 0)):
+        # represent with a small rect
+        self.rect = pygame.Rect(int(x) - 2, int(y) - 2, 4, 12)
+        self.vx = vx
+        self.vy = vy
+        self.color = color
+
+    def update(self):
+        self.rect.x += int(self.vx)
+        self.rect.y += int(self.vy)
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+
 class Explosion:
     def __init__(self, x, y, asteroid_scale, explosion_img, window_height=None):
         self.x = x
@@ -312,4 +328,132 @@ class BattleDroid(Spieler):
 
     def torpedo(self):
         return None
+
+
+# ---------------------------
+# Enemy integration (direct integration, no separate API)
+# ---------------------------
+from game import enemy_ai
+from game.constants import ASSET_PATHS
+
+
+class EnemyManager:
+    """
+    Spawns and manages EnemyShip instances (uses game.enemy_ai.EnemyShip).
+    Preserves existing asteroid logic; spawns ships that correspond to player's chosen ship:
+      - XWing -> TIE_FIGHTER
+      - MillenniumFalcon -> BATTLE_DROID
+    Each enemy has its own personality and stats defined in enemy_ai.DEFAULT_STATS.
+    """
+
+    PLAYER_TO_ENEMY = {
+        # Keys use the same ship_choice strings produced by StarWarsGame (lowercase)
+        'xwing': enemy_ai.ShipType.TIE_FIGHTER,
+        # Map the Millennium Falcon selection to a tougher TIE variant for quick start
+        'milleniumfalcon': enemy_ai.ShipType.TIE_DEFENDER,
+        'tiefighter': enemy_ai.ShipType.TIE_INTERCEPTOR,
+        'battledroid': enemy_ai.ShipType.TIE_BOMBER,
+        # Fallback mapping when more player types are added
+    }
+
+    # Provide mapping from ShipType to asset key in constants.ASSET_PATHS
+    SHIPTYPE_TO_ASSET_KEY = {
+        enemy_ai.ShipType.TIE_FIGHTER: 'tie_fighter',
+        enemy_ai.ShipType.TIE_INTERCEPTOR: 'tie_fighter',
+        enemy_ai.ShipType.TIE_BOMBER: 'tie_fighter',
+        enemy_ai.ShipType.TIE_DEFENDER: 'tie_fighter',
+        enemy_ai.ShipType.ELITE_BOSS: 'tie_fighter',
+    }
+
+    def __init__(self, window_width: int, window_height: int, asset_loader=None):
+        self.window_width = window_width
+        self.window_height = window_height
+        self.enemies: List[enemy_ai.EnemyShip] = []
+        self.enemy_sprites: Dict[int, Any] = {}  # instance_id -> pygame.Surface
+        self.asset_loader = asset_loader  # function to load images, if None use pygame.image.load
+
+    def _load_image_for_ship(self, ship_type: enemy_ai.ShipType):
+        key = self.SHIPTYPE_TO_ASSET_KEY.get(ship_type)
+        if key is None:
+            return None
+        path = ASSET_PATHS.get(key)
+        if path is None:
+            return None
+        try:
+            if self.asset_loader:
+                img = self.asset_loader(path)
+            else:
+                img = pygame.image.load(path).convert_alpha()
+            return img
+        except Exception:
+            return None
+
+    def spawn_enemy_for_player(self, player_ship_name: str, count: int = 1):
+        # Map player ship name to enemy type; default to TIE_FIGHTER
+        enemy_type = self.PLAYER_TO_ENEMY.get(player_ship_name, enemy_ai.ShipType.TIE_FIGHTER)
+        for _ in range(count):
+            # spawn at random x, above screen
+            x = random.uniform(0, self.window_width)
+            y = -random.uniform(50, 300)
+            heading = random.uniform(0, 360)
+            personality = enemy_ai.Personality.random_variant()
+            ship = enemy_ai.EnemyShip(enemy_type, position=(x, y), heading=heading, personality=personality)
+            # set mode to hybrid by default (utility + optional RL)
+            ship.mode = 'hybrid'
+            self.enemies.append(ship)
+            # load sprite (if available)
+            img = self._load_image_for_ship(enemy_type)
+            if img is not None:
+                self.enemy_sprites[ship.instance_id] = img
+
+    def update_all(self, dt: float, player_state: dict[str, any], other_world: dict[str, any] = None):
+        """
+        Update all enemies. Returns a list of projectile dicts created by enemies during their updates.
+        Each projectile dict has keys: type, pos (x,y), vel (vx,vy), damage, source_id
+        """
+        projectiles: list[dict[str, any]] = []
+        # other_world can include nearest asteroid distances etc.
+        world_state = {'player': player_state}
+        if other_world:
+            world_state.update(other_world)
+        # include a simplified player_profile if available
+        for e in list(self.enemies):
+            e.update(dt, world_state)
+            # collect any projectiles the enemy created
+            while getattr(e, 'pending_projectiles', None):
+                projectiles.append(e.pending_projectiles.pop(0))
+            # remove if off-screen too far below
+            if e.position[1] > self.window_height + 500:
+                try:
+                    self.enemies.remove(e)
+                    if e.instance_id in self.enemy_sprites:
+                        del self.enemy_sprites[e.instance_id]
+                except ValueError:
+                    pass
+        return projectiles
+
+    def draw_all(self, screen):
+        for e in self.enemies:
+            img = self.enemy_sprites.get(e.instance_id)
+            if img is not None:
+                # scale according to ship type constants if defined
+                key = self.SHIPTYPE_TO_ASSET_KEY.get(e.ship_type)
+                scale = 0.3
+                try:
+                    if key and key in ASSET_PATHS:
+                        # pick a reasonable default scale from constants if available
+                        from game.constants import SHIP_SCALE_TIEFIGHTER
+                        scale = SHIP_SCALE_TIEFIGHTER
+                except Exception:
+                    scale = 0.3
+                img_scaled = pygame.transform.scale_by(img, scale)
+                rect = img_scaled.get_rect(center=(int(e.position[0]), int(e.position[1])))
+                screen.blit(img_scaled, rect)
+            else:
+                # fallback: draw simple circle
+                pygame.draw.circle(screen, (255, 0, 0), (int(e.position[0]), int(e.position[1])), 10)
+
+    def clear(self):
+        self.enemies.clear()
+        self.enemy_sprites.clear()
     
