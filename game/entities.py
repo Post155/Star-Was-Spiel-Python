@@ -368,8 +368,8 @@ class EnemyManager:
     def __init__(self, window_width: int, window_height: int, asset_loader=None):
         self.window_width = window_width
         self.window_height = window_height
-        self.enemies: List[enemy_ai.EnemyShip] = []
-        self.enemy_sprites: Dict[int, Any] = {}  # instance_id -> pygame.Surface
+        self.enemies: list[enemy_ai.EnemyShip] = []
+        self.enemy_sprites: dict[int, any] = {}  # instance_id -> pygame.Surface
         self.asset_loader = asset_loader  # function to load images, if None use pygame.image.load
 
     def _load_image_for_ship(self, ship_type: enemy_ai.ShipType):
