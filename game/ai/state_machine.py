@@ -48,6 +48,11 @@ class PatrolState(State):
         if getattr(self.ai, 'steering', None) is not None:
             ctx = {'target_pos': self.waypoint, 'neighbors': world.get('neighbors', []), 'obstacles': world.get('asteroids', [])}
             desired = self.ai.steering.compute(ctx)
+            # store for visualization
+            try:
+                self.ai.last_desired_velocity = desired
+            except Exception:
+                pass
             from game.ai.controls_adapter import apply_steering_to_controls
             apply_steering_to_controls(self.ai, desired, dt)
 
@@ -73,6 +78,10 @@ class AttackState(State):
         if getattr(self.ai, 'steering', None) is not None and world.get('player_agent') is not None:
             ctx = {'target_agent': world['player_agent'], 'neighbors': world.get('neighbors', []), 'obstacles': world.get('asteroids', [])}
             desired = self.ai.steering.compute(ctx)
+            try:
+                self.ai.last_desired_velocity = desired
+            except Exception:
+                pass
             from game.ai.controls_adapter import apply_steering_to_controls
             apply_steering_to_controls(self.ai, desired, dt)
         # let decision logic handle firing; state could set flags
@@ -92,6 +101,10 @@ class EvadeState(State):
         if getattr(self.ai, 'steering', None) is not None and threat is not None:
             ctx = {'threat': threat, 'neighbors': world.get('neighbors', []), 'obstacles': world.get('asteroids', [])}
             desired = self.ai.steering.compute(ctx)
+            try:
+                self.ai.last_desired_velocity = desired
+            except Exception:
+                pass
             from game.ai.controls_adapter import apply_steering_to_controls
             apply_steering_to_controls(self.ai, desired, dt)
         if self.time > 2.0:
@@ -129,6 +142,10 @@ class FlankState(State):
         if getattr(self.ai, 'steering', None) is not None:
             ctx = {'target_pos': flank_point, 'neighbors': world.get('neighbors', []), 'obstacles': world.get('asteroids', [])}
             desired = self.ai.steering.compute(ctx)
+            try:
+                self.ai.last_desired_velocity = desired
+            except Exception:
+                pass
             from game.ai.controls_adapter import apply_steering_to_controls
             apply_steering_to_controls(self.ai, desired, dt)
 

@@ -458,6 +458,10 @@ class EnemyShip:
         except Exception:
             self.steering = None
 
+        # last computed vectors for debugging/visualization
+        self.last_desired_velocity = None
+        self.last_lead_point = None
+
     def update(self, dt: float, world_state: Dict[str, Any]):
         # frame accounting for DecisionTick
         self._frame_index += 1
@@ -529,6 +533,10 @@ class EnemyShip:
             }
             try:
                 desired = self.steering.compute(ctx)
+                try:
+                    self.last_desired_velocity = desired
+                except Exception:
+                    pass
                 from game.ai.controls_adapter import apply_steering_to_controls
                 apply_steering_to_controls(self, desired, dt)
             except Exception:
@@ -631,6 +639,11 @@ class EnemyShip:
                 pvel = np.array(player.get('velocity'), dtype=np.float32)
                 shooter_pos = np.array(self.position, dtype=np.float32)
                 lead_point = leading_position(shooter_pos, ppos, pvel, projectile_speed)
+                # store for debug
+                try:
+                    self.last_lead_point = lead_point
+                except Exception:
+                    pass
                 aim_dir = lead_point - shooter_pos
                 if np.linalg.norm(aim_dir) > 1e-6:
                     aim_dir = aim_dir / (np.linalg.norm(aim_dir) + 1e-9)

@@ -294,6 +294,7 @@ while True:
             'nearest_asteroid_distance': min([a.y for a in asteroid_list]) if asteroid_list else 10000.0,
             'ammo_frac': 1.0,
             'player_profile': None,
+            'asteroids': asteroid_list,
         }
         # Update enemy AI and collect enemy-fired projectiles
         enemy_projectiles = enemy_manager.update_all(1.0/60.0, player_state, other_world)

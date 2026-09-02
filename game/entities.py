@@ -46,8 +46,14 @@ class Asteroid:
         # asteroid speed is chosen from ASTEROID_SPEED_RANGE in constants.py
         self.speed = random.randint(ASTEROID_SPEED_RANGE[0], ASTEROID_SPEED_RANGE[1])
 
+        # new fields for AI use: integrity and last_hit_time
+        self.integrity = 1.0
+        self.last_hit_time = None
+
     def update(self):
         self.y += self.speed
+        # update center position convenience attribute
+        self.position = (self.x + self.width / 2, self.y + self.height / 2)
 
         self.frame_counter += 1
         if self.frame_counter >= self.frame_delay:
@@ -94,6 +100,8 @@ class Asteroid:
 
         self.x = center_x - self.width / 2
         self.y = center_y - self.height / 2
+        # refresh center position
+        self.position = (self.x + self.width / 2, self.y + self.height / 2)
 
 class Laser:
     def __init__(self, x, y):
@@ -371,6 +379,12 @@ class EnemyManager:
         self.enemies: list[enemy_ai.EnemyShip] = []
         self.enemy_sprites: dict[int, any] = {}  # instance_id -> pygame.Surface
         self.asset_loader = asset_loader  # function to load images, if None use pygame.image.load
+        # AI debug visualization
+        self.debug_ai = True
+        try:
+            self._debug_font = pygame.font.Font(None, 14)
+        except Exception:
+            self._debug_font = None
 
     def _load_image_for_ship(self, ship_type: enemy_ai.ShipType):
         key = self.SHIPTYPE_TO_ASSET_KEY.get(ship_type)
@@ -400,6 +414,22 @@ class EnemyManager:
             ship = enemy_ai.EnemyShip(enemy_type, position=(x, y), heading=heading, personality=personality)
             # set mode to hybrid by default (utility + optional RL)
             ship.mode = 'hybrid'
+            # Configure steering & state presets per ship type for better behavior
+            try:
+                from game.ai.state_machine import AIState
+                # interceptor: aggressive pursuer
+                if enemy_type == enemy_ai.ShipType.TIE_INTERCEPTOR and getattr(ship, 'steering', None) is not None:
+                    ship.steering.behavior_weights.update({'pursuit': 1.0, 'separation': 0.6, 'obstacle_avoid': 1.0, 'cohesion': 0.2})
+                    if getattr(ship, 'state_machine', None) is not None:
+                        ship.state_machine.change_state(AIState.ATTACK)
+                # bomber: slower, prefers to find a position and drop bombs/take cover
+                if enemy_type == enemy_ai.ShipType.TIE_BOMBER and getattr(ship, 'steering', None) is not None:
+                    ship.steering.behavior_weights.update({'arrive': 0.7, 'separation': 0.4, 'obstacle_avoid': 1.0, 'cohesion': 0.1})
+                    if getattr(ship, 'state_machine', None) is not None:
+                        ship.state_machine.change_state(AIState.PATROL)
+            except Exception:
+                pass
+
             self.enemies.append(ship)
             # load sprite (if available)
             img = self._load_image_for_ship(enemy_type)
@@ -416,9 +446,47 @@ class EnemyManager:
         world_state = {'player': player_state}
         if other_world:
             world_state.update(other_world)
+
+        # Build spatial grid for neighbor/asteroid queries to improve performance
+        try:
+            from game.ai.spatial_grid import SpatialGrid
+            grid = SpatialGrid((0, 0, self.window_width, self.window_height), cell_size=300)
+            # insert asteroids if provided in other_world
+            asteroids = other_world.get('asteroids') if other_world and other_world.get('asteroids') is not None else []
+            for a in asteroids:
+                pos = getattr(a, 'position', (getattr(a, 'x', 0) + getattr(a, 'width', 0)/2, getattr(a, 'y', 0) + getattr(a, 'height', 0)/2))
+                grid.insert(('asteroid', a), pos)
+            # insert enemies into grid
+            for e in self.enemies:
+                grid.insert(('enemy', e), (e.position[0], e.position[1]))
+        except Exception:
+            grid = None
+            asteroids = other_world.get('asteroids') if other_world and other_world.get('asteroids') is not None else []
+
+        # prepare a player_agent proxy for steering functions that expect .position/.velocity
+        class _AgentProxy:
+            def __init__(self, pos, vel):
+                self.position = pos
+                self.velocity = vel
+        player_agent = _AgentProxy(player_state.get('position'), player_state.get('velocity'))
+
         # include a simplified player_profile if available
         for e in list(self.enemies):
-            e.update(dt, world_state)
+            # prepare neighbor list from grid
+            neighbors = []
+            if grid is not None:
+                raw = grid.query_radius((e.position[0], e.position[1]), 400)
+                for tag_obj, pos in raw:
+                    tag, obj = tag_obj
+                    if tag == 'enemy' and getattr(obj, 'instance_id', None) != e.instance_id:
+                        neighbors.append(obj)
+            # build world state for this enemy
+            per_enemy_world = dict(world_state)
+            per_enemy_world['neighbors'] = neighbors
+            per_enemy_world['asteroids'] = asteroids
+            per_enemy_world['player_agent'] = player_agent
+
+            e.update(dt, per_enemy_world)
             # collect any projectiles the enemy created
             while getattr(e, 'pending_projectiles', None):
                 projectiles.append(e.pending_projectiles.pop(0))
@@ -452,6 +520,35 @@ class EnemyManager:
             else:
                 # fallback: draw simple circle
                 pygame.draw.circle(screen, (255, 0, 0), (int(e.position[0]), int(e.position[1])), 10)
+
+            # Debug overlays: steering vector, predicted lead point, state label
+            if self.debug_ai:
+                # steering vector
+                try:
+                    if getattr(e, 'last_desired_velocity', None) is not None:
+                        lv = e.last_desired_velocity
+                        sx = int(e.position[0])
+                        sy = int(e.position[1])
+                        ex = int(sx + lv[0])
+                        ey = int(sy + lv[1])
+                        pygame.draw.line(screen, (0, 100, 255), (sx, sy), (ex, ey), 2)
+                except Exception:
+                    pass
+                # lead point
+                try:
+                    if getattr(e, 'last_lead_point', None) is not None:
+                        lp = e.last_lead_point
+                        pygame.draw.circle(screen, (255, 200, 0), (int(lp[0]), int(lp[1])), 4)
+                except Exception:
+                    pass
+                # state label
+                try:
+                    st = getattr(e, 'state_machine', None)
+                    if st is not None and getattr(st, 'current_enum', None) is not None and self._debug_font is not None:
+                        label = self._debug_font.render(st.current_enum.name, True, (255,255,255))
+                        screen.blit(label, (int(e.position[0]) + 10, int(e.position[1]) - 10))
+                except Exception:
+                    pass
 
     def clear(self):
         self.enemies.clear()
