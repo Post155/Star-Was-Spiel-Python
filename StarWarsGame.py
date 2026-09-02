@@ -2,11 +2,10 @@ import os
 import sys
 
 import pygame
-import numpy as np
 
 from game.assets import load_assets, set_window_icon
 from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
-from game.entities import Asteroid, BattleDroid, Explosion, MillenniumFalcon, XWing, Tiefighter, EnemyManager, EnemyLaser
+from game.entities import Asteroid, BattleDroid, Explosion, MillenniumFalcon, XWing, Tiefighter
 from game.ui import death_screen, faction_selection, ship_selection
 from game.background import BackgroundManager
 
@@ -30,9 +29,6 @@ empire_logo_img = assets['empire_logo_img']
 asteroid_images = assets['asteroid_images']
 torpedo_img = assets['torpedo_img']
 explosion_img = assets['explosion_img']
-
-# Enemy manager (handles spawning and drawing of AI ships)
-enemy_manager = EnemyManager(WIDTH, HEIGHT)
 
 font = pygame.font.Font(None, 40)
 lightsaber_blue_img = assets.get('lightsaber_blue_img')
@@ -79,12 +75,10 @@ while True:
 
     score = 0
     asteroid_spawn_timer = 0
-    enemy_spawn_timer = 0
     laser_list = []
     asteroid_list = []
     torpedo_list = []
     explosion_list = []
-    enemy_laser_list = []
     running = True
 
     # anchor background system timers/score for this run
@@ -158,31 +152,6 @@ while True:
             if laser.rect.bottom < 0:
                 laser_list.remove(laser)
 
-        # Laser -> enemy collision detection using enemy.get_rect()
-        for enemy in enemy_manager.enemies[:]:
-            enemy_rect = enemy.get_rect()
-            for laser in laser_list[:]:
-                if enemy_rect.colliderect(laser.rect):
-                    damage = 25
-                    enemy.hp -= damage
-                    ex, ey = float(enemy.position[0]), float(enemy.position[1])
-                    explosion_list.append(
-                        Explosion(int(ex), int(ey), 0.5, explosion_img, HEIGHT)
-                    )
-                    if laser in laser_list:
-                        laser_list.remove(laser)
-                    if enemy.hp <= 0:
-                        try:
-                            enemy_manager.enemies.remove(enemy)
-                        except ValueError:
-                            pass
-                        try:
-                            del enemy_manager.enemy_sprites[enemy.instance_id]
-                        except Exception:
-                            pass
-                        score += 200
-                    break
-
         for current_torpedo in torpedo_list[:]:
             current_torpedo.update()
             if current_torpedo.rect.bottom < 0:
@@ -196,15 +165,6 @@ while True:
             asteroid.speed = max(2, int(asteroid.speed * difficulty['asteroid_speed_multiplier']))
             asteroid_list.append(asteroid)
             asteroid_spawn_timer = 0
-
-        # Enemy spawn (top of screen). Spawn interval scaled by difficulty.
-        enemy_spawn_interval = max(120, int(240 / max(1.0, difficulty['asteroid_speed_multiplier'])))
-        enemy_spawn_timer += 1
-        if enemy_spawn_timer >= enemy_spawn_interval:
-            # ship_choice uses lowercase strings like 'xwing' / 'milleniumfalcon'
-            player_ship_name = ship_choice
-            enemy_manager.spawn_enemy_for_player(player_ship_name, count=1)
-            enemy_spawn_timer = 0
 
         for asteroid in asteroid_list[:]:
             asteroid.update()
@@ -300,7 +260,6 @@ while True:
             'nearest_asteroid_distance': min([a.y for a in asteroid_list]) if asteroid_list else 10000.0,
             'ammo_frac': 1.0,
             'player_profile': None,
-            'asteroids': asteroid_list,
         }
         # Update enemy AI and collect enemy-fired projectiles
         enemy_projectiles = enemy_manager.update_all(1.0/60.0, player_state, other_world)
