@@ -105,14 +105,25 @@ class Asteroid:
 
 class Laser:
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, 3, 20)
-        self.speed = 15
+        # Use floating point position for improved precision and smoother movement
+        self.fx = float(x)
+        self.fy = float(y)
+        # velocity (upwards)
+        self.vx = 0.0
+        self.vy = -15.0
+        self.color = (255, 0, 0)
+        # rect anchored to rounded float position
+        self.rect = pygame.Rect(int(self.fx) - 1, int(self.fy) - 10, 3, 20)
 
     def update(self):
-        self.rect.y -= self.speed
+        # update float position then sync rect
+        self.fx += float(self.vx)
+        self.fy += float(self.vy)
+        self.rect.x = int(self.fx) - 1
+        self.rect.y = int(self.fy) - 10
 
     def draw(self, screen):
-        pygame.draw.rect(screen, (255, 0, 0), self.rect)
+        pygame.draw.rect(screen, self.color, self.rect)
 
 class Torpedo:
     def __init__(self, x, y, torpedo_img):

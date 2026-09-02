@@ -174,19 +174,24 @@ while True:
                     explosion_list.append(
                         Explosion(int(ex), int(ey), 0.5, explosion_img, HEIGHT)
                     )
-                    if laser in laser_list:
-                        laser_list.remove(laser)
-                    if enemy.hp <= 0:
-                        try:
-                            enemy_manager.enemies.remove(enemy)
-                        except ValueError:
-                            pass
-                        try:
-                            del enemy_manager.enemy_sprites[enemy.instance_id]
-                        except Exception:
-                            pass
-                        score += 200
-                    break
+                # debug log for collision diagnosis
+                try:
+                    print(f"[DEBUG] Player laser hit enemy id={getattr(enemy, 'instance_id', 'N/A')} pos={enemy.position} laser_rect={laser.rect}")
+                except Exception:
+                    pass
+                if laser in laser_list:
+                    laser_list.remove(laser)
+                if enemy.hp <= 0:
+                    try:
+                        enemy_manager.enemies.remove(enemy)
+                    except ValueError:
+                        pass
+                    try:
+                        del enemy_manager.enemy_sprites[enemy.instance_id]
+                    except Exception:
+                        pass
+                    score += 200
+                break
 
         for current_torpedo in torpedo_list[:]:
             current_torpedo.update()
@@ -322,10 +327,18 @@ while True:
         for el in enemy_laser_list[:]:
             el.update()
             if el.rect.top > HEIGHT:
-                enemy_laser_list.remove(el)
+                try:
+                    enemy_laser_list.remove(el)
+                except ValueError:
+                    pass
                 continue
             # collision with player hitbox
             if spieler.hitbox.colliderect(el.rect):
+                # debug log for collision diagnosis
+                try:
+                    print(f"[DEBUG] Enemy laser hit player at pos={el.rect.center} player_hitbox={spieler.hitbox}")
+                except Exception:
+                    pass
                 # apply damage to player
                 died = spieler.take_damage()
                 explosion_list.append(Explosion(el.rect.centerx, el.rect.centery, 0.5, explosion_img, HEIGHT))
@@ -335,6 +348,13 @@ while True:
                     pass
                 if died:
                     running = False
+
+        # Draw enemy-fired projectiles so they are visible
+        for el in enemy_laser_list:
+            try:
+                el.draw(screen)
+            except Exception:
+                pass
 
         for explosion in explosion_list[:]:
             expired = explosion.update()
