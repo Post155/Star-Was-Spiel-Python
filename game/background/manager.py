@@ -165,7 +165,7 @@ class BackgroundManager:
             'MUSTAFAR': {'max_visible': 1, 'spawn_cooldown': (400, 800), 'speed_range': (0.85, 0.95), 'linger_range': (1500, 2600)},
             'KAMINO': {'max_visible': 1, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 0.9), 'linger_range': (1500, 2500)},
             'SATURN': {'max_visible': 1, 'spawn_cooldown': (550, 1100), 'speed_range': (0.6, 0.7), 'linger_range': (1200, 2200)},
-            'PURPLE PLANET': {'max_visible': 2, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 0.9), 'linger_range': (1500, 2500)},
+            'PURPLE PLANET': {'max_visible': 1, 'spawn_cooldown': (400, 850), 'speed_range': (0.8, 0.9), 'linger_range': (1500, 2500)},
             'DEATH STAR': {'max_visible': 1, 'spawn_cooldown': (350, 800), 'speed_range': (0.9, 1.0), 'linger_range': (1600, 2600)},
         }
         return settings.get(self.current_system.id_name, {'max_visible': 1, 'spawn_cooldown': (500, 1000), 'speed_range': (0.7, 1.4), 'linger_range': (1300, 2300)})
@@ -206,69 +206,54 @@ class BackgroundManager:
             self._start_transition()
 
     def _start_transition(self):
-        # mark start and record from/to systems for the transition screen
         self.transitioning = True
         self.transition_start = pygame.time.get_ticks()
         self._swapped = False
-        # record source system and next target system for display
-        self.transition_from = self.current_system
-        next_index = (self.order_index + 1) % len(self.order) if self.order else 0
-        self.transition_to = self.order[next_index] if self.order else None
 
-        # Map-only mode: user requested only Phase 4 (Galaxiekarte)
+        self.transition_from = self.current_system
+
+        next_index = (self.order_index + 1) % len(self.order)
+        self.transition_to = self.order[next_index]
+
+        # Zielindex fest speichern
+        self.target_order_index = next_index
+
         from game.constants import GALAXY_MAP_DURATION_MS
         map_dur = int(GALAXY_MAP_DURATION_MS)
+
         self.phase_durations = [map_dur]
         self.phase_starts = [0]
         self.total_transition_ms = map_dur
 
-        # no hyperraum image usage for map-only sequence
-        self._cached_hyper_scaled = None
-
-        # minimal particles for subtle map accents
         self._particles = []
-        for i in range(8):
-            px = random.uniform(0, self.width)
-            py = random.uniform(0, self.height)
-            life = random.randint(int(map_dur * 0.25), int(map_dur * 0.9))
-            self._particles.append({'x': px, 'y': py, 'life': life, 'max_life': life, 'size': random.uniform(1.2, 4.2), 'phase': 4})
 
-        # camera/visual state
-        self._camera_zoom = 0.0
-        self._star_stretch = 0.0
-        self._hyper_size_checked = False
-        self._hyper_too_small = False
-        # mark mode so draw uses only Phase 4
         self._map_only_mode = True
 
-        # capture available planet keys for from/to systems now so they don't change mid-transition
         self.transition_from_planets = self._get_available_planet_keys(self.transition_from)
         self.transition_to_planets = self._get_available_planet_keys(self.transition_to)
 
     def _complete_transition(self):
-        # actually advance the system order and swap current system
+
         self.visited.add(self.current_system.id_name)
-        self.order_index = (self.order_index + 1) % len(self.order)
-        self.level_index = self.order_index
-        if len(self.visited) >= len(self.order):
-            self.visited.clear()
-            first_system = self.order[0] if self.order else None
-            others = self.order[1:] if self.order else []
-            random.shuffle(others)
-            self.order = ([first_system] if first_system else []) + others
-            self.order_index = 0
-            self.level_index = 0
-        self.current_system = self.order[self.order_index]
+
+        # Immer das System verwenden,
+        # das auf der Galaxiekarte angezeigt wurde.
+        self.order_index = self.target_order_index
+
+        self.current_system = self.transition_to
         self.current_level_name = self.current_system.id_name
         self.current_difficulty = self.current_system.difficulty
+
         for planet in self.layer3_planets:
             planet.is_exiting = True
             planet.speed = max(planet.speed, 2.0)
+
         self.layer4_objects.clear()
+
         self.planet_spawn_cooldown = 0
         self.foreground_spawn_cooldown = 0
+
         self.last_switch_time = pygame.time.get_ticks()
-        # keep transitioning True until the visual duration completes; _swapped handles swap state
 
         self._apply_system_visuals()
 
@@ -317,98 +302,6 @@ class BackgroundManager:
         self.planet_speed_range = settings['speed_range']
         self.planet_linger_range = settings['linger_range']
 
-    def update(self, current_score: int = 0):
-        """Main per-frame update for background manager.
-
-        Handles system switch requests, ongoing transition progression, star updates,
-        planet/foreground spawning and particle lifetime updates. Non-blocking.
-        """
-        # Check whether a transition should be started (score/time based)
-        now = pygame.time.get_ticks()
-        time_elapsed = now - self.last_switch_time
-        score_diff = current_score - self.last_score_at_switch
-        if not self.transitioning:
-            if score_diff >= self.switch_points or time_elapsed >= self.switch_time_ms:
-                self.last_score_at_switch = current_score
-                self.last_switch_time = now
-                self._start_transition()
-
-        # If a cinematic transition is running, update its internal timers and particles
-        if self.transitioning:
-            elapsed = now - self.transition_start
-            # swap to next system at end of phase 3
-            if hasattr(self, 'phase_durations'):
-                swap_time = sum(self.phase_durations[:3])
-                total = self.total_transition_ms
-            else:
-                swap_time = 2000 + 2000 + 4000
-                total = swap_time + 2000 + 2000
-
-            if elapsed >= swap_time and not getattr(self, '_swapped', False):
-                self._complete_transition()
-                self._swapped = True
-
-            if elapsed >= total:
-                self.transitioning = False
-                self._swapped = False
-
-            # update star particles and basic star layers even during transition for motion
-            for star in self.layer1:
-                star.update()
-            for star in self.layer2:
-                star.update()
-
-            # update simple particle lifetimes
-            for p in self._particles:
-                p['life'] = max(0, p['life'] - 16)
-                # slight drift for phase 3 particles
-                if p.get('phase') == 3:
-                    p['x'] += random.uniform(-0.6, 0.6)
-                    p['y'] += random.uniform(-1.2, 1.2)
-
-            return
-
-        # Normal update when not transitioning
-        for star in self.layer1:
-            star.update()
-        for star in self.layer2:
-            star.update()
-
-        # planet spawning
-        if self.planet_spawn_cooldown <= 0 and self.planet_images and len(self.layer3_planets) < self.planet_max_visible:
-            if random.random() < 0.9:
-                planet = Planet(
-                    random.choice(self.planet_images),
-                    self.width,
-                    self.height,
-                    speed_range=self.planet_speed_range,
-                    linger_range=self.planet_linger_range,
-                )
-                if self._can_spawn_planet(planet):
-                    self.layer3_planets.append(planet)
-                    self.planet_spawn_cooldown = random.randint(*self.planet_spawn_range)
-                else:
-                    self.planet_spawn_cooldown = max(15, min(self.planet_spawn_range))
-        else:
-            self.planet_spawn_cooldown = max(0, self.planet_spawn_cooldown - 1)
-
-        for planet in self.layer3_planets[:]:
-            planet.update()
-            if planet.expired():
-                self.layer3_planets.remove(planet)
-
-        if self.foreground_spawn_cooldown <= 0 and self.near_images and random.random() < 0.18:
-            obj = ForegroundObject(random.choice(self.near_images), self.width, self.height)
-            self.layer4_objects.append(obj)
-            self.foreground_spawn_cooldown = random.randint(60, 240)
-        else:
-            self.foreground_spawn_cooldown = max(0, self.foreground_spawn_cooldown - 1)
-
-        for obj in self.layer4_objects[:]:
-            obj.update()
-            if obj.expired():
-                self.layer4_objects.remove(obj)
-
     def notify_score_anchor(self, score: int):
         """Call from game when a system switch happens to anchor score/time tracking."""
         self.last_score_at_switch = score
@@ -418,25 +311,6 @@ class BackgroundManager:
         self.request_switch_if_needed(current_score)
 
         now = pygame.time.get_ticks()
-        if self.transitioning:
-            elapsed = now - self.transition_start
-            # swap to the next system at the end of the hold phase so the player
-            # sees the fully faded-in hyperraum image before the new system loads
-            if (elapsed >= (self._fade_in_ms + self._hold_ms)) and getattr(self, '_swapped', False) is False:
-                self._complete_transition()
-                self._swapped = True
-            if elapsed >= self.transition_duration:
-                self.transitioning = False
-                self._swapped = False
-
-            for star in self.layer1:
-                star.update()
-            for star in self.layer2:
-                star.update()
-            # update simple particle lifetimes
-            for p in self._particles:
-                p['life'] = max(0, p['life'] - 16)
-            return
 
         for star in self.layer1:
             star.update()
@@ -599,19 +473,28 @@ class BackgroundManager:
                     life_ratio = 1.0 - (p['life'] / max(1, p['max_life']))
                     a = int(200 * (0.3 + 0.7 * life_ratio) * phase_t)
                     radius = int(max(1, p['size'] * (0.5 + life_ratio)))
+
                     if a > 8:
                         s = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
-                        pygame.draw.circle(s, (180, 220, 255, a), (radius + 2, radius + 2), radius)
+                        pygame.draw.circle(
+                            s,
+                            (180, 220, 255, a),
+                            (radius + 2, radius + 2),
+                            radius
+                        )
                         screen.blit(s, (int(p['x']) - radius, int(p['y']) - radius))
+
                     p['life'] = max(0, p['life'] - 12)
 
-                # finish transition when duration elapsed
+                # <<< AUSSERHALB DER SCHLEIFE >>>
                 if elapsed >= dur:
-                    # advance to next system and end transition
-                    self._complete_transition()
+                    if not self._swapped:
+                        self._complete_transition()
+                        
+                        self._swapped = True
+
                     self.transitioning = False
                     self._map_only_mode = False
-                return
 
             # otherwise fall back to generic behavior (not used)
             return
