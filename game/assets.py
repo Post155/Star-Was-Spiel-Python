@@ -1,5 +1,4 @@
 import os
-import sys
 
 import pygame
 
@@ -20,43 +19,13 @@ PLANET_NAME_ALIASES = {
 }
 
 
-def _resolve_path(path):
-    """Resolve a relative asset path to an absolute path.
-
-    When the application is bundled by PyInstaller (onefile), data files are
-    extracted into a temporary folder accessible via sys._MEIPASS. When
-    running from source, resolve paths relative to the repository root
-    (parent of the `game` package).
-    """
-    if not path:
-        return None
-
-    # Normalize separators
-    path = path.replace('/', os.sep).replace('\\', os.sep)
-
-    # If an absolute path is provided, just return it
-    if os.path.isabs(path):
-        return path
-
-    # When frozen by PyInstaller, data are unpacked to _MEIPASS
-    if getattr(sys, 'frozen', False):
-        base = getattr(sys, '_MEIPASS', os.path.abspath('.'))
-        return os.path.join(base, path)
-
-    # Running from source: repository root is one level above this file's directory
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    return os.path.join(repo_root, path)
-
-
 def set_window_icon(icon_path=None):
     """Apply the configured game icon to the current window and taskbar."""
     if icon_path is None:
-        icon_path = ASSET_PATHS.get('window_icon')
-
-    resolved = _resolve_path(icon_path)
+        icon_path = ASSET_PATHS['window_icon']
 
     try:
-        icon = pygame.image.load(resolved).convert_alpha()
+        icon = pygame.image.load(icon_path).convert_alpha()
         pygame.display.set_icon(icon)
         return icon
     except Exception:
@@ -64,15 +33,13 @@ def set_window_icon(icon_path=None):
 
 
 def _safe_load(path, convert_alpha=True):
-    """Load an image from the given path, resolving bundled paths when frozen."""
     try:
-        resolved = _resolve_path(path)
         if not pygame.display.get_init():
             pygame.display.init()
         if pygame.display.get_surface() is None:
             pygame.display.set_mode((1, 1))
 
-        surf = pygame.image.load(resolved)
+        surf = pygame.image.load(path)
         return surf.convert_alpha() if convert_alpha else surf.convert()
     except Exception:
         return None
@@ -88,10 +55,10 @@ def _normalize_asset_name(name):
 
 
 def _load_planet_assets():
-    planet_dir = _resolve_path(os.path.join('Pixelarts', 'Planets'))
+    planet_dir = os.path.join('Pixelarts', 'Planets')
     discovered = {}
 
-    if not planet_dir or not os.path.isdir(planet_dir):
+    if not os.path.isdir(planet_dir):
         return discovered
 
     for root, _, files in os.walk(planet_dir):
