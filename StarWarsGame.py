@@ -136,9 +136,15 @@ while True:
                     spieler = BattleDroid(WIDTH, HEIGHT, battle_droid_img, torpedo_img)
 
                 if event.key in (pygame.K_SPACE, pygame.K_w, pygame.K_UP):
-                    new_lasers = spieler.shoot()
+                    try:
+                        new_lasers = spieler.shoot()
+                        print(f"[DEBUG] Shoot key pressed. shoot() returned: {type(new_lasers)} len={len(new_lasers) if hasattr(new_lasers, '__len__') else 'N/A'}")
+                    except Exception as _e:
+                        new_lasers = None
+                        print(f"[ERROR] Exception when calling shoot(): {_e}")
                     if new_lasers:
                         laser_list.extend(new_lasers)
+                        print(f"[DEBUG] Added {len(new_lasers)} player lasers to laser_list. Total now: {len(laser_list)}")
 
                 if event.key in (pygame.K_s, pygame.K_DOWN):
                     torpedo = spieler.torpedo()
@@ -291,6 +297,11 @@ while True:
 
         for laser in laser_list:
             laser.draw(screen)
+            # small visual marker to make player lasers clearly visible for debugging
+            try:
+                pygame.draw.circle(screen, (255, 200, 0), laser.rect.center, 2)
+            except Exception:
+                pass
         for current_torpedo in torpedo_list:
             current_torpedo.draw(screen)
         for asteroid in asteroid_list:
