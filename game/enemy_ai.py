@@ -39,6 +39,14 @@ try:
 except Exception:
     TORCH_AVAILABLE = False
 
+# Additional AI helper modules (lightweight, optional)
+# These modules provide DecisionTick, StateMachine and aiming/steering helpers.
+# If they are not present the code falls back to existing behavior.
+from game.decision_tick import DecisionTick
+from game.state_machine import StateMachine, AIState
+from game.aim_utils import leading_position, compute_shot_direction
+from game.steering_component import SteeringComponent
+
 
 class ShipType(Enum):
     TIE_FIGHTER = "TIE_Fighter"
@@ -376,26 +384,75 @@ class EnemyShip:
         # buffer for projectiles created during this update, consumed by EnemyManager
         self.pending_projectiles: List[Dict[str, Any]] = []
 
+        # Decision tick throttles heavy decisions (utility, RL inference, squad updates)
+        # Default ~10 Hz - adjustable per-enemy later
+        try:
+            self.decision_tick = DecisionTick(frequency_hz=10)
+        except Exception:
+            # fallback: simple object with should_run always True
+            class _AlwaysTick:
+                def should_run(self, frame_index):
+                    return True
+            self.decision_tick = _AlwaysTick()
+        self._frame_index = 0
+        self._last_action = Action.NONE
+
+        # lightweight state machine - states implemented in game.state_machine (optional)
+        try:
+            self.state_machine = StateMachine(self)
+        except Exception:
+            self.state_machine = None
+
+        # steering component (optional). Use lazy import so missing module doesn't break runtime.
+        try:
+            self.steering = SteeringComponent(owner=self, max_speed=self.stats.max_speed, max_force=self.stats.max_speed * 0.5)
+        except Exception:
+            self.steering = None
+
     def update(self, dt: float, world_state: Dict[str, Any]):
+        # frame accounting for DecisionTick
+        self._frame_index += 1
+
+        # update state machine lightweightly if available
+        if getattr(self, 'state_machine', None) is not None:
+            try:
+                self.state_machine.update(dt)
+            except Exception:
+                pass
+
+        # cheap observation every frame
         obs = self._observe(world_state)
-        action = Action.NONE
-        if self.mode == 'utility':
-            action = self._decide_utility(obs)
-        elif self.mode == 'rl':
-            action = self._decide_rl(obs)
-        else:
-            candidates = [Action.THRUST, Action.TURN_LEFT, Action.TURN_RIGHT, Action.FIRE_PRIMARY, Action.EVADE, Action.SPECIAL]
-            u_choice = self.utility.choose(obs, candidates)
-            if self.rl_agent.model is not None:
-                vec = obs.to_vector()
-                rl_choice = self.rl_agent.infer(vec)
-                if rl_choice in (Action.EVADE, Action.FIRE_PRIMARY, Action.SPECIAL):
-                    action = rl_choice
+
+        # default to repeating last action when not re-evaluating
+        action = self._last_action
+
+        # run heavy decision logic only when DecisionTick allows
+        try:
+            should_run = self.decision_tick.should_run(self._frame_index)
+        except Exception:
+            should_run = True
+
+        if should_run:
+            if self.mode == 'utility':
+                action = self._decide_utility(obs)
+            elif self.mode == 'rl':
+                action = self._decide_rl(obs)
+            else:
+                candidates = [Action.THRUST, Action.TURN_LEFT, Action.TURN_RIGHT, Action.FIRE_PRIMARY, Action.EVADE, Action.SPECIAL]
+                u_choice = self.utility.choose(obs, candidates)
+                if self.rl_agent.model is not None:
+                    vec = obs.to_vector()
+                    rl_choice = self.rl_agent.infer(vec)
+                    if rl_choice in (Action.EVADE, Action.FIRE_PRIMARY, Action.SPECIAL):
+                        action = rl_choice
+                    else:
+                        action = u_choice
                 else:
                     action = u_choice
-            else:
-                action = u_choice
-        self._execute_action(action, dt)
+            self._last_action = action
+
+        # execute the chosen or repeated action; pass world_state for predictive decisions (e.g. aiming)
+        self._execute_action(action, dt, world_state)
         self._record_telemetry(action, obs, world_state)
 
     def _observe(self, world_state: Dict[str, Any]) -> Observation:
@@ -439,7 +496,7 @@ class EnemyShip:
         v = obs.to_vector()
         return self.rl_agent.infer(v)
 
-    def _execute_action(self, action: Action, dt: float):
+    def _execute_action(self, action: Action, dt: float, world_state: Optional[Dict[str, Any]] = None):
         if action == Action.THRUST:
             rad = math.radians(self.heading)
             accel = np.array([math.cos(rad), math.sin(rad)]) * self.stats.max_speed * 0.5
@@ -451,7 +508,12 @@ class EnemyShip:
         elif action == Action.TURN_RIGHT:
             self.heading += self.stats.turn_rate * dt
         elif action == Action.FIRE_PRIMARY:
-            self._fire_primary()
+            # pass world_state for predictive aiming if available
+            try:
+                self._fire_primary(world_state)
+            except TypeError:
+                # fallback to legacy signature
+                self._fire_primary()
         elif action == Action.SPECIAL:
             self._use_special()
         elif action == Action.EVADE:
@@ -460,28 +522,49 @@ class EnemyShip:
                 perp = np.array([random.uniform(-1, 1), random.uniform(-1, 1)])
             perp = perp / (np.linalg.norm(perp) + 1e-6)
             self.velocity += perp * self.stats.max_speed * 0.6
+        # simple physics integration
         self.position += self.velocity * dt
 
-    def _fire_primary(self):
-        # Create a projectile dict and append to pending_projectiles. The caller (EnemyManager)
-        # will convert this into in-game projectile objects (EnemyLaser/Torpedo).
+    def _fire_primary(self, world_state: Optional[Dict[str, Any]] = None):
+        # Predictive aiming: if world_state contains player pos/vel and a projectile speed is known,
+        # compute a leading aim point. Fall back to legacy straight shots when data missing.
         acc = max(0.0, min(1.0, self.stats.accuracy + self.personality.accuracy_bonus))
-        # compute spawn point a bit in front of ship (along heading)
         rad = math.radians(self.heading)
         spawn_x = float(self.position[0] + math.cos(rad) * 10.0)
         spawn_y = float(self.position[1] + math.sin(rad) * 10.0)
-        # enemy lasers travel roughly in heading direction; in screen coords typically +y is down
-        speed = 8.0
-        vx = math.cos(rad) * speed
-        vy = math.sin(rad) * speed
+
+        # default projectile speed (game units per tick) - keep same as legacy for consistency
+        projectile_speed = 8.0
+
+        aim_vx = math.cos(rad) * projectile_speed
+        aim_vy = math.sin(rad) * projectile_speed
+
+        if world_state is not None and world_state.get('player') is not None:
+            try:
+                player = world_state['player']
+                # player position and velocity may be numpy arrays
+                ppos = np.array(player.get('position'), dtype=np.float32)
+                pvel = np.array(player.get('velocity'), dtype=np.float32)
+                shooter_pos = np.array(self.position, dtype=np.float32)
+                lead_point = leading_position(shooter_pos, ppos, pvel, projectile_speed)
+                aim_dir = lead_point - shooter_pos
+                if np.linalg.norm(aim_dir) > 1e-6:
+                    aim_dir = aim_dir / (np.linalg.norm(aim_dir) + 1e-9)
+                    aim_vx = float(aim_dir[0] * projectile_speed)
+                    aim_vy = float(aim_dir[1] * projectile_speed)
+            except Exception:
+                # fallback to simple heading-based velocity
+                pass
+
         # add some spread based on (1-acc)
         spread = (1.0 - acc) * 0.5
-        vx += random.uniform(-spread, spread)
-        vy += random.uniform(-spread, spread)
+        aim_vx += random.uniform(-spread, spread)
+        aim_vy += random.uniform(-spread, spread)
+
         proj = {
             'type': 'laser',
             'pos': (spawn_x, spawn_y),
-            'vel': (vx, vy),
+            'vel': (aim_vx, aim_vy),
             'damage': 10,
             'source_id': self.instance_id,
         }
