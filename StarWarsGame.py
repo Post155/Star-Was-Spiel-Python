@@ -163,6 +163,11 @@ while True:
             enemy_rect = enemy.get_rect()
             for laser in laser_list[:]:
                 if enemy_rect.colliderect(laser.rect):
+                    # mark hit flash for visual debug
+                    try:
+                        enemy._hit_flash_time = pygame.time.get_ticks()
+                    except Exception:
+                        pass
                     damage = 25
                     enemy.hp -= damage
                     ex, ey = float(enemy.position[0]), float(enemy.position[1])

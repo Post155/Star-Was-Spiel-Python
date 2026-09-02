@@ -127,17 +127,25 @@ class Torpedo:
         screen.blit(self.image, self.rect)
 
 class EnemyLaser:
-    """Projectile fired by enemies. Moves downward (positive y)."""
+    """Projectile fired by enemies. Uses floating position for smoother movement and more precise collision.
+    Moves in world-space according to vx, vy (floats).
+    """
     def __init__(self, x, y, vx=0.0, vy=6.0, color=(255, 200, 0)):
-        # represent with a small rect
-        self.rect = pygame.Rect(int(x) - 2, int(y) - 2, 4, 12)
-        self.vx = vx
-        self.vy = vy
+        # floating position
+        self.fx = float(x)
+        self.fy = float(y)
+        self.vx = float(vx)
+        self.vy = float(vy)
         self.color = color
+        # rect anchored to rounded float position
+        self.rect = pygame.Rect(int(self.fx) - 2, int(self.fy) - 2, 4, 12)
 
     def update(self):
-        self.rect.x += int(self.vx)
-        self.rect.y += int(self.vy)
+        # update float position then sync rect
+        self.fx += float(self.vx)
+        self.fy += float(self.vy)
+        self.rect.x = int(self.fx) - 2
+        self.rect.y = int(self.fy) - 2
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -561,6 +569,20 @@ class EnemyManager:
             else:
                 # fallback: draw simple circle
                 pygame.draw.circle(screen, (255, 0, 0), (int(e.position[0]), int(e.position[1])), 10)
+
+            # draw collision rect for debugging
+            try:
+                r = e.get_rect()
+                pygame.draw.rect(screen, (0,255,0), r, 1)
+                # red highlight if recently hit
+                try:
+                    now = pygame.time.get_ticks()
+                    if getattr(e, '_hit_flash_time', 0) and (now - e._hit_flash_time) < 250:
+                        pygame.draw.rect(screen, (255,0,0), r, 3)
+                except Exception:
+                    pass
+            except Exception:
+                pass
 
             # Debug overlays: steering vector, predicted lead point, state label
             if self.debug_ai:
