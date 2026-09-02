@@ -385,6 +385,10 @@ class EnemyManager:
             self._debug_font = pygame.font.Font(None, 14)
         except Exception:
             self._debug_font = None
+        # simple perf stats for update_all (when debug_ai True)
+        self._perf_frame = 0
+        self._perf_acc_ms = 0.0
+        self._perf_report_frames = 120  # report average every N frames when many enemies
 
     def _load_image_for_ship(self, ship_type: enemy_ai.ShipType):
         key = self.SHIPTYPE_TO_ASSET_KEY.get(ship_type)
@@ -410,7 +414,16 @@ class EnemyManager:
             x = random.uniform(0, self.window_width)
             y = -random.uniform(50, 300)
             heading = random.uniform(0, 360)
-            personality = enemy_ai.Personality.random_variant()
+            # choose personality preset by ship type for more consistent behavior
+            if enemy_type == enemy_ai.ShipType.TIE_INTERCEPTOR:
+                personality = enemy_ai.Personality.random_variant('aggressive')
+            elif enemy_type == enemy_ai.ShipType.TIE_BOMBER:
+                personality = enemy_ai.Personality.random_variant('cautious')
+            elif enemy_type == enemy_ai.ShipType.TIE_DEFENDER:
+                personality = enemy_ai.Personality.random_variant('aggressive')
+            else:
+                personality = enemy_ai.Personality.random_variant()
+
             ship = enemy_ai.EnemyShip(enemy_type, position=(x, y), heading=heading, personality=personality)
             # set mode to hybrid by default (utility + optional RL)
             ship.mode = 'hybrid'
@@ -427,6 +440,16 @@ class EnemyManager:
                     ship.steering.behavior_weights.update({'arrive': 0.7, 'separation': 0.4, 'obstacle_avoid': 1.0, 'cohesion': 0.1})
                     if getattr(ship, 'state_machine', None) is not None:
                         ship.state_machine.change_state(AIState.PATROL)
+                # fighter: balanced pursuit + separation
+                if enemy_type == enemy_ai.ShipType.TIE_FIGHTER and getattr(ship, 'steering', None) is not None:
+                    ship.steering.behavior_weights.update({'pursuit': 0.8, 'separation': 0.7, 'obstacle_avoid': 1.0, 'cohesion': 0.4})
+                    if getattr(ship, 'state_machine', None) is not None:
+                        ship.state_machine.change_state(AIState.ATTACK)
+                # defender: stay near formation, protect others
+                if enemy_type == enemy_ai.ShipType.TIE_DEFENDER and getattr(ship, 'steering', None) is not None:
+                    ship.steering.behavior_weights.update({'seek': 0.3, 'separation': 0.6, 'cohesion': 0.8, 'obstacle_avoid': 1.0})
+                    if getattr(ship, 'state_machine', None) is not None:
+                        ship.state_machine.change_state(AIState.GUARD_LEADER)
             except Exception:
                 pass
 
@@ -471,6 +494,12 @@ class EnemyManager:
         player_agent = _AgentProxy(player_state.get('position'), player_state.get('velocity'))
 
         # include a simplified player_profile if available
+        # profiling start (only when debug_ai and many enemies)
+        import time
+        start_time = None
+        if self.debug_ai and len(self.enemies) > 30:
+            start_time = time.perf_counter()
+
         for e in list(self.enemies):
             # prepare neighbor list from grid
             neighbors = []
@@ -498,6 +527,18 @@ class EnemyManager:
                         del self.enemy_sprites[e.instance_id]
                 except ValueError:
                     pass
+
+        # profiling end
+        if start_time is not None:
+            end = time.perf_counter()
+            delta_ms = (end - start_time) * 1000.0
+            self._perf_frame += 1
+            self._perf_acc_ms += delta_ms
+            if self._perf_frame >= self._perf_report_frames:
+                avg = self._perf_acc_ms / max(1, self._perf_frame)
+                print(f"[AI PERF] update_all avg ms over {self._perf_frame} frames: {avg:.2f} ms (enemies={len(self.enemies)})")
+                self._perf_frame = 0
+                self._perf_acc_ms = 0.0
         return projectiles
 
     def draw_all(self, screen):

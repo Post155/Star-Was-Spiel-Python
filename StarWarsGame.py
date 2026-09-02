@@ -119,6 +119,12 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_h:
                     spieler.show_hitbox = not spieler.show_hitbox
+                if event.key == pygame.K_k:
+                    # toggle AI debug overlays
+                    try:
+                        enemy_manager.debug_ai = not enemy_manager.debug_ai
+                    except Exception:
+                        pass
 
                 if event.key == pygame.K_1:
                     spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)
