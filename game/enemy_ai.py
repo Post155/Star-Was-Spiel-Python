@@ -42,10 +42,10 @@ except Exception:
 # Additional AI helper modules (lightweight, optional)
 # These modules provide DecisionTick, StateMachine and aiming/steering helpers.
 # If they are not present the code falls back to existing behavior.
-from game.decision_tick import DecisionTick
-from game.state_machine import StateMachine, AIState
-from game.aim_utils import leading_position, compute_shot_direction
-from game.steering_component import SteeringComponent
+from game.ai.decision_tick import DecisionTick
+from game.ai.state_machine import StateMachine, AIState
+from game.ai.aim_utils import leading_position, compute_shot_direction
+from game.ai.steering_component import SteeringComponent
 
 
 class ShipType(Enum):
@@ -335,23 +335,72 @@ class SquadRoleAssignment:
 
 
 class SquadController:
-    def __init__(self, squad_id: int, members: List['EnemyShip']):
+    def __init__(self, squad_id: int, members: List['EnemyShip'], update_hz: float = 2.0):
         self.squad_id = squad_id
         self.members = members
         self.assignment = SquadRoleAssignment()
+        # throttle squad updates (default 2 Hz)
+        try:
+            from game.ai.decision_tick import DecisionTick
+            self._tick = DecisionTick(frequency_hz=update_hz)
+        except Exception:
+            class _Always:
+                def should_run(self, fi):
+                    return True
+            self._tick = _Always()
+        self._frame = 0
 
     def update(self):
+        self._frame += 1
+        if not self._tick.should_run(self._frame):
+            return
         best_score = -1e9
         leader = None
         for m in self.members:
-            s = m.personality.maneuver_skill * (m.hp / m.max_hp) * (1 + m.stats.aggressiveness)
+            # consider maneuver skill, health and aggressiveness when choosing leader
+            s = m.personality.maneuver_skill * (m.hp / max(1.0, m.max_hp)) * (1 + getattr(m.stats, 'aggressiveness', 0.0))
             if s > best_score:
                 best_score = s
                 leader = m
         if leader:
             self.assignment.leader_id = leader.instance_id
+        # assign simple roles: first flanker/supporter heuristics
+        flankers = []
+        supporters = []
+        others = []
         for m in self.members:
-            m.squad_context = {'leader_id': self.assignment.leader_id}
+            if leader and m.instance_id == leader.instance_id:
+                m.squad_context = {'leader_id': leader.instance_id, 'role': 'leader'}
+                continue
+            # heuristic: faster ships flank, slower support
+            if m.stats.max_speed > leader.stats.max_speed * 0.9:
+                flankers.append(m)
+                m.squad_context = {'leader_id': leader.instance_id, 'role': 'flanker', 'flank_point': None}
+            elif m.stats.hp < m.max_hp * 0.6:
+                supporters.append(m)
+                m.squad_context = {'leader_id': leader.instance_id, 'role': 'supporter'}
+            else:
+                others.append(m)
+                m.squad_context = {'leader_id': leader.instance_id, 'role': 'defender'}
+        self.assignment.flankers = [m.instance_id for m in flankers]
+        self.assignment.supporters = [m.instance_id for m in supporters]
+        # let leader compute flank points
+        if leader is not None:
+            self._assign_flank_points(leader, flankers)
+
+    def _assign_flank_points(self, leader, flankers):
+        # very simple visibility-based flank points: pick points offset around player
+        # share player's position assuming leader has access to world via leader._last_world
+        world = getattr(leader, '_last_world', {})
+        player = world.get('player')
+        if player is None:
+            return
+        ppos = player.get('position')
+        offsets = [(0,150), (0,-150), (150,0), (-150,0)]
+        for i, f in enumerate(flankers):
+            of = offsets[i % len(offsets)]
+            fp = (ppos[0] + of[0], ppos[1] + of[1])
+            f.squad_context['flank_point'] = fp
 
 
 class EnemyShip:
@@ -423,6 +472,9 @@ class EnemyShip:
         # cheap observation every frame
         obs = self._observe(world_state)
 
+        # store last seen world for StateMachine and Squad logic
+        self._last_world = world_state
+
         # default to repeating last action when not re-evaluating
         action = self._last_action
 
@@ -438,21 +490,53 @@ class EnemyShip:
             elif self.mode == 'rl':
                 action = self._decide_rl(obs)
             else:
+                # use UtilityEvaluator but also consult state machine to prefer state-driven actions
                 candidates = [Action.THRUST, Action.TURN_LEFT, Action.TURN_RIGHT, Action.FIRE_PRIMARY, Action.EVADE, Action.SPECIAL]
                 u_choice = self.utility.choose(obs, candidates)
-                if self.rl_agent.model is not None:
-                    vec = obs.to_vector()
-                    rl_choice = self.rl_agent.infer(vec)
-                    if rl_choice in (Action.EVADE, Action.FIRE_PRIMARY, Action.SPECIAL):
-                        action = rl_choice
+                # small integration: if state machine requests a specific mode, prefer state
+                if getattr(self, 'state_machine', None) is not None and getattr(self.state_machine, 'current_enum', None) is not None:
+                    se = self.state_machine.current_enum
+                    if se == AIState.ATTACK:
+                        action = Action.FIRE_PRIMARY if obs.distance < 900 else Action.THRUST
+                    elif se == AIState.EVADE:
+                        action = Action.EVADE
+                    elif se == AIState.RETREAT:
+                        action = Action.BRAKE
                     else:
                         action = u_choice
                 else:
-                    action = u_choice
+                    if self.rl_agent.model is not None:
+                        vec = obs.to_vector()
+                        rl_choice = self.rl_agent.infer(vec)
+                        if rl_choice in (Action.EVADE, Action.FIRE_PRIMARY, Action.SPECIAL):
+                            action = rl_choice
+                        else:
+                            action = u_choice
+                    else:
+                        action = u_choice
             self._last_action = action
 
         # execute the chosen or repeated action; pass world_state for predictive decisions (e.g. aiming)
-        self._execute_action(action, dt, world_state)
+        # but if steering component exists, prefer steering-based motion
+        if getattr(self, 'steering', None) is not None:
+            # build basic context
+            ctx = {
+                'target_agent': world_state.get('player_agent'),
+                'target_pos': world_state.get('player', {}).get('position') if world_state.get('player') else None,
+                'neighbors': world_state.get('neighbors', []),
+                'obstacles': world_state.get('asteroids', []),
+                'threat': world_state.get('threat')
+            }
+            try:
+                desired = self.steering.compute(ctx)
+                from game.ai.controls_adapter import apply_steering_to_controls
+                apply_steering_to_controls(self, desired, dt)
+            except Exception:
+                # fallback to discrete action execution
+                self._execute_action(action, dt, world_state)
+        else:
+            self._execute_action(action, dt, world_state)
+
         self._record_telemetry(action, obs, world_state)
 
     def _observe(self, world_state: Dict[str, Any]) -> Observation:
