@@ -484,7 +484,8 @@ class EnemyShip:
 
         # run heavy decision logic only when DecisionTick allows
         try:
-            should_run = self.decision_tick.should_run(self._frame_index)
+            # pass observed distance to DecisionTick so tick frequency adapts to proximity
+            should_run = self.decision_tick.should_run(self._frame_index, distance=obs.distance if obs is not None else None)
         except Exception:
             should_run = True
 
