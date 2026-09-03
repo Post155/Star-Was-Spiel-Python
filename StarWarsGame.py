@@ -5,7 +5,9 @@ import pygame
 
 from game.assets import load_assets, set_window_icon
 from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
-from game.entities import Asteroid, BattleDroid, Explosion, MillenniumFalcon, XWing, Tiefighter
+from game.entities.asteroid import Asteroid
+from game.entities.ships import BattleDroid, MillenniumFalcon, XWing, Tiefighter
+from game.entities.explosion import Explosion
 from game.ui import death_screen, faction_selection, ship_selection
 from game.background import BackgroundManager
 

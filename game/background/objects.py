@@ -66,9 +66,19 @@ class Star:
 
 
 class Planet:
-    def __init__(self, image, width, height, speed_range=(0.6, 1.8), scale_range=(0.25, 0.6), linger_range=(900, 1800)):
+    def __init__(
+        self,
+        image,
+        width,
+        height,
+        speed_range=(0.3, 0.7),
+        scale_range=(0.35, 0.7),
+        linger_range=(5000, 7000),
+    ):
         self.original = image
+
         scale = random.uniform(scale_range[0], scale_range[1])
+
         self.img = pygame.transform.scale(
             self.original,
             (
@@ -79,33 +89,60 @@ class Planet:
 
         self.width = width
         self.height = height
-        self.x = random.uniform(0, max(0, width - self.img.get_width()))
-        self.y = -self.img.get_height() - random.randint(0, height // 2)
-        self.speed = random.uniform(speed_range[0], speed_range[1])
-        self.drift_x = random.uniform(-0.8, 0.8)
-        self.linger = random.randint(linger_range[0], linger_range[1])
+
+        # Weiter oben starten
+        self.x = random.uniform(
+            50,
+            max(50, width - self.img.get_width() - 50)
+        )
+
+        self.y = -self.img.get_height()
+
+        # Langsamer Flug durchs System
+        self.speed = random.uniform(
+            speed_range[0],
+            speed_range[1]
+        )
+
+        # Kaum seitliches Driften
+        self.drift_x = random.uniform(-0.15, 0.15)
+
+        self.linger = random.randint(
+            linger_range[0],
+            linger_range[1]
+        )
+
         self.is_exiting = False
 
     def update(self):
+
+        # System wird verlassen
         if self.is_exiting:
-            self.y += self.speed * 2.6
-            self.x += self.drift_x * 2.2
-            self.linger -= 1
+
+            self.y += self.speed * 4.0
+            self.x += self.drift_x * 2
+
             return
 
         self.y += self.speed
         self.x += self.drift_x
-        self.linger -= 1
 
     def draw(self, screen):
         screen.blit(self.img, (int(self.x), int(self.y)))
 
     def get_rect(self):
-        return pygame.Rect(int(self.x), int(self.y), self.img.get_width(), self.img.get_height())
+        return pygame.Rect(
+            int(self.x),
+            int(self.y),
+            self.img.get_width(),
+            self.img.get_height()
+        )
 
     def expired(self):
-        return self.y > self.height + self.img.get_height() or self.linger <= 0
 
+        return (
+            self.y > self.height + self.img.get_height()
+        )
 
 class ForegroundObject:
     def __init__(self, image, width, height, silhouette=True):
