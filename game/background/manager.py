@@ -68,6 +68,18 @@ class BackgroundManager:
         self.current_difficulty = self.current_system.difficulty
         self._apply_system_visuals()
 
+        # System-Reise Gefühl
+        self.system_enter_time = pygame.time.get_ticks()
+
+        # Wie lange nach Eintritt keine Planeten erscheinen
+        self.system_entry_delay_ms = 10000
+
+        # Wie lange vor einem Wechsel keine neuen Planeten erscheinen
+        self.system_exit_delay_ms = 10000
+
+        # Pro System nur ein Planet
+        self.planet_spawned_this_system = False
+
         # transition state
         self.transitioning = False
         self.transition_start = 0
@@ -212,6 +224,15 @@ class BackgroundManager:
 
         self.transition_from = self.current_system
 
+        # Alte Planeten schnell aus dem Bild fliegen lassen
+        for planet in self.layer3_planets:
+            planet.is_exiting = True
+
+            try:
+                planet.speed *= 3.0
+            except:
+                pass
+
         next_index = (self.order_index + 1) % len(self.order)
         self.transition_to = self.order[next_index]
 
@@ -256,6 +277,9 @@ class BackgroundManager:
         self.last_switch_time = pygame.time.get_ticks()
 
         self._apply_system_visuals()
+        self.planet_spawned_this_system = False
+        self.layer3_planets.clear()
+
 
     def _get_available_planet_keys(self, system):
         """Return planet keys for the given StarSystem that have loaded assets.
@@ -317,22 +341,37 @@ class BackgroundManager:
         for star in self.layer2:
             star.update()
 
-        if self.planet_spawn_cooldown <= 0 and self.planet_images and len(self.layer3_planets) < self.planet_max_visible:
-            if random.random() < 0.9:
-                planet = Planet(
-                    random.choice(self.planet_images),
-                    self.width,
-                    self.height,
-                    speed_range=self.planet_speed_range,
-                    linger_range=self.planet_linger_range,
-                )
-                if self._can_spawn_planet(planet):
-                    self.layer3_planets.append(planet)
-                    self.planet_spawn_cooldown = random.randint(*self.planet_spawn_range)
-                else:
-                    self.planet_spawn_cooldown = max(15, min(self.planet_spawn_range))
-        else:
-            self.planet_spawn_cooldown = max(0, self.planet_spawn_cooldown - 1)
+        system_time = pygame.time.get_ticks() - self.system_enter_time
+
+        time_until_switch = (
+            self.switch_time_ms -
+            (pygame.time.get_ticks() - self.last_switch_time)
+        )
+
+        allow_planets = (
+            system_time > self.system_entry_delay_ms
+            and
+            time_until_switch > self.system_exit_delay_ms
+        )
+
+        if (
+            allow_planets
+            and not self.planet_spawned_this_system
+            and len(self.layer3_planets) == 0
+            and self.planet_images
+        ):
+            planet = Planet(
+                random.choice(self.planet_images),
+                self.width,
+                self.height,
+                speed_range=(0.4, 0.7),
+                linger_range=(5000, 7000),
+            )
+
+            if self._can_spawn_planet(planet):
+                self.layer3_planets.append(planet)
+                self.planet_spawned_this_system = True
+
 
         for planet in self.layer3_planets[:]:
             planet.update()
