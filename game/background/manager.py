@@ -153,6 +153,10 @@ class BackgroundManager:
             # mark planets to exit quickly
             self.planet_manager.start_exit_all()
 
+            # prevent immediate re-trigger by anchoring time and score now
+            self.last_switch_time = now
+            self.last_score_at_switch = current_score
+
             # prepare transition manager
             map_dur = int(getattr(__import__('game.constants', fromlist=['GALAXY_MAP_DURATION_MS']), 'GALAXY_MAP_DURATION_MS'))
             self.transition_manager.transition_from_planets = self.systems.get_available_planet_keys(transition_from, self.assets)

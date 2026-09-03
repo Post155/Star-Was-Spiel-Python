@@ -50,7 +50,8 @@ class TransitionManager:
         self.phase_durations = [map_duration_ms]
         self.phase_starts = [0]
         self._map_only_mode = True
-        self._particles = self._create_particles(60)
+        # Do not create visual particle dots for the map-only transition: only show the map/targets
+        self._particles = []
 
     def is_active(self) -> bool:
         return self.transitioning
