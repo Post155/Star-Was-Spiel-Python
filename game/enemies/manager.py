@@ -38,7 +38,6 @@ class EnemyManager:
         self.projectiles = []
         self.explosions = []
         self.spawn_timer = 0.55
-        self.audio = EnemyAudio()
         self._role_cursor = 0
 
     def set_player(self, player, clear_existing=True):
@@ -146,7 +145,6 @@ class EnemyManager:
             self.explosions.append(
                 Explosion(enemy.centerx, enemy.centery, explosion_scale, explosion_img, self.height)
             )
-        self.audio.play_explosion()
         return enemy.score_value() if award_score else 0
 
     def _handle_player_shots(self, player_lasers, player_torpedoes):
