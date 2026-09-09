@@ -10,7 +10,7 @@ ASSET_PATHS = {
     "window_icon": "Pixelarts/icon.ico",
     "tie_fighter": "Pixelarts/tie-fighter.png",
     "battle_droid": "Pixelarts/Battle_Droid.png",
-    "x_wing": "Pixelarts/x_wing.png",
+    "x_wing": "Pixelarts/X_Wing.png",
     "millennium_falcon": "Pixelarts/millennium.png",
     "rebel_logo": "Pixelarts/Star-Wars-Rebel-Logo.png",
     "empire_logo": "Pixelarts/Galactic-Empire-Logo.png",

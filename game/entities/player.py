@@ -85,16 +85,20 @@ class Player:
     def is_invulnerable(self):
         return pygame.time.get_ticks() < getattr(self, 'invulnerable_until', 0)
 
-    def take_damage(self):
-        """Apply damage to the player if not currently invulnerable.
-        Returns True if the player has no lives left (dead), False otherwise or when hit was ignored.
+    def take_damage(self, amount=1):
+        """Apply one or more points of damage unless currently invulnerable.
+
+        Enemy lasers normally deal 1 life of damage; heavy/elite weapons and
+        torpedoes may deal more. Existing callers without an argument retain
+        the old one-life behavior.
         """
         now = pygame.time.get_ticks()
         if now < getattr(self, 'invulnerable_until', 0):
             # still invulnerable, ignore
             return False
-        # lose one life and start invulnerability
-        self.lives = max(0, self.lives - 1)
+        # lose lives and start invulnerability
+        amount = max(1, int(amount))
+        self.lives = max(0, self.lives - amount)
         self.invulnerable_until = now + getattr(self, 'invulnerable_duration_ms', 2000)
         return self.lives <= 0
 

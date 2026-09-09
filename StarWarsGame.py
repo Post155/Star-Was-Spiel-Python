@@ -1,15 +1,13 @@
-import os
 import sys
 
 import pygame
 
 from game.assets import load_assets, set_window_icon
-from game.constants import ASTEROID_SPAWN_INTERVAL, BLACK, HEIGHT, SCREEN_TITLE, WIDTH
-from game.entities.asteroid import Asteroid
-from game.entities.ships import BattleDroid, MillenniumFalcon, XWing, Tiefighter
-from game.entities.explosion import Explosion
-from game.ui import death_screen, faction_selection, ship_selection
 from game.background import BackgroundManager
+from game.constants import BLACK, HEIGHT, SCREEN_TITLE, WIDTH
+from game.enemies import EnemyManager
+from game.entities.ships import BattleDroid, MillenniumFalcon, Tiefighter, XWing
+from game.ui import death_screen, faction_selection, ship_selection
 
 pygame.init()
 
@@ -19,27 +17,24 @@ pygame.display.set_caption(SCREEN_TITLE)
 clock = pygame.time.Clock()
 
 assets = load_assets()
-
 background = BackgroundManager(WIDTH, HEIGHT, assets)
 
-x_wing_img = assets['x_wing_img']
-millennium_falcon_img = assets['millennium_falcon_img']
-tiefighter_img = assets['tie_fighter_img']
-battle_droid_img = assets['battle_droid_img']
-rebel_logo_img = assets['rebel_logo_img']
-empire_logo_img = assets['empire_logo_img']
-asteroid_images = assets['asteroid_images']
-torpedo_img = assets['torpedo_img']
-explosion_img = assets['explosion_img']
+x_wing_img = assets["x_wing_img"]
+millennium_falcon_img = assets["millennium_falcon_img"]
+tiefighter_img = assets["tie_fighter_img"]
+battle_droid_img = assets["battle_droid_img"]
+rebel_logo_img = assets["rebel_logo_img"]
+empire_logo_img = assets["empire_logo_img"]
+torpedo_img = assets["torpedo_img"]
 
 font = pygame.font.Font(None, 40)
-lightsaber_blue_img = assets.get('lightsaber_blue_img')
-lightsaber_red_img = assets.get('lightsaber_red_img')
+lightsaber_blue_img = assets.get("lightsaber_blue_img")
+lightsaber_red_img = assets.get("lightsaber_red_img")
 
 
-def draw_lives(screen, lives, faction='rebels', size=24, padding=8):
+def draw_lives(screen, lives, faction="rebels", size=24, padding=8):
     """Draw the faction-specific lightsaber sprite as the life indicator."""
-    saber_img = lightsaber_blue_img if faction == 'rebels' else lightsaber_red_img
+    saber_img = lightsaber_blue_img if faction == "rebels" else lightsaber_red_img
     if saber_img is None:
         return
 
@@ -54,59 +49,79 @@ def draw_lives(screen, lives, faction='rebels', size=24, padding=8):
         screen.blit(scaled_saber, (start_x, start_y + i * (target_height + padding)))
 
 
+def create_player(ship_choice, width, height):
+    """Create the selected player ship while keeping one central mapping."""
+    if ship_choice == "xwing":
+        return XWing(width, height, x_wing_img, torpedo_img)
+    if ship_choice == "milleniumfalcon":
+        return MillenniumFalcon(width, height, millennium_falcon_img, torpedo_img)
+    if ship_choice == "tiefighter":
+        return Tiefighter(width, height, tiefighter_img, torpedo_img)
+    if ship_choice == "battledroid":
+        return BattleDroid(width, height, battle_droid_img, torpedo_img)
+    raise ValueError(f"Unbekannte Schiffsauswahl: {ship_choice}")
+
+
+def faction_for_player(player):
+    return "rebels" if isinstance(player, (XWing, MillenniumFalcon)) else "empire"
+
+
 while True:
-    faction_choice, WIDTH, HEIGHT = faction_selection(screen, clock, WIDTH, HEIGHT, rebel_logo_img, empire_logo_img)
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-    set_window_icon()
-    if faction_choice == 'rebels':
-        faction_logo_img = rebel_logo_img
-    else:
-        faction_logo_img = empire_logo_img
-    ship_choice, WIDTH, HEIGHT = ship_selection(screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img, x_wing_img, millennium_falcon_img, tiefighter_img, battle_droid_img)
+    faction_choice, WIDTH, HEIGHT = faction_selection(
+        screen,
+        clock,
+        WIDTH,
+        HEIGHT,
+        rebel_logo_img,
+        empire_logo_img,
+    )
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
     set_window_icon()
 
-    if ship_choice == 'xwing':
-        spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)
-    elif ship_choice == 'milleniumfalcon':
-        spieler = MillenniumFalcon(WIDTH, HEIGHT, millennium_falcon_img, torpedo_img)
-    elif ship_choice == 'tiefighter':
-        spieler = Tiefighter(WIDTH, HEIGHT, tiefighter_img, torpedo_img)
-    elif ship_choice == 'battledroid':
-        spieler = BattleDroid(WIDTH, HEIGHT, battle_droid_img, torpedo_img)
+    faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+    ship_choice, WIDTH, HEIGHT = ship_selection(
+        screen,
+        clock,
+        WIDTH,
+        HEIGHT,
+        faction_choice,
+        faction_logo_img,
+        x_wing_img,
+        millennium_falcon_img,
+        tiefighter_img,
+        battle_droid_img,
+    )
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    set_window_icon()
+
+    spieler = create_player(ship_choice, WIDTH, HEIGHT)
+    enemy_manager = EnemyManager(WIDTH, HEIGHT, assets, spieler)
 
     score = 0
-    asteroid_spawn_timer = 0
     laser_list = []
-    asteroid_list = []
     torpedo_list = []
-    explosion_list = []
     running = True
 
-    # anchor background system timers/score for this run
+    # Anchor background system timers/score for this run.
     try:
         background.notify_score_anchor(score)
     except Exception:
         pass
 
     while running:
+        # Delta time is capped at 60 FPS and powers the new AI. Existing player
+        # movement/projectiles stay frame based so the old game feel is preserved.
+        dt = min(0.05, clock.tick(60) / 1000.0)
+
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
-                WIDTH = event.w
-                HEIGHT = event.h
+                WIDTH = max(480, event.w)
+                HEIGHT = max(360, event.h)
                 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
                 set_window_icon()
 
-                if spieler:
-                    spieler.resize(WIDTH, HEIGHT)
-
-                for asteroid in asteroid_list:
-                    asteroid.resize(WIDTH, HEIGHT)
-
-                for explosion in explosion_list:
-                    explosion.resize(HEIGHT)
-
-                # resize background layers to match new window
+                spieler.resize(WIDTH, HEIGHT)
+                enemy_manager.resize(WIDTH, HEIGHT)
                 background.resize(WIDTH, HEIGHT)
 
             if event.type == pygame.QUIT:
@@ -116,14 +131,24 @@ while True:
                 if event.key == pygame.K_h:
                     spieler.show_hitbox = not spieler.show_hitbox
 
+                # Debug/quick ship switch from the original project. Existing
+                # enemies are cleared so the "never same ship" rule can never
+                # be violated after a live switch.
+                new_ship_choice = None
                 if event.key == pygame.K_1:
-                    spieler = XWing(WIDTH, HEIGHT, x_wing_img, torpedo_img)
+                    new_ship_choice = "xwing"
                 elif event.key == pygame.K_2:
-                    spieler = MillenniumFalcon(WIDTH, HEIGHT, millennium_falcon_img, torpedo_img)
+                    new_ship_choice = "milleniumfalcon"
                 elif event.key == pygame.K_3:
-                    spieler = Tiefighter(WIDTH, HEIGHT, tiefighter_img, torpedo_img)
+                    new_ship_choice = "tiefighter"
                 elif event.key == pygame.K_4:
-                    spieler = BattleDroid(WIDTH, HEIGHT, battle_droid_img, torpedo_img)
+                    new_ship_choice = "battledroid"
+
+                if new_ship_choice is not None:
+                    spieler = create_player(new_ship_choice, WIDTH, HEIGHT)
+                    laser_list.clear()
+                    torpedo_list.clear()
+                    enemy_manager.set_player(spieler, clear_existing=True)
 
                 if event.key in (pygame.K_SPACE, pygame.K_w, pygame.K_UP):
                     new_lasers = spieler.shoot()
@@ -143,6 +168,7 @@ while True:
         if keys[pygame.K_ESCAPE]:
             running = False
 
+        # ---------------- Player projectiles ----------------
         for laser in laser_list[:]:
             laser.update()
             if laser.rect.bottom < 0:
@@ -153,109 +179,38 @@ while True:
             if current_torpedo.rect.bottom < 0:
                 torpedo_list.remove(current_torpedo)
 
+        # ---------------- Intelligent enemy system ----------------
         difficulty = background.get_current_difficulty()
-        asteroid_interval = max(10, int(ASTEROID_SPAWN_INTERVAL / max(1.0, difficulty['asteroid_speed_multiplier'])))
-        asteroid_spawn_timer += 1
-        if asteroid_spawn_timer >= asteroid_interval:
-            asteroid = Asteroid(WIDTH, HEIGHT, asteroid_images)
-            asteroid.speed = max(2, int(asteroid.speed * difficulty['asteroid_speed_multiplier']))
-            asteroid_list.append(asteroid)
-            asteroid_spawn_timer = 0
+        system_difficulty = int(difficulty.get("level", 1))
+        enemy_result = enemy_manager.update(
+            dt=dt,
+            score=score,
+            system_difficulty=system_difficulty,
+            player_lasers=laser_list,
+            player_torpedoes=torpedo_list,
+        )
+        score += enemy_result.score_delta
+        if enemy_result.player_dead or spieler.lives <= 0:
+            running = False
 
-        for asteroid in asteroid_list[:]:
-            asteroid.update()
-            if asteroid.y > HEIGHT:
-                asteroid_list.remove(asteroid)
-
-        for asteroid in asteroid_list[:]:
-            for laser in laser_list[:]:
-                if asteroid.get_rect().colliderect(laser.rect):
-                    score += asteroid.get_points()
-                    explosion_list.append(
-                        Explosion(
-                            asteroid.x + asteroid.width // 2,
-                            asteroid.y + asteroid.height // 2,
-                            asteroid.scale,
-                            explosion_img,
-                            HEIGHT,
-                        )
-                    )
-                    if asteroid in asteroid_list:
-                        asteroid_list.remove(asteroid)
-                    if laser in laser_list:
-                        laser_list.remove(laser)
-                    break
-
-        for asteroid in asteroid_list[:]:
-            for current_torpedo in torpedo_list[:]:
-                if asteroid.get_rect().colliderect(current_torpedo.rect):
-                    score += asteroid.get_points()
-                    explosion_list.append(
-                        Explosion(
-                            asteroid.x + asteroid.width // 2,
-                            asteroid.y + asteroid.height // 2,
-                            asteroid.scale,
-                            explosion_img,
-                            HEIGHT,
-                        )
-                    )
-                    asteroid_list.remove(asteroid)
-                    torpedo_list.remove(current_torpedo)
-                    break
-
-        for asteroid in asteroid_list[:]:
-            if asteroid.get_rect().colliderect(spieler.hitbox):
-                # Ignore collision while player is invulnerable
-                if getattr(spieler, 'is_invulnerable', lambda: False)():
-                    continue
-
-                # Apply damage; take_damage returns True when player has no lives left
-                died = spieler.take_damage()
-
-                # spawn explosion at collision point
-                explosion_list.append(
-                    Explosion(
-                        asteroid.x + asteroid.width // 2,
-                        asteroid.y + asteroid.height // 2,
-                        asteroid.scale,
-                        explosion_img,
-                        HEIGHT,
-                    )
-                )
-
-                if asteroid in asteroid_list:
-                    asteroid_list.remove(asteroid)
-
-                if died:
-                    running = False
-                break
-
+        # ---------------- Rendering ----------------
         screen.fill(BLACK)
         background.update(score)
         background.draw(screen)
+
+        enemy_manager.draw(screen, show_hitboxes=spieler.show_hitbox)
         spieler.draw(screen)
 
         for laser in laser_list:
             laser.draw(screen)
         for current_torpedo in torpedo_list:
             current_torpedo.draw(screen)
-        for asteroid in asteroid_list:
-            asteroid.draw(screen)
-
-        for explosion in explosion_list[:]:
-            expired = explosion.update()
-            explosion.draw(screen)
-            if expired and explosion in explosion_list:
-                explosion_list.remove(explosion)
 
         score_text = font.render(f"Punkte: {score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
-        # draw lightsabers for lives (color depends on faction)
-        if spieler:
-            draw_lives(screen, getattr(spieler, 'lives', 0), faction_choice)
+        draw_lives(screen, getattr(spieler, "lives", 0), faction_for_player(spieler))
 
         pygame.display.flip()
-        clock.tick(60)
 
     restart = death_screen(screen, clock, score, WIDTH, HEIGHT)
     if not restart:
