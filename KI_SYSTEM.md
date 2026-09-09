@@ -18,7 +18,6 @@ Die Zuordnung liegt zentral in `game/enemies/config.py` und wird bei jedem Spawn
 - `EnemyMovement`: weiches beschleunigungsbegrenztes Steering
 - `EnemyWeaponSystem`: Salven, Zielvorhalt, Genauigkeit, taktische Torpedos
 - `EnemyManager`: Spawn, Schwierigkeit, Gruppenzusammenstellung, Kollisionen, Score und Explosionen
-- `EnemyAudio`: optionaler Explosion-Sound mit sicherem Fallback
 
 ## Gruppenrollen
 
