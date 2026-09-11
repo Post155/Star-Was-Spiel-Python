@@ -10,12 +10,16 @@ from game.constants import (
     HEIGHT,
     SCREEN_TITLE,
     WIDTH,
+    DIFFICULTY_SETTINGS,
+    DEFAULT_DIFFICULTY,
+    ASTEROID_MIN_SPAWN_INTERVAL,
 )
 from game.enemies import EnemyManager
 from game.entities.asteroid import Asteroid
 from game.entities.explosion import Explosion
 from game.entities.ships import BattleDroid, MillenniumFalcon, Tiefighter, XWing
 from game.ui import death_screen, faction_selection, ship_selection
+from game.ui.difficulty import difficulty_selection
 
 
 pygame.init()
@@ -82,12 +86,40 @@ def faction_for_player(player):
     return "rebels" if isinstance(player, (XWing, MillenniumFalcon)) else "empire"
 
 
-def create_asteroid(width, height):
-    """Create an asteroid using the original animated asteroid system."""
+def create_asteroid(width, height, size_multiplier=1.0, speed_multiplier=1.0):
+    """Create a balanced asteroid. All multipliers come from constants.py."""
     if not asteroid_images:
         return None
+    return Asteroid(
+        width,
+        height,
+        asteroid_images,
+        size_multiplier=size_multiplier,
+        speed_multiplier=speed_multiplier,
+    )
 
-    return Asteroid(width, height, asteroid_images)
+
+def draw_enemy_warning(screen, text, width, height, remaining_ms):
+    """Large but short warning before a newly unlocked enemy tier appears."""
+    if not text:
+        return
+
+    pulse = 1.0 + 0.04 * pygame.math.Vector2(1, 0).rotate(
+        (remaining_ms / 80.0) % 360
+    ).x
+    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
+    overlay.fill((120, 0, 0, 95))
+    screen.blit(overlay, (0, 0))
+
+    warning_font = pygame.font.Font(None, max(44, int(min(width, height) * 0.075 * pulse)))
+    sub_font = pygame.font.Font(None, max(24, int(min(width, height) * 0.038)))
+
+    title = warning_font.render("!!! WARNUNG !!!", True, (255, 235, 120))
+    message = sub_font.render(text, True, (255, 255, 255))
+
+    screen.blit(title, title.get_rect(center=(width // 2, int(height * 0.40))))
+    screen.blit(message, message.get_rect(center=(width // 2, int(height * 0.50))))
+
 
 
 def destroy_asteroid(asteroid, explosion_list):
@@ -115,6 +147,16 @@ while True:
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
     set_window_icon()
 
+    difficulty_choice, WIDTH, HEIGHT = difficulty_selection(
+        screen,
+        clock,
+        WIDTH,
+        HEIGHT,
+        DEFAULT_DIFFICULTY,
+    )
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    set_window_icon()
+
     faction_logo_img = (
         rebel_logo_img if faction_choice == "rebels" else empire_logo_img
     )
@@ -134,7 +176,7 @@ while True:
     set_window_icon()
 
     spieler = create_player(ship_choice, WIDTH, HEIGHT)
-    enemy_manager = EnemyManager(WIDTH, HEIGHT, assets, spieler)
+    enemy_manager = EnemyManager(WIDTH, HEIGHT, assets, spieler, difficulty=difficulty_choice)
 
     score = 0
     asteroid_spawn_timer = 0
@@ -227,27 +269,37 @@ while True:
 
         # ------------------------------------------------------------
         # ASTEROID SYSTEM
-        # Runs independently of the enemy AI system.
+        # Difficulty + current star system both affect density, speed and size.
         # ------------------------------------------------------------
         difficulty = background.get_current_difficulty()
-        system_difficulty = int(difficulty.get("level", 1))
+        system_index = int(difficulty.get("system_index", 0))
+        system_bonus = float(difficulty.get("system_bonus", 0.0))
+        profile = DIFFICULTY_SETTINGS[difficulty_choice]
 
-        asteroid_speed_multiplier = float(
-            difficulty.get("asteroid_speed_multiplier", 1.0)
+        asteroid_speed_multiplier = (
+            float(difficulty.get("asteroid_speed_multiplier", 1.0))
+            * profile["asteroid_speed"]
+            * (1.0 + system_bonus * 0.70)
         )
+        asteroid_density = (
+            profile["asteroid_density"]
+            * (1.0 + system_bonus * 0.80)
+        )
+
         asteroid_interval = max(
-            10,
-            int(ASTEROID_SPAWN_INTERVAL / max(1.0, asteroid_speed_multiplier)),
+            ASTEROID_MIN_SPAWN_INTERVAL,
+            int(ASTEROID_SPAWN_INTERVAL / max(0.35, asteroid_density)),
         )
 
         asteroid_spawn_timer += 1
         if asteroid_spawn_timer >= asteroid_interval:
-            asteroid = create_asteroid(WIDTH, HEIGHT)
+            asteroid = create_asteroid(
+                WIDTH,
+                HEIGHT,
+                size_multiplier=profile["asteroid_size"] * (1.0 + system_bonus * 0.18),
+                speed_multiplier=asteroid_speed_multiplier,
+            )
             if asteroid is not None:
-                asteroid.speed = max(
-                    2,
-                    int(asteroid.speed * asteroid_speed_multiplier),
-                )
                 asteroid_list.append(asteroid)
             asteroid_spawn_timer = 0
 
@@ -308,7 +360,7 @@ while True:
         enemy_result = enemy_manager.update(
             dt=dt,
             score=score,
-            system_difficulty=system_difficulty,
+            system_difficulty=system_index,
             player_lasers=laser_list,
             player_torpedoes=torpedo_list,
         )
@@ -323,6 +375,15 @@ while True:
         screen.fill(BLACK)
         background.update(score)
         background.draw(screen)
+
+        if enemy_result.warning_text:
+            draw_enemy_warning(
+                screen,
+                enemy_result.warning_text,
+                WIDTH,
+                HEIGHT,
+                enemy_manager.warning_timer_ms,
+            )
 
         # Draw enemies and their projectiles.
         enemy_manager.draw(screen, show_hitboxes=spieler.show_hitbox)

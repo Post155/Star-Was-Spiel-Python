@@ -8,6 +8,7 @@ from game.constants import HEIGHT as DEFAULT_HEIGHT
 from game.constants import WIDTH as DEFAULT_WIDTH
 from game.constants import SYSTEM_SWITCH_POINTS, SYSTEM_SWITCH_TIME_MS
 from game.constants import HYPERSPACE_DURATION_MS
+from game.constants import DIFFICULTY_SETTINGS, DEFAULT_DIFFICULTY, SYSTEM_DIFFICULTY_BONUS, SYSTEM_PROGRESS_MAX_BONUS
 
 from .objects import ForegroundObject
 from .planet_manager import PlanetManager
@@ -86,11 +87,26 @@ class BackgroundManager:
         self.last_switch_time = pygame.time.get_ticks()
 
     def get_current_difficulty(self):
+        # Gameplay difficulty is selected in the menu. System progression is
+        # represented separately so the enemy/asteroid systems can scale from
+        # the same central configuration.
+        system_index = self.systems.order_index
+        if system_index < len(SYSTEM_DIFFICULTY_BONUS):
+            system_bonus = SYSTEM_DIFFICULTY_BONUS[system_index]
+        else:
+            system_bonus = SYSTEM_DIFFICULTY_BONUS[-1]
+
         return {
-            'level': self.systems.get_current_difficulty(),
+            'level': system_index + 1,
+            'system_index': system_index,
+            'system_bonus': system_bonus,
             'planet_max_visible': self.planet_manager.planet_max_visible,
-            'asteroid_speed_multiplier': getattr(self.systems.current_system(), 'asteroid_speed_mul', 1.0),
-            'asteroid_spawn_interval': max(18, int(60 / max(1, self.systems.get_current_difficulty()))),
+            'asteroid_speed_multiplier': getattr(
+                self.systems.current_system(), 'asteroid_speed_mul', 1.0
+            ),
+            'asteroid_spawn_interval': max(
+                18, int(60 / max(1, system_index + 1))
+            ),
         }
 
     def get_current_system_name(self) -> str:
