@@ -10,9 +10,12 @@ from game.constants import (
     HEIGHT,
     SCREEN_TITLE,
     WIDTH,
+<<<<<<< HEAD
     DIFFICULTY_SETTINGS,
     DEFAULT_DIFFICULTY,
     ASTEROID_MIN_SPAWN_INTERVAL,
+=======
+>>>>>>> origin/develop
 )
 from game.enemies import EnemyManager
 from game.entities.asteroid import Asteroid
@@ -20,6 +23,7 @@ from game.entities.explosion import Explosion
 from game.entities.ships import BattleDroid, MillenniumFalcon, Tiefighter, XWing
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
+
 
 
 pygame.init()
@@ -86,6 +90,7 @@ def faction_for_player(player):
     return "rebels" if isinstance(player, (XWing, MillenniumFalcon)) else "empire"
 
 
+<<<<<<< HEAD
 def create_asteroid(width, height, size_multiplier=1.0, speed_multiplier=1.0):
     """Create a balanced asteroid. All multipliers come from constants.py."""
     if not asteroid_images:
@@ -120,6 +125,14 @@ def draw_enemy_warning(screen, text, width, height, remaining_ms):
     screen.blit(title, title.get_rect(center=(width // 2, int(height * 0.40))))
     screen.blit(message, message.get_rect(center=(width // 2, int(height * 0.50))))
 
+=======
+def create_asteroid(width, height):
+    """Create an asteroid using the original animated asteroid system."""
+    if not asteroid_images:
+        return None
+
+    return Asteroid(width, height, asteroid_images)
+>>>>>>> origin/develop
 
 
 def destroy_asteroid(asteroid, explosion_list):
@@ -147,6 +160,7 @@ while True:
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
     set_window_icon()
 
+<<<<<<< HEAD
     difficulty_choice, WIDTH, HEIGHT = difficulty_selection(
         screen,
         clock,
@@ -157,6 +171,8 @@ while True:
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
     set_window_icon()
 
+=======
+>>>>>>> origin/develop
     faction_logo_img = (
         rebel_logo_img if faction_choice == "rebels" else empire_logo_img
     )
@@ -269,6 +285,7 @@ while True:
 
         # ------------------------------------------------------------
         # ASTEROID SYSTEM
+<<<<<<< HEAD
         # Difficulty + current star system both affect density, speed and size.
         # ------------------------------------------------------------
         difficulty = background.get_current_difficulty()
@@ -289,10 +306,24 @@ while True:
         asteroid_interval = max(
             ASTEROID_MIN_SPAWN_INTERVAL,
             int(ASTEROID_SPAWN_INTERVAL / max(0.35, asteroid_density)),
+=======
+        # Runs independently of the enemy AI system.
+        # ------------------------------------------------------------
+        difficulty = background.get_current_difficulty()
+        system_difficulty = int(difficulty.get("level", 1))
+
+        asteroid_speed_multiplier = float(
+            difficulty.get("asteroid_speed_multiplier", 1.0)
+        )
+        asteroid_interval = max(
+            10,
+            int(ASTEROID_SPAWN_INTERVAL / max(1.0, asteroid_speed_multiplier)),
+>>>>>>> origin/develop
         )
 
         asteroid_spawn_timer += 1
         if asteroid_spawn_timer >= asteroid_interval:
+<<<<<<< HEAD
             asteroid = create_asteroid(
                 WIDTH,
                 HEIGHT,
@@ -300,6 +331,14 @@ while True:
                 speed_multiplier=asteroid_speed_multiplier,
             )
             if asteroid is not None:
+=======
+            asteroid = create_asteroid(WIDTH, HEIGHT)
+            if asteroid is not None:
+                asteroid.speed = max(
+                    2,
+                    int(asteroid.speed * asteroid_speed_multiplier),
+                )
+>>>>>>> origin/develop
                 asteroid_list.append(asteroid)
             asteroid_spawn_timer = 0
 
@@ -376,6 +415,7 @@ while True:
         background.update(score)
         background.draw(screen)
 
+<<<<<<< HEAD
         if enemy_result.warning_text:
             draw_enemy_warning(
                 screen,
@@ -385,6 +425,8 @@ while True:
                 enemy_manager.warning_timer_ms,
             )
 
+=======
+>>>>>>> origin/develop
         # Draw enemies and their projectiles.
         enemy_manager.draw(screen, show_hitboxes=spieler.show_hitbox)
 
