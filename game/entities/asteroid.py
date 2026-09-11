@@ -23,12 +23,14 @@ class Asteroid:
         speed: vertical speed
     """
 
-    def __init__(self, window_width, window_height, asteroid_images):
+    def __init__(self, window_width, window_height, asteroid_images, size_multiplier=1.0, speed_multiplier=1.0):
         self.window_width = window_width
         self.window_height = window_height
         self.asteroid_images = asteroid_images
 
-        self.scale = random.choice([0.25, 0.5, 0.75, 1.0])
+        self.scale = random.choice([0.25, 0.5, 0.75, 1.0]) * size_multiplier
+        self.scale = max(0.18, min(1.25, self.scale))
+        self.speed_multiplier = speed_multiplier
 
         self.frame = 0
         self.frame_counter = 0
@@ -50,7 +52,7 @@ class Asteroid:
         self.y = -self.height
 
         # asteroid speed is chosen from ASTEROID_SPEED_RANGE in constants.py
-        self.speed = random.randint(ASTEROID_SPEED_RANGE[0], ASTEROID_SPEED_RANGE[1])
+        self.speed = random.randint(ASTEROID_SPEED_RANGE[0], ASTEROID_SPEED_RANGE[1]) * self.speed_multiplier
 
     def update(self):
         self.y += self.speed

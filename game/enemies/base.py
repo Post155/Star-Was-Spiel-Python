@@ -50,10 +50,13 @@ class EnemyBase:
         self.y = float(spawn_y)
         self.vx = 0.0
         self.vy = 0.0
-        self.max_hp = int(round(archetype.max_hp * (1.0 + max(0.0, difficulty_scale - 1.0) * 0.06)))
+        # The manager already applies the selected difficulty and system
+        # progression to the archetype. Keep the entity itself data-driven so
+        # balancing stays centralized in game/constants.py.
+        self.max_hp = int(archetype.max_hp)
         self.hp = self.max_hp
-        self.max_speed = archetype.max_speed * (1.0 + min(0.32, max(0.0, difficulty_scale - 1.0) * 0.035))
-        self.acceleration = archetype.acceleration
+        self.max_speed = float(archetype.max_speed)
+        self.acceleration = float(archetype.acceleration)
         self.alive = True
         self.damage_flash_timer = 0.0
         self.previous_player_x = None

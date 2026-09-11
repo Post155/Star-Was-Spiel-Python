@@ -89,3 +89,91 @@ SHIP_SCALE_BATTLEDROID = 0.12
 
 # Asteroid speed range (min, max)
 ASTEROID_SPEED_RANGE = (2, 8)
+
+# ============================================================================
+# DIFFICULTY / BALANCING
+# ============================================================================
+# All gameplay balancing values are centralized here.
+# Change these values to fine-tune the game without editing the game loop.
+#
+# Difficulty:
+#   EASY     = Einfach
+#   NORMAL   = Normal
+#   HARD     = Schwer
+#   EXPERT   = Experte
+
+DIFFICULTY_SETTINGS = {
+    "easy": {
+        "name": "Einfach",
+        "enemy_accuracy": 0.72,
+        "enemy_hp": 0.80,
+        "enemy_speed": 0.82,
+        "enemy_aggression": 0.70,
+        "enemy_max": 0.65,
+        "enemy_spawn": 1.25,
+        "asteroid_density": 0.78,
+        "asteroid_speed": 0.82,
+        "asteroid_size": 0.90,
+    },
+    "normal": {
+        "name": "Normal",
+        "enemy_accuracy": 0.90,
+        "enemy_hp": 1.00,
+        "enemy_speed": 0.95,
+        "enemy_aggression": 0.88,
+        "enemy_max": 0.82,
+        "enemy_spawn": 1.10,
+        "asteroid_density": 0.90,
+        "asteroid_speed": 0.92,
+        "asteroid_size": 0.95,
+    },
+    "hard": {
+        "name": "Schwer",
+        "enemy_accuracy": 1.00,
+        "enemy_hp": 1.12,
+        "enemy_speed": 1.05,
+        "enemy_aggression": 1.05,
+        "enemy_max": 1.00,
+        "enemy_spawn": 0.92,
+        "asteroid_density": 1.05,
+        "asteroid_speed": 1.05,
+        "asteroid_size": 1.00,
+    },
+    "expert": {
+        "name": "Experte",
+        "enemy_accuracy": 1.08,
+        "enemy_hp": 1.25,
+        "enemy_speed": 1.14,
+        "enemy_aggression": 1.20,
+        "enemy_max": 1.15,
+        "enemy_spawn": 0.80,
+        "asteroid_density": 1.18,
+        "asteroid_speed": 1.15,
+        "asteroid_size": 1.08,
+    },
+}
+
+DEFAULT_DIFFICULTY = "normal"
+
+# Enemy progression is score based. Before the first threshold the player
+# fights asteroids only.
+ENEMY_UNLOCK_STANDARD_POINTS = 1000
+ENEMY_UNLOCK_HEAVY_POINTS = 3000
+ENEMY_UNLOCK_ELITE_POINTS = 6000
+
+# Difficulty added by entering later star systems.
+# System 1 = 0%, System 2 = +15%, System 3 = +30%, System 4 = +50%.
+# Later systems continue with the last value unless explicitly configured.
+SYSTEM_DIFFICULTY_BONUS = (0.00, 0.15, 0.30, 0.50)
+
+# Additional gradual scaling inside a system. This prevents a sudden jump
+# immediately after a system transition.
+SYSTEM_PROGRESS_MAX_BONUS = 0.20
+
+# Warning display before a new enemy class can spawn.
+ENEMY_WARNING_DURATION_MS = 2600
+
+# Asteroid tuning. These are deliberately separate so they can be adjusted.
+ASTEROID_BASE_SPAWN_INTERVAL = ASTEROID_SPAWN_INTERVAL
+ASTEROID_MIN_SPAWN_INTERVAL = 22
+ASTEROID_SIZE_RANGE = (0.25, 1.00)
