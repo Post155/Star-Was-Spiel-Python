@@ -616,7 +616,7 @@ def run_multiplayer_flow(config):
 
 
 def main():
-    global screen
+    global screen, WIDTH, HEIGHT
 
     while True:
         mode = main_menu(screen, clock, WIDTH, HEIGHT)
