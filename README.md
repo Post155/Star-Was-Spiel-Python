@@ -322,7 +322,6 @@ StarWars/
     └── enemies/
         ├── __init__.py
         ├── ai.py
-        ├── audio.py
         ├── base.py
         ├── config.py
         ├── manager.py
@@ -355,17 +354,6 @@ StarWars/
 - Anpassbare Raumschiffe
 
 ---
-
-# 📸 Screenshots
-
-```text
-docs/menu.png
-docs/gameplay.png
-docs/combat.png
-docs/bossfight.png
-```
-
-*Sobald erste spielbare Versionen verfügbar sind, können hier Screenshots und GIFs eingefügt werden.*
 
 ## 🎮 Lokaler PvP-Duell-Modus
 
