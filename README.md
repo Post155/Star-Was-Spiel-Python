@@ -1,8 +1,22 @@
 # 🚀 Star Wars: Galactic Assault
 
-Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschlachten.
+Ein actionreiches 2D-Arcade-Weltraumspiel mit **Python** und **Pygame**.
 
-Übernimm die Kontrolle über ikonische Raumschiffe, durchquere gefährliche Asteroidenfelder und stelle dich intelligenten KI-Gegnern. Mit jedem erreichten Sternensystem steigt die Herausforderung, während neue Gegner und Bedrohungen freigeschaltet werden.
+Übernimm die Kontrolle über verschiedene Raumschiffe, durchquere dynamische
+Sternensysteme, kämpfe gegen KI-Gegner und tritt im lokalen oder LAN-basierten
+Mehrspielermodus gegen andere Spieler an.
+
+## ✨ Highlights
+
+- 🚀 4 spielbare Raumschiffe
+- 🤖 Dynamisches KI-Gegnersystem
+- ☄️ Dynamisches Asteroidensystem
+- 🌌 Fortschritt durch mehrere Sternensysteme
+- ⚙️ 4 Schwierigkeitsstufen
+- 🎮 Lokaler PvP-Modus
+- 🌐 LAN-Multiplayer
+- 🏆 Score- und Highscore-System
+- 💥 Laser, Torpedos und Explosionen
 
 ---
 
@@ -11,22 +25,26 @@ Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschl
 - [📦 Installation](#-installation)
 - [▶ Spiel starten](#-spiel-starten)
 
-- [Features](#-features)
-    - [Spielbare Schiffe](#spielbare-schiffe)
-    - [Gegner-KI](#gegner-ki)
-    - [Gegnerzuordnung](#gegnerzuordnung)
-    - [Asteroidensystem](#asteroidensystem)
-- [🪐 Planeten & Welten](#-planeten--welten)
+- [🚀 Features](#-features)
+  - [🎮 Spielmodi](#-spielmodi)
+  - [🚀 Spielbare Schiffe](#-spielbare-schiffe)
+  - [☄️ Asteroidensystem](#-asteroidensystem)
+  - [💥 Waffen](#-waffen)
+
+- [🌐 Mehrspielermodi](#-mehrspielermodi)
+  - [LAN Multiplayer](#lan-multiplayer)
+  - [LAN PvP](#lan-pvp)
+  - [Lokaler PvP](#lokaler-pvp)
+
+- [🏆 Score-System](#-score-system)
 
 - [⚙️ Schwierigkeitssystem](#️-schwierigkeitssystem)
   - [Verfügbare Schwierigkeitsstufen](#verfügbare-schwierigkeitsstufen)
-  - [Balancing & Konfiguration](#️-balancing--konfiguration)
-  - [Difficulty Presets](#difficulty-presets)
+  - [Balancing & Konfiguration](#balancing--konfiguration)
   - [Gegner-Freischaltungen](#gegner-freischaltungen)
   - [Sternensystem-Skalierung](#sternensystem-skalierung)
 
-- [📈 Progression-System](#-progression-system)
-- [🌌 Dynamische Sternensysteme](#-dynamische-sternensysteme)
+- [📈 Progression & Sternensysteme](#-progression--sternensysteme)
 
 - [🧠 KI-System](#-ki-system)
   - [Komponenten](#komponenten)
@@ -37,9 +55,9 @@ Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschl
 - [🎯 Spielziel](#-spielziel)
 - [🎮 Steuerung](#-steuerung)
 - [📂 Projektstruktur](#-projektstruktur)
-- [🛣️ Roadmap](#️-roadmap)
-- [🎮 Lokaler PvP-Modus](#-lokaler-pvp-modus)
+- [🪐 Planeten & Welten](#-planeten--welten)
 - [⚠️ Rechtlicher Hinweis](#️-rechtlicher-hinweis)
+
 
 ---
 
@@ -47,76 +65,80 @@ Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschl
 
 ## Voraussetzungen
 
-- Python 3.8 oder neuer
-- `pygame` oder `pygame-ce`
+- Python **3.8 oder neuer**
+- Windows / Linux / macOS
+- Eine Netzwerkverbindung wird nur für den LAN-Multiplayer benötigt
 
-### pygame installieren
+## Installation
+
+Repository klonen oder herunterladen:
+
+```bash
+git clone https://github.com/Post155/Star-Was-Spiel-Python.git
+cd StarWars
+```
+
+Abhängigkeiten installieren:
+
+```bash
+pip install -r requirements.txt
+```
+
+Alternativ kann Pygame direkt installiert werden:
 
 ```bash
 pip install pygame
 ```
 
-### pygame-ce installieren
-
-```bash
-pip install pygame-ce
-```
+> 💡 Für eine saubere Entwicklungsumgebung empfiehlt sich zusätzlich eine
+> virtuelle Python-Umgebung.
 
 ---
 
 # ▶ Spiel starten
 
+Nach der Installation kann das Spiel mit folgendem Befehl gestartet werden:
+
 ```bash
-pip install -r requirements.txt
 python StarWarsGame.py
 ```
+
+Nach dem Start stehen die verfügbaren Spielmodi über das Mehrspieler-/Spielmenü
+zur Auswahl.
+
+> Für LAN-Spielmodi müssen sich die beteiligten Computer im selben lokalen
+> Netzwerk befinden.
 
 ---
 
 # 🚀 Features
 
-## Spielbare Schiffe
+## 🎮 Spielmodi
+
+Das Projekt unterstützt mehrere Spielvarianten:
+
+- 🎮 **Einzelspieler**
+- 🌐 **LAN Multiplayer**
+- ⚔️ **LAN PvP**
+- 🎮 **Lokaler PvP**
+
+Der Einzelspieler konzentriert sich auf Progression, Asteroiden und KI-Gegner.
+Die Mehrspielermodi erweitern das Spiel um den Wettbewerb zwischen mehreren
+Spielern.
+
+## 🚀 Spielbare Schiffe
 
 - X-Wing
 - Millennium Falcon
 - TIE-Fighter
 - Battle Droid Fighter
 
-Jedes Schiff verfügt über eigene Eigenschaften, Waffen und Flugcharakteristiken.
+Jedes Schiff verfügt über eigene Eigenschaften, Waffen und
+Flugcharakteristiken.
 
-## Gegner-KI
+## ☄️ Asteroidensystem
 
-Vier verschiedene Gegnerklassen:
-
-- Standard
-- Schnell
-- Schwer
-- Elite
-
-Die KI kann:
-
-- Spieler aktiv verfolgen
-- Flankierungsmanöver ausführen
-- Andere Gegner unterstützen
-- Laser- und Torpedoangriffen ausweichen
-- Zielgenaue Lasersalven abfeuern
-- Taktische Torpedos einsetzen
-- Dynamisch auf Spielsituationen reagieren
-
-## Gegnerzuordnung
-
-Jedes Spielerschiff besitzt einen fest definierten Gegenspieler.
-
-| Spielerschiff | KI-Gegner |
-|---|---|
-| X-Wing | TIE-Fighter |
-| Millennium Falcon | Battle Droid Fighter |
-| TIE-Fighter | X-Wing |
-| Battle Droid Fighter | Millennium Falcon |
-
----
-
-## Asteroidensystem
+Das Asteroidensystem bildet einen zentralen Teil des Gameplays.
 
 - Mehrere Asteroidengrößen
 - Individuelle Geschwindigkeiten
@@ -125,115 +147,95 @@ Jedes Spielerschiff besitzt einen fest definierten Gegenspieler.
 - Kollisions- und Schadenssystem
 - Fortschrittsabhängige Skalierung
 
+## 💥 Waffen
+
+Die Raumschiffe verfügen über unterschiedliche Waffen:
+
+- Laser
+- Torpedos
+
+Laser dienen als reguläre Angriffe, während Torpedos als zusätzliche
+Angriffsoption eingesetzt werden.
+
 ---
 
-# 🪐 Planeten & Welten
+# 🌐 Mehrspielermodi
 
-Alle im Spiel verfügbaren Welten aus `Pixelarts/Planets` sind hier als Übersicht dokumentiert.
+Das Spiel enthält neben dem Einzelspieler mehrere Mehrspielervarianten.
 
-#### Tatooine
+## LAN Multiplayer
 
-![Tatooine](Pixelarts/Planets/core_worlds/planet_tatooine.png)
+Der LAN-Multiplayer ermöglicht das gemeinsame Spielen über ein lokales
+Netzwerk.
 
-- Wüstenwelt im äußeren Randbereich des Weltraums.
-- Heimat von Anakin Skywalker, Luke Skywalker und vielen Schmugglern.
-- Charakteristisch für Sandstürme, Durst, Düne und die ikonischen Lars-Möbel im Sonnenschein.
+### Verbindung
 
-#### Kamino
+- Die beteiligten PCs befinden sich im selben lokalen Netzwerk.
+- Es wird keine externe Server-Infrastruktur benötigt.
+- Das Spiel kann über die vorhandenen LAN-Funktionen verbunden werden.
 
-![Kamino](Pixelarts/Planets/core_worlds/planet_kamino.png)
+### Spielprinzip
 
-- Ozeanplanet mit einer flachen, klaren Atmosphäre und übergroßen Gewässern.
-- Heimat der Kaminoaner und der Klon-Armee des Galaktischen Reichs.
-- Bekannt für seine saubere, technisch fortschrittliche Kultur und die präzise Herstellung von Klonsoldaten.
+Jeder Spieler spielt mit seiner eigenen Spielansicht und kann gleichzeitig mit
+anderen Spielern im selben Match antreten.
 
-#### Coruscant
+Das Score-/Highscore-System dient dabei als gemeinsamer Wettbewerbsrahmen.
 
-![Coruscant](Pixelarts/Planets/core_worlds/planet_corusant.png)
+## LAN PvP
 
-- Die glitzernde Hauptstadtwelt, über die ganze Oberfläche mit Städten und Türmen überzogen.
-- Sitz der galaktischen Regierung, des Senats und der politischen Macht im Star-Wars-Universum.
-- Eine chaotische, dichte Megacity mit unzähligen Lichtpunkten und großer industrieller Aktivität.
+Im LAN-PvP treten Spieler direkt gegeneinander an.
 
-#### Hoth
+Die Netzwerkvariante nutzt die vorhandenen PvP-Regeln, Waffen und
+Trefferlogiken und erweitert sie um die Netzwerkverbindung zwischen den PCs.
 
-![Hoth](Pixelarts/Planets/core_worlds/planet_hoth.png)
+## Lokaler PvP
 
-- Eispanzer und kalte Eisplanet-Ökologie mit schneebedeckten Plateaus.
-- Die Rebellenbasis auf Hoth ist eine der wichtigsten Stützpunkte im Krieg gegen das Imperium.
-- Kälte, Eisstürme und starke Wetterfronten bestimmen die Bedingungen auf der Welt.
+Der lokale PvP-Modus ermöglicht ein direktes Duell auf **einem einzigen PC**.
 
-#### Endor
+Dieser Modus benötigt keine Netzwerkverbindung.
 
-![Endor](Pixelarts/Planets/core_worlds/planet_endor.png)
+### Lokale Steuerung
 
-- Waldmond mit dichten Wäldern, grünen Höhen und einem ruhigen, üppigen Ökosystem.
-- Heimat der Ewoks, einer der charakteristischsten Völker der Saga.
-- Eine Welt mit natürlicher Tarnung, Schutz und einem starken Vertrautheitssinn mit der Natur.
+**Spieler 1 – unteres Schiff**
 
-#### Mustafar
+- `A / D` → Bewegen
+- `W` → Laser
+- `S` → Torpedo
 
-![Mustafar](Pixelarts/Planets/core_worlds/planet_Mustafar.png)
+**Spieler 2 – oberes Schiff**
 
-- Lava- und Vulkankontinentalwelt mit aktiver vulkanischer Aktivität.
-- Bekannt als Ort der epischen Duelle und der dunklen Macht im Inneren des Sith-Imperiums.
-- Die Erdkörper bilden ein raues, glühendes und extrem gefährliches Terrain.
+- `← / →` → Bewegen
+- `↑` → Laser
+- `↓` → Torpedo
 
-#### Earth
+Die lokale PvP-Steuerung ist ausschließlich für diesen Spielmodus aktiv.
+Einzelspieler und Netzwerkmodi verwenden weiterhin ihre vorgesehenen Eingaben.
 
-![Earth](Pixelarts/Planets/milkyway/planet_earth.png)
+### Mehrspieler-Menü
 
-- Die Erde als irdische Referenzwelt im Spiel und im Kosmoskontext.
-- Symbolisiert den Heimatplaneten der Menschheit und den Bezug zu irdischer Raumfahrt.
-- Ein ruhiger, blauer Planet mit klarer Atmosphäre und starkem visuellen Kontrast zu den Sternensystemen.
+1. LAN Multiplayer
+2. LAN PvP
+3. Lokaler PvP
 
-#### Saturn
+---
 
-![Saturn](Pixelarts/Planets/milkyway/planet_saturn.png)
+# 🏆 Score-System
 
-- Gasriese mit markanten Ringen aus Eis, Staub und Gestein.
-- Ein kraftvoller, heller Planet im äußeren Sonnensystem mit viel visueller Tiefe.
-- Bekannt für die imposante Ringstruktur und seine visuelle Präsenz im Weltraum.
+Das Spiel verwendet ein Punktesystem für den Spielfortschritt und den
+Wettbewerb.
 
-#### Schwarzes Loch
+Der Score ist unter anderem relevant für:
 
-![Schwarzes Loch](Pixelarts/Planets/milkyway/planet_schwarzesLoch.png)
+- Gegner-Freischaltungen
+- Progression
+- Highscore
+- Mehrspieler-Wettbewerb
 
-- Extrem gefährliche Gravitationsanomalie im Zentrum von Raum- und Zeitfenstern.
-- Ein visueller Fokuspunkt für turbulente, gefährliche und unheimliche Sternensysteme.
-- Repräsentiert die Grenze zwischen Stabilität und Katastrophe im Weltraum.
+Im Einzelspieler ist der Score eng mit der Freischaltung neuer Gegnerstufen
+verbunden.
 
-#### Purpurplanet
-
-![Purpurplanet](Pixelarts/Planets/core_worlds/planet_purple.png)
-
-- Eine exotische violette Welt mit ruhigem, surrealem Erscheinungsbild.
-- Typisch für einzigartige und fremdartige Planetensysteme im Spiel.
-- Eine auffällige Welt mit klarer Farbgebung und starkem Stil.
-
-#### Todesstern
-
-![Todesstern](Pixelarts/Planets/death_star/TodesternEins.png)
-
-- Der legendäre Superwaffentöter mit tödlicher Energie und militärischer Macht.
-- Eine Station mit enormer Zerstörungskraft und zentralem Einfluss auf die galaktische Geschichte.
-- Symbol für das Imperium und dessen totale Kontrolle über das Sternensystem.
-
-#### Todesstern
-
-![Todesstern](Pixelarts/Planets/death_star/TodesternZwei.png)
-
-- Der legendäre Superwaffentöter mit tödlicher Energie und militärischer Macht.
-- Eine Station mit enormer Zerstörungskraft und zentralem Einfluss auf die galaktische Geschichte.
-- Symbol für das Imperium und dessen totale Kontrolle über das Sternensystem.
-
-#### Sternzerstörer
-
-![Sternzerstörer](Pixelarts/Planets/death_star/Sternzerstörer.png)
-
-- Ein imperialer Kriegsschifftyp aus der Klasse der Todesstern-Klassen-Einheiten.
-- Repräsentiert die militärische Präsenz und die Stärke des galaktischen Imperiums im Raum.
-- Ein visueller Hinweis auf die räumliche Dominanz, die in vielen Weltraumkonflikten der Saga sichtbar wird.
+Im Mehrspielermodus können die aktuellen Spielstände der Spieler miteinander
+verglichen werden.
 
 ---
 
@@ -275,7 +277,8 @@ game/constants.py
 
 ## Difficulty Presets
 
-Über `DIFFICULTY_SETTINGS` können folgende Werte angepasst werden:
+Über `DIFFICULTY_SETTINGS` können unter anderem folgende Werte angepasst
+werden:
 
 - `enemy_accuracy`
 - `enemy_hp`
@@ -329,7 +332,7 @@ ENEMY_UNLOCK_HEAVY_POINTS = 3000
 ENEMY_UNLOCK_ELITE_POINTS = 6000
 ```
 
-Vor 1.000 Punkten erscheinen keine Gegner.
+Vor **1.000 Punkten** erscheinen keine Gegner.
 
 | Punkte | Freischaltung |
 |---:|---|
@@ -370,29 +373,24 @@ Der Bonus beeinflusst:
 
 ---
 
-# 📈 Progression-System
+# 📈 Progression & Sternensysteme
 
-Zu Beginn befindet sich der Spieler allein im Sternensystem und kämpft ausschließlich gegen Asteroiden. Dadurch können Steuerung und Waffen zunächst ohne Druck erlernt werden.
+Zu Beginn befindet sich der Spieler allein im Sternensystem und kämpft
+ausschließlich gegen Asteroiden. Dadurch können Steuerung und Waffen zunächst
+ohne Druck erlernt werden.
 
 ## Gegner-Freischaltung
 
-```text
-0–999 Punkte
-└─ Nur Asteroiden
-
-1.000 Punkte
-└─ Erste feindliche Schiffe erscheinen
-
-3.000 Punkte
-└─ Erweiterte Gegnerklassen werden freigeschaltet
-
-6.000 Punkte
-└─ Elite-Gegner erscheinen
-```
+| Punkte | Ereignis |
+|---:|---|
+| 0–999 | Nur Asteroiden |
+| 1.000 | Erste feindliche Schiffe erscheinen |
+| 3.000 | Erweiterte Gegnerklassen werden freigeschaltet |
+| 6.000 | Elite-Gegner erscheinen |
 
 Vor jeder neuen Gegnerstufe wird eine Warnmeldung angezeigt.
 
-### Beispielmeldungen
+Beispiele:
 
 ```text
 ⚠ Feindliche Schiffe wurden entdeckt!
@@ -401,11 +399,10 @@ Vor jeder neuen Gegnerstufe wird eine Warnmeldung angezeigt.
 ⚠ Unbekanntes Signal erkannt!
 ```
 
----
+## Dynamische Sternensysteme
 
-# 🌌 Dynamische Sternensysteme
-
-Zusätzlich zur gewählten Schwierigkeit erhöht jedes neue Sternensystem die Gesamtgefahr.
+Zusätzlich zur gewählten Schwierigkeit erhöht jedes neue Sternensystem die
+Gesamtgefahr.
 
 | Sternensystem | Schwierigkeitsbonus |
 |---|---:|
@@ -414,7 +411,7 @@ Zusätzlich zur gewählten Schwierigkeit erhöht jedes neue Sternensystem die Ge
 | System 3 | +30 % |
 | System 4 | +50 % |
 
-Die Skalierung beeinflusst:
+Die Skalierung beeinflusst unter anderem:
 
 - Gegnerstärke
 - Gegnerverhalten
@@ -422,7 +419,7 @@ Die Skalierung beeinflusst:
 - Asteroidendichte
 - Asteroidengeschwindigkeit
 
-Dadurch bleibt das Spiel langfristig herausfordernd, ohne den Spieler zu überfordern.
+Dadurch steigt die Herausforderung mit dem Fortschritt durch die Systeme.
 
 ---
 
@@ -432,11 +429,13 @@ Die Gegner-KI wurde modular aufgebaut und ist vollständig erweiterbar.
 
 ## Komponenten
 
-- **EnemyBase:** Lebenspunkte, Hitbox, Sprite und Basisschnittstelle
-- **EnemyBrain:** Zielwahl, Reaktionszeit und Entscheidungslogik
-- **EnemyMovement:** Weiche, beschleunigungsbasierte Bewegung
-- **EnemyWeaponSystem:** Salven, Zielvorhalt und Torpedos
-- **EnemyManager:** Spawnlogik, Schwierigkeit, Gruppenbildung und Score-System
+| Komponente | Aufgabe |
+|---|---|
+| **EnemyBase** | Lebenspunkte, Hitbox, Sprite und Basisschnittstelle |
+| **EnemyBrain** | Zielwahl, Reaktionszeit und Entscheidungslogik |
+| **EnemyMovement** | Weiche, beschleunigungsbasierte Bewegung |
+| **EnemyWeaponSystem** | Salven, Zielvorhalt und Torpedos |
+| **EnemyManager** | Spawnlogik, Schwierigkeit, Gruppenbildung und Score-System |
 
 ## Gruppenrollen
 
@@ -460,9 +459,11 @@ Dadurch bewegen sich mehrere Gegner nicht auf identischen Flugbahnen.
 
 ## Dodge-System
 
-Die KI prüft nur in bestimmten Reaktionsintervallen, ob ein Projektil ihre Flugbahn kreuzt.
+Die KI prüft nur in bestimmten Reaktionsintervallen, ob ein Projektil ihre
+Flugbahn kreuzt.
 
-Dadurch entstehen keine unrealistisch perfekten Ausweichmanöver und gleichzeitig bleibt die CPU-Last gering.
+Dadurch entstehen keine unrealistisch perfekten Ausweichmanöver und
+gleichzeitig bleibt die CPU-Last gering.
 
 - Elite-Gegner reagieren schneller
 - Standardgegner reagieren ausgewogen
@@ -507,16 +508,38 @@ Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
 
 # 🎮 Steuerung
 
+## Einzelspieler
+
 | Taste | Aktion |
 |---|---|
-| A / ← | Nach links bewegen |
-| D / → | Nach rechts bewegen |
-| W / ↑ | Nach oben bewegen |
-| Leertaste | Laser schießen |
-| S / ↓ | Torpedo abfeuern |
-| H | Hitboxen anzeigen |
-| 1 / 2 / 3 / 4 | Schiff wechseln (Debug) |
-| ESC | Pause / Zurück |
+| `A / ←` | Nach links bewegen |
+| `D / →` | Nach rechts bewegen |
+| `W / ↑` | Nach oben bewegen |
+| `Leertaste` | Laser schießen |
+| `S / ↓` | Torpedo abfeuern |
+| `H` | Hitboxen anzeigen |
+| `1 / 2 / 3 / 4` | Schiff wechseln (Debug) |
+| `ESC` | Pause / Zurück |
+
+## Lokaler PvP
+
+### Spieler 1 – unteres Schiff
+
+| Taste | Aktion |
+|---|---|
+| `A / D` | Bewegen |
+| `W` | Laser |
+| `S` | Torpedo |
+
+### Spieler 2 – oberes Schiff
+
+| Taste | Aktion |
+|---|---|
+| `← / →` | Bewegen |
+| `↑` | Laser |
+| `↓` | Torpedo |
+
+> Die lokale PvP-Steuerung ist ausschließlich im lokalen PvP-Modus aktiv.
 
 ---
 
@@ -525,16 +548,16 @@ Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
 ```text
 StarWars/
 │
-├── StarWarsGame.py
-├── README.md
-├── requirements.txt
+├── StarWarsGame.py       # Hauptprogramm
+├── README.md             # Projektdokumentation
+├── requirements.txt      # Python-Abhängigkeiten
 │
 └── game/
-    ├── assets.py
-    ├── background.py
-    ├── constants.py
-    ├── entities.py
-    ├── ui.py
+    ├── assets.py         # Assets und Grafiken
+    ├── background.py     # Hintergrundsystem
+    ├── constants.py      # Globale Konfiguration
+    ├── entities.py       # Spielobjekte
+    ├── ui.py             # Benutzeroberfläche
     │
     └── enemies/
         ├── __init__.py
@@ -547,66 +570,40 @@ StarWars/
         ├── weapons.py
         └── audio.py
 ```
-
 ---
 
-# 🛣️ Roadmap
+# 🪐 Planeten & Welten
 
-## Version 1.1
+Die verfügbaren Welten und Weltraumobjekte befinden sich unter
+`Pixelarts/Planets`.
 
-- Erste Bossgegner
-- Neue Gegnerklassen
-- Verbesserte Partikeleffekte
+| Welt | Asset |
+|---|---|
+| Tatooine | ![Tatooine](Pixelarts/Planets/core_worlds/planet_tatooine.png) |
+| Kamino |  ![Kamino](Pixelarts/Planets/core_worlds/planet_kamino.png) |
+| Coruscant |  ![Coruscant](Pixelarts/Planets/core_worlds/planet_corusant.png) |
+| Hoth |  ![Hoth](Pixelarts/Planets/core_worlds/planet_hoth.png) |
+| Endor |  ![Endor](Pixelarts/Planets/core_worlds/planet_endor.png) |
+| Mustafar | ![Mustafar](Pixelarts/Planets/core_worlds/planet_Mustafar.png) |
+| Earth | ![Earth](Pixelarts/Planets/milkyway/planet_earth.png) |
+| Saturn | ![Saturn](Pixelarts/Planets/milkyway/planet_saturn.png) |
+| Schwarzes Loch | ![Schwarzes Loch](Pixelarts/Planets/milkyway/planet_schwarzesLoch.png) |
+| Purpurplanet | ![Purpurplanet](Pixelarts/Planets/core_worlds/planet_purple.png) |
+| Todesstern | ![Todesstern](Pixelarts/Planets/death_star/TodesternEins.png) |
+| Todesstern II | ![Todesstern](Pixelarts/Planets/death_star/TodesternZwei.png) |
+| Sternzerstörer | ![Sternzerstörer](Pixelarts/Planets/death_star/Sternzerstörer.png) |
 
-## Version 1.2
 
-- Koop-Modus
-- Neue Sternensysteme
-- Zufällige Weltraum-Events
-
-## Version 2.0
-
-- Story-Kampagne
-- Fraktionssystem
-- Schiffs-Upgrades
-- Anpassbare Raumschiffe
-
----
-
-# 🎮 Lokaler PvP-Modus
-
-Der bestehende PvP-Duell-Modus kann zusätzlich lokal auf einem einzigen PC gespielt werden.
-
-## Steuerung
-
-### Spieler 1 (unteres Schiff)
-
-- A / D = Bewegen
-- W = Laser
-- S = Torpedo
-
-### Spieler 2 (oberes Schiff)
-
-- ← / → = Bewegen
-- ↑ = Laser
-- ↓ = Torpedo
-
-Die lokale Steuerung ist ausschließlich für den lokalen PvP-Modus aktiv.
-
-Einzelspieler, LAN-Multiplayer und LAN-PvP verwenden weiterhin ihre bisherigen Eingaben.
-
-## Mehrspieler-Menü
-
-1. LAN Multiplayer
-2. LAN PvP
-3. Lokaler PvP
-
-Der lokale PvP-Modus verwendet dieselben Regeln, Asteroiden, Waffen, Trefferlogiken und Ergebnisanzeigen wie LAN-PvP, benötigt jedoch keine Netzwerkverbindung.
+### Die Welt-Assets dienen als visuelle Bestandteile der verschiedenen Sternensysteme.
 
 ---
 
 # ⚠️ Rechtlicher Hinweis
 
-Dieses Projekt dient ausschließlich Lern-, Demonstrations- und Entwicklungszwecken.
+Dieses Projekt wurde ausschließlich zu **Lern-, Demonstrations- und
+Entwicklungszwecken** erstellt.
 
-Star Wars sowie alle zugehörigen Marken, Namen und Designs sind Eigentum von Lucasfilm Ltd. und The Walt Disney Company. Dieses Projekt steht in keiner Verbindung zu den Rechteinhabern.
+**Star Wars** sowie die damit verbundenen Namen, Charaktere, Designs und
+Marken gehören ihren jeweiligen Rechteinhabern.
+
+Dieses Fanprojekt steht in keiner offiziellen Verbindung zu den Rechteinhabern.
