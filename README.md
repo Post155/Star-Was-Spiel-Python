@@ -87,6 +87,79 @@ Jedes Spielerschiff besitzt einen fest definierten Gegenspieler.
 - Kollisions- und Schadenssystem
 - Fortschrittsabhängige Skalierung
 
+### Planetensysteme mit offiziellen Star-Wars-Referenzen
+
+> Die grafischen Planetensprites im Spiel dienen als visuelle Kulisse. Die folgenden Fakten basieren auf den offiziell bestätigten Angaben aus dem Star-Wars-Kanon, soweit diese eindeutig belegt sind.
+
+#### Tatooine
+
+![Tatooine](Pixelarts/Planets/core_worlds/planet_tatooine.png)
+
+- Tatooine ist eine Wüstenwelt im Outer Rim und gilt als eine der ikonischsten Welten der Saga.
+- Die Welt besitzt ein binäres Sonnensystem: Zwei Sonnen stehen gleichzeitig am Himmel.
+- Sie ist die Heimat von Luke Skywalker, Anakin Skywalker und auch ein Zentrum für Schmuggel, Handel und Wüstenrennen.
+- In offiziellen Star-Wars-Beschreibungen ist Tatooine eine trockene, lebensfeindliche Welt mit riesigen Dünen, Wasserquellen und kleinen, weit verstreuten Siedlungen.
+
+#### Hoth
+
+![Hoth](Pixelarts/Planets/core_worlds/planet_hoth.png)
+
+- Hoth ist ein eisiger Planet im äußeren Rand der Galaxis.
+- Die Rebellenbasis auf Hoth war ein zentraler Schauplatz des Imperium-Konflikts und wurde in Episode V als starkes Operationszentrum genutzt.
+- Hoth ist geprägt von Eislandschaften, Gletschern, Blizzardstürmen und extremen Temperaturen.
+- Die Welt ist ein typisches Beispiel für die kältegeprägten, lebensfeindlichen Umgebungen des Star-Wars-Universums.
+
+#### Kamino
+
+![Kamino](Pixelarts/Planets/core_worlds/planet_kamino.png)
+
+- Kamino ist eine ozeanische Welt, auf der die Klon-Armee der Republik entwickelt und aufgezogen wurde.
+- Die Kaminoaner sind die einheimische Spezies der Welt und bekannt für ihre exakte, wissenschaftlich orientierte Kultur.
+- Die Welt wurde in Star Wars: Angriff der Klonkrieger als eine der wichtigsten Planeten im Clone-Krieg eingeführt.
+- Kamino ist eher eine Wasserwelt als ein typischer terrestrischer Planet und zeigt die große Vielfalt der bewohnten Welten in Star Wars.
+
+#### Endor
+
+![Endor](Pixelarts/Planets/core_worlds/planet_endor.png)
+
+- Endor ist kein Planet, sondern ein Waldmond eines größeren Gasplaneten.
+- Der Mond ist die Heimat der Ewoks, einer intelligenten, naturnahen Spezies.
+- Die Szene auf Endor ist in Episode VI ein Schlüsselort der Schlacht um die zweite Death Star.
+- Die Bezeichnung „Waldmond“ ist wichtig: Endor ist eine Mondwelt mit dichten Wäldern, einem üppigen Ökosystem und einer sehr eigenen Kultur.
+
+#### Coruscant
+
+![Coruscant](Pixelarts/Planets/core_worlds/planet_corusant.png)
+
+- Coruscant ist ein Stadtplanet und galt als galaktische Hauptstadt der Republik und später des Galaktischen Reichs.
+- Der Planet besteht praktisch aus einem gigantischen urbanisierten Megacities-Netz, das sich über die gesamte Oberfläche erstreckt.
+- In offiziellen Star-Wars-Quellen ist Coruscant das politische und administrative Zentrum der Galaxis.
+- Coruscant zeigt das Gegenstück zu Wüsten-, Eis- oder Naturwelten: eine planetare Welt, die vollständig von Architektur und Regierung geprägt ist.
+
+#### Mustafar
+
+![Mustafar](Pixelarts/Planets/core_worlds/planet_Mustafar.png)
+
+- Mustafar ist ein vulkanischer Planet mit aktiver Lava- und Magmakonzentration.
+- Er ist vollständig von Feuer, Felsen und extremen Temperaturen geprägt und gilt als extrem feindliche Umwelt.
+- Mustafar spielt in der Trilogie der Prequel-Filme eine zentrale Rolle, besonders im Zusammenhang mit Darth Vader und Obi-Wan Kenobi.
+- Die Welt ist ein gutes Beispiel für die auffällige planetare Vielfalt in Star Wars: Von Wüsten über Eiswelten bis zu heißen Lavawelten.
+
+#### Death Star
+
+![Death Star](Pixelarts/Planets/death_star/planet_Todesstern.png)
+
+- Die Death Star ist kein Planet, sondern eine riesige, mondgroße Waffenstation.
+- Sie wurde als Superwaffe des Galaktischen Imperiums konstruiert und war ein zentraler Schauplatz der ursprünglichen Trilogie.
+- Die erste Death Star wurde in Episode IV als extrem gefährliche, planetenartige Station gezeigt, die eine einzelne Welt zerstören konnte.
+- Technisch gesehen ist die Death Star daher ein künstlicher Weltraumbau, kein natürlicher Himmelskörper.
+
+#### Wichtig zur Einordnung im Spiel
+
+- Nicht alle im Spiel enthaltenen Planetensprites sind canonische Star-Wars-Standorte; einige dienen als generische Weltraumkulissen.
+- Die hier aufgeführten Eckdaten entsprechen den meistgesicherten, offiziellen Star-Wars-Angaben, soweit die Film- und Serienquellen eine klare, konsistente Beschreibung liefern.
+- Die Darstellung im Spiel ist bewusst stilisiert und dient der Spielsensation – die zugrundeliegenden Star-Wars-Identitäten sind jedoch auf die kanonischen Namens- und Umgebungsmerkmale zurückzuführen.
+
 ---
 
 # ⚙️ Schwierigkeitssystem
