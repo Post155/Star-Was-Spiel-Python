@@ -1,35 +1,34 @@
 # 🚀 Star Wars: Galactic Assault
 
-Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschlachten. Übernimm die Kontrolle über ikonische Raumschiffe, durchquere gefährliche Asteroidenfelder und stelle dich intelligenten KI-Gegnern. Mit jedem erreichten Sternensystem steigt die Herausforderung, während neue Gegner und Bedrohungen freigeschaltet werden. 【1-ca9f37】
+Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschlachten.
+
+Übernimm die Kontrolle über ikonische Raumschiffe, durchquere gefährliche Asteroidenfelder und stelle dich intelligenten KI-Gegnern. Mit jedem erreichten Sternensystem steigt die Herausforderung, während neue Gegner und Bedrohungen freigeschaltet werden.
 
 ---
 
 # 📑 Inhaltsverzeichnis
 
-- [🚀tar-wars-galactic-assault
-- [🎮 Features](##spielbare-schiffe
-  - [Gegner-KI](#- #gegnerzuordnung
-  - [Asteroidensystem](#asterhwierigkeitssystem
-  - [Verfügbare Schwierigkeitsstufen
+- [-star-wars-galactic-assault
+- [-features
+  - [Spielbare Schiffe](#- #gegner-ki
+  - [Gegnerzuordnung](#- #asteroidensystem
+- [⚙️ Schwierigkeitssystem](#️#verfügbare-schwierigkeitsstufen
 - #️-balancing--konfiguration
-  - #difficulty-presets
-  - #gegner-freischaltungen
-  - [Sternensystem-Skalierung](#sterngression-system
-- [🌌 Dynamische Sternensysteme](#-dynamische-- #komponenten
-  - [Gruppenrollen
+  - [Difficulty Presets](#difficulty-reischaltungen
+  - [Sternensystem-Skalierung
+- #-progression-system
+- [🌌 Dynamische Sternensysteme](#-dynamische-st#komponenten
+  - #gruppenrollen
   - #dodge-system
   - [Dynamische Schwierigkeit
 - #-spielziel
-- [🎮 Steuerung](#-nstallation
+- [-steuerung
+- #-installation
 - [-spiel-starten
-- [📂 Projektruktur
-- [️-roadmap
-- [🎮 Lokalervp-modus
-- [️-rechtlicher-hinweis
-
----
-
-# 🎮 Features
+- [-projektstruktur
+- [🛣️ Roadmap](#️-roadmap)
+-modus
+- [⚠️ Rechtlicher Hinweis](#️-rechtlicherres
 
 ## Spielbare Schiffe
 
@@ -38,7 +37,7 @@ Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschl
 - TIE-Fighter
 - Battle Droid Fighter
 
-Jedes Schiff verfügt über eigene Eigenschaften, Waffen und Flugcharakteristiken. 【1-ca9f37】
+Jedes Schiff verfügt über eigene Eigenschaften, Waffen und Flugcharakteristiken.
 
 ## Gegner-KI
 
@@ -59,11 +58,9 @@ Die KI kann:
 - Taktische Torpedos einsetzen
 - Dynamisch auf Spielsituationen reagieren
 
-【1-ca9f37】【2-a644b4】
-
 ## Gegnerzuordnung
 
-Jedes Spielerschiff besitzt einen fest definierten Gegenspieler. 【2-a644b4】
+Jedes Spielerschiff besitzt einen fest definierten Gegenspieler.
 
 | Spielerschiff | KI-Gegner |
 |--------------|-----------|
@@ -81,13 +78,11 @@ Jedes Spielerschiff besitzt einen fest definierten Gegenspieler. 【2-a644b4】
 - Kollisions- und Schadenssystem
 - Fortschrittsabhängige Skalierung
 
-【1-ca9f37】
-
 ---
 
 # ⚙️ Schwierigkeitssystem
 
-Zu Beginn jeder Spielrunde kann eine Schwierigkeitsstufe ausgewählt werden. 【1-ca9f37】
+Zu Beginn jeder Spielrunde kann eine Schwierigkeitsstufe ausgewählt werden.
 
 ## Verfügbare Schwierigkeitsstufen
 
@@ -111,186 +106,29 @@ Die gewählte Schwierigkeit beeinflusst:
 - Asteroidengeschwindigkeit
 - Asteroidengröße
 
-【1-ca9f37】
-
 ---
 
 # ⚖️ Balancing & Konfiguration
 
 Alle wichtigen Gameplay-Werte befinden sich in:
 
-```python
-game/constants.py
-
-## Verfügbare Schwierigkeitsstufen
-
-| Schwierigkeit | Beschreibung |
-|--------------|-------------|
-| Einfach | Ideal für Einsteiger |
-| Normal | Ausgewogenes Standard-Erlebnis |
-| Schwer | Höhere Herausforderung durch aggressivere Gegner |
-| Experte | Maximale Schwierigkeit für erfahrene Spieler |
-
-## Beeinflusste Werte
-
-Die gewählte Schwierigkeit wirkt sich auf folgende Systeme aus:
-
-- Gegnerische Trefferquote
-- Gegner-Lebenspunkte
-- Gegnergeschwindigkeit
-- Gegner-Aggressivität
-- Verfolgungsverhalten
-- Gegner-Spawnrate
-- Maximale Anzahl aktiver Gegner
-- Asteroidendichte
-- Asteroidengeschwindigkeit
-- Asteroidengröße
-
----
-
-# 📈 Progression-System
-
-Gegner erscheinen nicht sofort zu Spielbeginn.
-
-Zu Beginn befindet sich der Spieler allein im Sternensystem und kämpft ausschließlich gegen Asteroiden. Dadurch können Steuerung und Waffen zunächst ohne Druck erlernt werden.
-
-## Gegner-Freischaltung
-
-```text
-0 - 999 Punkte
-└─ Nur Asteroiden
-
-1.000 Punkte
-└─ Erste feindliche Schiffe erscheinen
-
-3.000 Punkte
-└─ Erweiterte Gegnerklassen werden freigeschaltet
-
-6.000 Punkte
-└─ Elite-Gegner erscheinen
-```
-
-Vor jeder neuen Gegnerstufe wird eine Warnmeldung angezeigt.
-
-### Beispielmeldungen
-
-```text
-⚠ Feindliche Schiffe wurden entdeckt!
-
-⚠ Verstärkte Aktivitäten im System festgestellt!
-
-⚠ Elite-Einheit im Anflug!
-
-⚠ Unbekanntes Signal erkannt!
-```
-
----
-
-# 🌌 Dynamische Sternensysteme
-
-Zusätzlich zur gewählten Schwierigkeit erhöht jedes neue Sternensystem die Gesamtgefahr.
-
-| Sternensystem | Schwierigkeitsbonus |
-|--------------|-------------------:|
-| System 1 | +0 % |
-| System 2 | +15 % |
-| System 3 | +30 % |
-| System 4 | +50 % |
-
-Die Skalierung beeinflusst:
-
-- Gegnerstärke
-- Gegnerverhalten
-- Spawnraten
-- Asteroidendichte
-- Asteroidengeschwindigkeit
-
-Dadurch bleibt das Spiel langfristig herausfordernd, ohne den Spieler zu überfordern.
-
----
-
-# 🎯 Spielziel
-
-Überlebe möglichst lange und erreiche die höchste Punktzahl.
-
-Der Spieler muss:
-
-- Asteroiden zerstören
-- Feindliche Schiffe besiegen
-- Torpedos ausweichen
-- Sternensysteme durchqueren
-- Hohe Punktzahlen erzielen
-- Immer stärkere Bedrohungen überleben
-
-Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
-
----
-
-# 🎮 Steuerung
-
-| Taste | Aktion |
-|--------|--------|
-| A / ← | Nach links bewegen |
-| D / → | Nach rechts bewegen |
-| W / ↑ | Nach oben bewegen |
-| Leertaste | Laser schießen |
-| S / ↓ | Torpedo abfeuern |
-| H | Hitboxen anzeigen |
-| 1 / 2 / 3 / 4 | Schiff wechseln (Debug) |
-| ESC | Pause / Zurück |
-
----
-
-# 📦 Installation
-
-## Voraussetzungen
-
-- Python 3.8 oder neuer
-- pygame oder pygame-ce
-
-### pygame installieren
-
-```bash
-pip install pygame
-```
-
-### pygame-ce installieren
-
-```bash
-pip install pygame-ce
-```
-
----
-
-# ▶ Spiel starten
-
-```bash
-python StarWarsGame.py
-```
-
----
-
-# ⚖️ Balancing
-
-Alle wichtigen Gameplay-Werte befinden sich in:
-
 ```text
 game/constants.py
 ```
 
-Dort können unter anderem folgende Werte angepasst werden:
+## Difficulty Presets
 
-- Gegner-Trefferquote
-- Gegner-Lebenspunkte
-- Gegnergeschwindigkeit
-- Gegner-Aggressivität
-- Maximale Gegneranzahl
-- Gegner-Spawnrate
-- Asteroidendichte
-- Asteroidengeschwindigkeit
-- Asteroidengröße
-- Punkteschwellen für Gegner-Freischaltungen
-- Schwierigkeitsfaktoren einzelner Sternensysteme
+Über `DIFFICULTY_SETTINGS` können folgende Werte angepasst werden:
+
+- enemy_accuracy
+- enemy_hp
+- enemy_speed
+- enemy_aggression
+- enemy_max
+- enemy_spawn
+- asteroid_density
+- asteroid_speed
+- asteroid_size
 
 ### Beispiel
 
@@ -326,34 +164,232 @@ DIFFICULTY_SETTINGS = {
 }
 ```
 
----
+## Gegner-Freischaltungen
 
-# 🧠 KI-Architektur
-
-```text
-game/enemies/
-├── __init__.py
-├── base.py
-├── ai.py
-├── movement.py
-├── weapons.py
-├── projectiles.py
-├── manager.py
-├── config.py
-└── audio.py
+```python
+ENEMY_UNLOCK_STANDARD_POINTS = 1000
+ENEMY_UNLOCK_HEAVY_POINTS = 3000
+ENEMY_UNLOCK_ELITE_POINTS = 6000
 ```
 
-Die Architektur wurde modular aufgebaut und ist für zukünftige Erweiterungen vorbereitet.
+Vor 1000 Punkten erscheinen keine Gegner.
 
-Geplante Erweiterungen:
+| Punkte | Freischaltung |
+|---------|---------------|
+| 0 - 999 | Nur Asteroiden |
+| 1000 | Standardgegner |
+| 3000 | Schwere Gegner |
+| 6000 | Elite-Gegner |
 
-- Bossgegner
-- Begleitjäger
-- Weitere Fraktionen
-- Spezialwaffen
-- Koop-Modus
-- Wellenmodus
-- Neue Gegnerklassen
+## Sternensystem-Skalierung
+
+```python
+SYSTEM_DIFFICULTY_BONUS = (
+    0.00,  # System 1
+    0.15,  # System 2
+    0.30,  # System 3
+    0.50,  # System 4
+)
+```
+
+| Sternensystem | Bonus |
+|---------------|--------|
+| System 1 | +0 % |
+| System 2 | +15 % |
+| System 3 | +30 % |
+| System 4 | +50 % |
+
+Spätere Systeme verwenden automatisch den zuletzt definierten Wert.
+
+Der Bonus beeinflusst:
+
+- Gegner-Lebenspunkte
+- Gegner-Geschwindigkeit
+- Gegner-Treffergenauigkeit
+- Gegner-Aggressivität
+- Asteroidendichte
+- Asteroidengeschwindigkeit
+- Asteroidengröße
+
+---
+
+# 📈 Progression-System
+
+Zu Beginn befindet sich der Spieler allein im Sternensystem und kämpft ausschließlich gegen Asteroiden. Dadurch können Steuerung und Waffen zunächst ohne Druck erlernt werden.
+
+## Gegner-Freischaltung
+
+```text
+0 - 999 Punkte
+└─ Nur Asteroiden
+
+1.000 Punkte
+└─ Erste feindliche Schiffe erscheinen
+
+3.000 Punkte
+└─ Erweiterte Gegnerklassen werden freigeschaltet
+
+6.000 Punkte
+└─ Elite-Gegner erscheinen
+```
+
+Vor jeder neuen Gegnerstufe wird eine Warnmeldung angezeigt.
+
+### Beispielmeldungen
+
+```text
+⚠ Feindliche Schiffe wurden entdeckt!
+⚠ Verstärkte Aktivitäten im System festgestellt!
+⚠ Elite-Einheit im Anflug!
+⚠ Unbekanntes Signal erkannt!
+```
+
+---
+
+# 🌌 Dynamische Sternensysteme
+
+Zusätzlich zur gewählten Schwierigkeit erhöht jedes neue Sternensystem die Gesamtgefahr.
+
+| Sternensystem | Schwierigkeitsbonus |
+|---------------|---------------------|
+| System 1 | +0 % |
+| System 2 | +15 % |
+| System 3 | +30 % |
+| System 4 | +50 % |
+
+Die Skalierung beeinflusst:
+
+- Gegnerstärke
+- Gegnerverhalten
+- Spawnraten
+- Asteroidendichte
+- Asteroidengeschwindigkeit
+
+Dadurch bleibt das Spiel langfristig herausfordernd, ohne den Spieler zu überfordern.
+
+---
+
+# 🧠 KI-System
+
+Die Gegner-KI wurde modular aufgebaut und ist vollständig erweiterbar.
+
+## Komponenten
+
+- EnemyBase: Lebenspunkte, Hitbox, Sprite und Basisschnittstelle
+- EnemyBrain: Zielwahl, Reaktionszeit und Entscheidungslogik
+- EnemyMovement: Weiche, beschleunigungsbasierte Bewegung
+- EnemyWeaponSystem: Salven, Zielvorhalt und Torpedos
+- EnemyManager: Spawnlogik, Schwierigkeit, Gruppenbildung und Score-System
+
+## Gruppenrollen
+
+### Attacker
+
+Folgt dem Spieler direkt und führt regelmäßige Angriffe aus.
+
+### Flanker Left
+
+Greift versetzt von links an.
+
+### Flanker Right
+
+Greift versetzt von rechts an.
+
+### Support
+
+Bleibt weiter entfernt und unterstützt andere Gegner.
+
+Dadurch bewegen sich mehrere Gegner nicht auf identischen Flugbahnen.
+
+## Dodge-System
+
+Die KI prüft nur in bestimmten Reaktionsintervallen, ob ein Projektil ihre Flugbahn kreuzt.
+
+Dadurch entstehen keine unrealistisch perfekten Ausweichmanöver und gleichzeitig bleibt die CPU-Last gering.
+
+- Elite-Gegner reagieren schneller
+- Standardgegner reagieren ausgewogen
+- Schwere Gegner reagieren träger
+
+## Dynamische Schwierigkeit
+
+Der EnemyManager berechnet einen dynamischen Schwierigkeitsfaktor aus:
+
+- Aktuellem Sternensystem
+- Spielerpunktzahl
+- Gewähltem Schwierigkeitsgrad
+
+Beeinflusst werden:
+
+- Maximale Gegnerzahl
+- Spawnintervall
+- Geschwindigkeit
+- Feuerfrequenz
+- Zielgenauigkeit
+- Elite-Wahrscheinlichkeit
+- Torpedonutzung
+
+---
+
+# 🎯 Spielziel
+
+Überlebe möglichst lange und erreiche die höchste Punktzahl.
+
+Der Spieler muss:
+
+- Asteroiden zerstören
+- Feindliche Schiffe besiegen
+- Torpedos ausweichen
+- Sternensysteme durchqueren
+- Hohe Punktzahlen erzielen
+- Immer stärkere Bedrohungen überleben
+
+Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
+
+---
+
+# 🎮 Steuerung
+
+| Taste | Aktion |
+|--------|---------|
+| A / ← | Nach links bewegen |
+| D / → | Nach rechts bewegen |
+| W / ↑ | Nach oben bewegen |
+| Leertaste | Laser schießen |
+| S / ↓ | Torpedo abfeuern |
+| H | Hitboxen anzeigen |
+| 1 / 2 / 3 / 4 | Schiff wechseln (Debug) |
+| ESC | Pause / Zurück |
+
+---
+
+# 📦 Installation
+
+## Voraussetzungen
+
+- Python 3.8 oder neuer
+- pygame oder pygame-ce
+
+### pygame installieren
+
+```bash
+pip install pygame
+```
+
+### pygame-ce installieren
+
+```bash
+pip install pygame-ce
+```
+
+---
+
+# ▶ Spiel starten
+
+```bash
+pip install -r requirements.txt
+python StarWarsGame.py
+```
 
 ---
 
@@ -381,7 +417,8 @@ StarWars/
         ├── manager.py
         ├── movement.py
         ├── projectiles.py
-        └── weapons.py
+        ├── weapons.py
+        └── audio.py
 ```
 
 ---
@@ -409,29 +446,35 @@ StarWars/
 
 ---
 
-## 🎮 Lokaler PvP-Duell-Modus
+# 🎮 Lokaler PvP-Modus
 
-Der bestehende PvP-Duell-Modus kann zusätzlich **lokal auf einem einzigen PC** gespielt werden.
+Der bestehende PvP-Duell-Modus kann zusätzlich lokal auf einem einzigen PC gespielt werden.
 
-### Steuerung
+## Steuerung
 
-- **Spieler 1 (unteres Schiff):** `A` / `D` bewegen, `W` Laser, `S` Torpedo
-- **Spieler 2 (oberes Schiff):** `←` / `→` bewegen, `↑` Laser, `↓` Torpedo
+### Spieler 1 (unteres Schiff)
 
-Die lokale Steuerung ist ausschließlich für den lokalen PvP-Modus aktiv. Einzelspieler,
-LAN-Multiplayer und LAN-PvP verwenden weiterhin ihre bisherigen Eingaben.
+- A / D = Bewegen
+- W = Laser
+- S = Torpedo
 
-### Menü
+### Spieler 2 (oberes Schiff)
 
-`Mehrspieler` enthält:
+- ← / → = Bewegen
+- ↑ = Laser
+- ↓ = Torpedo
+
+Die lokale Steuerung ist ausschließlich für den lokalen PvP-Modus aktiv.
+
+Einzelspieler, LAN-Multiplayer und LAN-PvP verwenden weiterhin ihre bisherigen Eingaben.
+
+## Mehrspieler-Menü
 
 1. LAN Multiplayer
 2. LAN PvP
 3. Lokaler PvP
 
-Der lokale PvP-Modus verwendet dieselben PvP-Regeln, Asteroiden, Waffen, Treffer,
-Weltenwechsel, Score-Regeln und Ergebnisanzeigen wie LAN-PvP, benötigt aber keine
-Netzwerkverbindung.
+Der lokale PvP-Modus verwendet dieselben Regeln, Asteroiden, Waffen, Trefferlogiken und Ergebnisanzeigen wie LAN-PvP, benötigt jedoch keine Netzwerkverbindung.
 
 ---
 
