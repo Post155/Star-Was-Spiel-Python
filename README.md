@@ -322,7 +322,6 @@ StarWars/
     └── enemies/
         ├── __init__.py
         ├── ai.py
-        ├── audio.py
         ├── base.py
         ├── config.py
         ├── manager.py
@@ -356,16 +355,29 @@ StarWars/
 
 ---
 
-# 📸 Screenshots
+## 🎮 Lokaler PvP-Duell-Modus
 
-```text
-docs/menu.png
-docs/gameplay.png
-docs/combat.png
-docs/bossfight.png
-```
+Der bestehende PvP-Duell-Modus kann zusätzlich **lokal auf einem einzigen PC** gespielt werden.
 
-*Sobald erste spielbare Versionen verfügbar sind, können hier Screenshots und GIFs eingefügt werden.*
+### Steuerung
+
+- **Spieler 1 (unteres Schiff):** `A` / `D` bewegen, `W` Laser, `S` Torpedo
+- **Spieler 2 (oberes Schiff):** `←` / `→` bewegen, `↑` Laser, `↓` Torpedo
+
+Die lokale Steuerung ist ausschließlich für den lokalen PvP-Modus aktiv. Einzelspieler,
+LAN-Multiplayer und LAN-PvP verwenden weiterhin ihre bisherigen Eingaben.
+
+### Menü
+
+`Mehrspieler` enthält:
+
+1. LAN Multiplayer
+2. LAN PvP
+3. Lokaler PvP
+
+Der lokale PvP-Modus verwendet dieselben PvP-Regeln, Asteroiden, Waffen, Treffer,
+Weltenwechsel, Score-Regeln und Ergebnisanzeigen wie LAN-PvP, benötigt aber keine
+Netzwerkverbindung.
 
 ---
 

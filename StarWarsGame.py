@@ -18,8 +18,27 @@ from game.enemies import EnemyManager
 from game.entities.asteroid import Asteroid
 from game.entities.explosion import Explosion
 from game.entities.ships import BattleDroid, MillenniumFalcon, Tiefighter, XWing
+from game.multiplayer import MultiplayerSession
+from game.network import NETWORK_DEBUG
+from game.scoreboard import draw_scoreboard
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
+from game.ui.multiplayer import (
+    lan_menu,
+    lobby_screen,
+    local_pvp_player_prompt,
+    main_menu,
+    multiplayer_menu,
+    pvp_lan_menu,
+    pvp_mode_menu,
+)
+from game.pvp_duel import PvPDuelSession
+from game.local_pvp import LocalPvPDuelSession
+from game.constants import (
+    PVP_MAX_PLAYERS,
+    LOCAL_PVP_PLAYER1_NAME,
+    LOCAL_PVP_PLAYER2_NAME,
+)
 
 
 pygame.init()
@@ -30,7 +49,6 @@ pygame.display.set_caption(SCREEN_TITLE)
 clock = pygame.time.Clock()
 
 assets = load_assets()
-background = BackgroundManager(WIDTH, HEIGHT, assets)
 
 x_wing_img = assets["x_wing_img"]
 millennium_falcon_img = assets["millennium_falcon_img"]
@@ -45,6 +63,14 @@ explosion_img = assets["explosion_img"]
 font = pygame.font.Font(None, 40)
 lightsaber_blue_img = assets.get("lightsaber_blue_img")
 lightsaber_red_img = assets.get("lightsaber_red_img")
+
+
+SHIP_NAME_BY_KEY = {
+    "xwing": "X-Wing",
+    "milleniumfalcon": "Millennium Falcon",
+    "tiefighter": "TIE Fighter",
+    "battledroid": "Battle Droid",
+}
 
 
 def draw_lives(screen, lives, faction="rebels", size=24, padding=8):
@@ -121,7 +147,6 @@ def draw_enemy_warning(screen, text, width, height, remaining_ms):
     screen.blit(message, message.get_rect(center=(width // 2, int(height * 0.50))))
 
 
-
 def destroy_asteroid(asteroid, explosion_list):
     """Remove an asteroid and create its visual explosion."""
     explosion_list.append(
@@ -135,48 +160,13 @@ def destroy_asteroid(asteroid, explosion_list):
     )
 
 
-while True:
-    faction_choice, WIDTH, HEIGHT = faction_selection(
-        screen,
-        clock,
-        WIDTH,
-        HEIGHT,
-        rebel_logo_img,
-        empire_logo_img,
-    )
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-    set_window_icon()
-
-    difficulty_choice, WIDTH, HEIGHT = difficulty_selection(
-        screen,
-        clock,
-        WIDTH,
-        HEIGHT,
-        DEFAULT_DIFFICULTY,
-    )
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-    set_window_icon()
-
-    faction_logo_img = (
-        rebel_logo_img if faction_choice == "rebels" else empire_logo_img
-    )
-    ship_choice, WIDTH, HEIGHT = ship_selection(
-        screen,
-        clock,
-        WIDTH,
-        HEIGHT,
-        faction_choice,
-        faction_logo_img,
-        x_wing_img,
-        millennium_falcon_img,
-        tiefighter_img,
-        battle_droid_img,
-    )
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-    set_window_icon()
+def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer=None):
+    """Run the existing local game simulation, optionally with LAN overlays."""
+    global screen, WIDTH, HEIGHT
 
     spieler = create_player(ship_choice, WIDTH, HEIGHT)
     enemy_manager = EnemyManager(WIDTH, HEIGHT, assets, spieler, difficulty=difficulty_choice)
+    background = BackgroundManager(WIDTH, HEIGHT, assets)
 
     score = 0
     asteroid_spawn_timer = 0
@@ -185,16 +175,30 @@ while True:
     asteroid_list = []
     explosion_list = []
     running = True
+    local_dead = False
+    host_disconnected = False
+    show_scoreboard = False
 
     try:
         background.notify_score_anchor(score)
     except Exception:
         pass
 
+    if multiplayer is not None:
+        multiplayer.poll(WIDTH, HEIGHT)
+        multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT)
+
     while running:
         # The AI system uses seconds, while the original asteroid/player
         # systems remain frame based to preserve their existing game feel.
         dt = min(0.05, clock.tick(60) / 1000.0)
+
+        if multiplayer is not None:
+            events = multiplayer.poll(WIDTH, HEIGHT)
+            for network_event in events:
+                if network_event.get("type") == "server_stopped":
+                    host_disconnected = True
+                    running = False
 
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
@@ -230,144 +234,151 @@ while True:
                 elif event.key == pygame.K_4:
                     new_ship_choice = "battledroid"
 
-                if new_ship_choice is not None:
+                if new_ship_choice is not None and not (multiplayer is not None and local_dead):
                     spieler = create_player(new_ship_choice, WIDTH, HEIGHT)
+                    ship_choice = new_ship_choice
                     laser_list.clear()
                     torpedo_list.clear()
                     enemy_manager.set_player(spieler, clear_existing=True)
 
-                if event.key in (pygame.K_SPACE, pygame.K_w, pygame.K_UP):
-                    new_lasers = spieler.shoot()
-                    if new_lasers:
-                        laser_list.extend(new_lasers)
+                if not local_dead:
+                    if event.key in (pygame.K_SPACE, pygame.K_w, pygame.K_UP):
+                        new_lasers = spieler.shoot()
+                        if new_lasers:
+                            laser_list.extend(new_lasers)
 
-                if event.key in (pygame.K_s, pygame.K_DOWN):
-                    torpedo = spieler.torpedo()
-                    if torpedo:
-                        torpedo_list.append(torpedo)
+                    if event.key in (pygame.K_s, pygame.K_DOWN):
+                        torpedo = spieler.torpedo()
+                        if torpedo:
+                            torpedo_list.append(torpedo)
+
+                if multiplayer is not None and event.key == pygame.K_ESCAPE:
+                    running = False
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            spieler.move_left()
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            spieler.move_right(WIDTH)
-        if keys[pygame.K_ESCAPE]:
-            running = False
+        if not local_dead:
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                spieler.move_left()
+            if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                spieler.move_right(WIDTH)
+            if keys[pygame.K_ESCAPE]:
+                running = False
 
         # ------------------------------------------------------------
         # PLAYER PROJECTILES
         # ------------------------------------------------------------
-        for laser in laser_list[:]:
-            laser.update()
-            if laser.rect.bottom < 0 and laser in laser_list:
-                laser_list.remove(laser)
-
-        for current_torpedo in torpedo_list[:]:
-            current_torpedo.update()
-            if current_torpedo.rect.bottom < 0 and current_torpedo in torpedo_list:
-                torpedo_list.remove(current_torpedo)
-
-        # ------------------------------------------------------------
-        # ASTEROID SYSTEM
-        # Difficulty + current star system both affect density, speed and size.
-        # ------------------------------------------------------------
-        difficulty = background.get_current_difficulty()
-        system_index = int(difficulty.get("system_index", 0))
-        system_bonus = float(difficulty.get("system_bonus", 0.0))
-        profile = DIFFICULTY_SETTINGS[difficulty_choice]
-
-        asteroid_speed_multiplier = (
-            float(difficulty.get("asteroid_speed_multiplier", 1.0))
-            * profile["asteroid_speed"]
-            * (1.0 + system_bonus * 0.70)
-        )
-        asteroid_density = (
-            profile["asteroid_density"]
-            * (1.0 + system_bonus * 0.80)
-        )
-
-        asteroid_interval = max(
-            ASTEROID_MIN_SPAWN_INTERVAL,
-            int(ASTEROID_SPAWN_INTERVAL / max(0.35, asteroid_density)),
-        )
-
-        asteroid_spawn_timer += 1
-        if asteroid_spawn_timer >= asteroid_interval:
-            asteroid = create_asteroid(
-                WIDTH,
-                HEIGHT,
-                size_multiplier=profile["asteroid_size"] * (1.0 + system_bonus * 0.18),
-                speed_multiplier=asteroid_speed_multiplier,
-            )
-            if asteroid is not None:
-                asteroid_list.append(asteroid)
-            asteroid_spawn_timer = 0
-
-        for asteroid in asteroid_list[:]:
-            asteroid.update()
-            if asteroid.y > HEIGHT:
-                asteroid_list.remove(asteroid)
-
-        # Player shots vs. asteroids. This is deliberately handled before the
-        # enemy manager so a projectile removed by an asteroid cannot also hit
-        # an enemy in the same frame.
-        for asteroid in asteroid_list[:]:
-            asteroid_rect = asteroid.get_rect()
-
-            hit_projectile = None
+        if not local_dead:
             for laser in laser_list[:]:
-                if asteroid_rect.colliderect(laser.rect):
-                    hit_projectile = laser
-                    break
+                laser.update()
+                if laser.rect.bottom < 0 and laser in laser_list:
+                    laser_list.remove(laser)
 
-            if hit_projectile is None:
-                for current_torpedo in torpedo_list[:]:
-                    if asteroid_rect.colliderect(current_torpedo.rect):
-                        hit_projectile = current_torpedo
+            for current_torpedo in torpedo_list[:]:
+                current_torpedo.update()
+                if current_torpedo.rect.bottom < 0 and current_torpedo in torpedo_list:
+                    torpedo_list.remove(current_torpedo)
+
+            # ------------------------------------------------------------
+            # ASTEROID SYSTEM
+            # Difficulty + current star system both affect density, speed and size.
+            # ------------------------------------------------------------
+            difficulty = background.get_current_difficulty()
+            system_index = int(difficulty.get("system_index", 0))
+            system_bonus = float(difficulty.get("system_bonus", 0.0))
+            profile = DIFFICULTY_SETTINGS[difficulty_choice]
+
+            asteroid_speed_multiplier = (
+                float(difficulty.get("asteroid_speed_multiplier", 1.0))
+                * profile["asteroid_speed"]
+                * (1.0 + system_bonus * 0.70)
+            )
+            asteroid_density = (
+                profile["asteroid_density"]
+                * (1.0 + system_bonus * 0.80)
+            )
+
+            asteroid_interval = max(
+                ASTEROID_MIN_SPAWN_INTERVAL,
+                int(ASTEROID_SPAWN_INTERVAL / max(0.35, asteroid_density)),
+            )
+
+            asteroid_spawn_timer += 1
+            if asteroid_spawn_timer >= asteroid_interval:
+                asteroid = create_asteroid(
+                    WIDTH,
+                    HEIGHT,
+                    size_multiplier=profile["asteroid_size"] * (1.0 + system_bonus * 0.18),
+                    speed_multiplier=asteroid_speed_multiplier,
+                )
+                if asteroid is not None:
+                    asteroid_list.append(asteroid)
+                asteroid_spawn_timer = 0
+
+            for asteroid in asteroid_list[:]:
+                asteroid.update()
+                if asteroid.y > HEIGHT:
+                    asteroid_list.remove(asteroid)
+
+            # Player shots vs. asteroids. This is deliberately handled before the
+            # enemy manager so a projectile removed by an asteroid cannot also hit
+            # an enemy in the same frame.
+            for asteroid in asteroid_list[:]:
+                asteroid_rect = asteroid.get_rect()
+
+                hit_projectile = None
+                for laser in laser_list[:]:
+                    if asteroid_rect.colliderect(laser.rect):
+                        hit_projectile = laser
                         break
 
-            if hit_projectile is not None:
-                score += asteroid.get_points()
-                destroy_asteroid(asteroid, explosion_list)
+                if hit_projectile is None:
+                    for current_torpedo in torpedo_list[:]:
+                        if asteroid_rect.colliderect(current_torpedo.rect):
+                            hit_projectile = current_torpedo
+                            break
 
-                if asteroid in asteroid_list:
-                    asteroid_list.remove(asteroid)
-                if hit_projectile in laser_list:
-                    laser_list.remove(hit_projectile)
-                if hit_projectile in torpedo_list:
-                    torpedo_list.remove(hit_projectile)
+                if hit_projectile is not None:
+                    score += asteroid.get_points()
+                    destroy_asteroid(asteroid, explosion_list)
 
-        # Asteroids vs. player.
-        for asteroid in asteroid_list[:]:
-            if asteroid.get_rect().colliderect(spieler.hitbox):
-                if getattr(spieler, "is_invulnerable", lambda: False)():
-                    continue
+                    if asteroid in asteroid_list:
+                        asteroid_list.remove(asteroid)
+                    if hit_projectile in laser_list:
+                        laser_list.remove(hit_projectile)
+                    if hit_projectile in torpedo_list:
+                        torpedo_list.remove(hit_projectile)
 
-                died = spieler.take_damage()
-                destroy_asteroid(asteroid, explosion_list)
+            # Asteroids vs. player.
+            for asteroid in asteroid_list[:]:
+                if asteroid.get_rect().colliderect(spieler.hitbox):
+                    if getattr(spieler, "is_invulnerable", lambda: False)():
+                        continue
 
-                if asteroid in asteroid_list:
-                    asteroid_list.remove(asteroid)
+                    died = spieler.take_damage()
+                    destroy_asteroid(asteroid, explosion_list)
 
-                if died:
-                    running = False
-                break
+                    if asteroid in asteroid_list:
+                        asteroid_list.remove(asteroid)
 
-        # ------------------------------------------------------------
-        # INTELLIGENT ENEMY SYSTEM
-        # Runs in the SAME frame/update as the asteroid system.
-        # ------------------------------------------------------------
-        enemy_result = enemy_manager.update(
-            dt=dt,
-            score=score,
-            system_difficulty=system_index,
-            player_lasers=laser_list,
-            player_torpedoes=torpedo_list,
-        )
-        score += enemy_result.score_delta
+                    if died:
+                        local_dead = True
+                    break
 
-        if enemy_result.player_dead or spieler.lives <= 0:
-            running = False
+            # ------------------------------------------------------------
+            # INTELLIGENT ENEMY SYSTEM
+            # Runs in the SAME frame/update as the asteroid system.
+            # ------------------------------------------------------------
+            enemy_result = enemy_manager.update(
+                dt=dt,
+                score=score,
+                system_difficulty=system_index,
+                player_lasers=laser_list,
+                player_torpedoes=torpedo_list,
+            )
+            score += enemy_result.score_delta
+
+            if enemy_result.player_dead or spieler.lives <= 0:
+                local_dead = True
 
         # ------------------------------------------------------------
         # RENDERING
@@ -376,47 +387,418 @@ while True:
         background.update(score)
         background.draw(screen)
 
-        if enemy_result.warning_text:
-            draw_enemy_warning(
-                screen,
-                enemy_result.warning_text,
-                WIDTH,
-                HEIGHT,
-                enemy_manager.warning_timer_ms,
-            )
+        # Enemy manager remains local.  A dead local player simply stops updating
+        # while the network view and scoreboard continue to run.
+        try:
+            if 'enemy_result' in locals() and enemy_result.warning_text and not local_dead:
+                draw_enemy_warning(
+                    screen,
+                    enemy_result.warning_text,
+                    WIDTH,
+                    HEIGHT,
+                    enemy_manager.warning_timer_ms,
+                )
+        except Exception:
+            pass
 
-        # Draw enemies and their projectiles.
         enemy_manager.draw(screen, show_hitboxes=spieler.show_hitbox)
 
-        # Draw player.
-        spieler.draw(screen)
+        if not local_dead:
+            spieler.draw(screen)
 
-        # Draw player weapons.
         for laser in laser_list:
             laser.draw(screen)
         for current_torpedo in torpedo_list:
             current_torpedo.draw(screen)
 
-        # Draw asteroids.
         for asteroid in asteroid_list:
             asteroid.draw(screen)
 
-        # Draw asteroid explosions.
         for explosion in explosion_list[:]:
             expired = explosion.update()
             explosion.draw(screen)
             if expired and explosion in explosion_list:
                 explosion_list.remove(explosion)
 
+        if multiplayer is not None:
+            multiplayer.draw_remote_players(screen, assets)
+
         score_text = font.render(f"Punkte: {score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
         draw_lives(screen, getattr(spieler, "lives", 0), faction_for_player(spieler))
 
+        if multiplayer is not None:
+            if local_dead:
+                dead_font = pygame.font.Font(None, max(34, int(min(WIDTH, HEIGHT) * 0.055)))
+                dead_text = dead_font.render("GAME OVER – ESC zum Verlassen", True, (255, 120, 120))
+                screen.blit(dead_text, dead_text.get_rect(center=(WIDTH // 2, int(HEIGHT * 0.72))))
+            elif not multiplayer.connected:
+                net_text = pygame.font.Font(None, 28).render("Netzwerkverbindung verloren", True, (255, 160, 100))
+                screen.blit(net_text, net_text.get_rect(center=(WIDTH // 2, 30)))
+
+            # TAB is intentionally a hold-to-show overlay, so it never pauses the game.
+            show_scoreboard = keys[pygame.K_TAB]
+            if show_scoreboard:
+                draw_scoreboard(screen, multiplayer.get_scoreboard_rows(), multiplayer.local_id)
+
+            multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT)
+
         pygame.display.flip()
 
-    restart = death_screen(screen, clock, score, WIDTH, HEIGHT)
-    if not restart:
-        break
+        if multiplayer is None and local_dead:
+            running = False
 
-pygame.quit()
-sys.exit()
+    if multiplayer is not None:
+        multiplayer.set_final_local_state(spieler, ship_choice, score, WIDTH, HEIGHT)
+
+    return {
+        "score": score,
+        "host_disconnected": host_disconnected,
+        "local_dead": local_dead,
+    }
+
+
+def wait_for_multiplayer_start(session, width, height):
+    """Wait without blocking the Pygame loop until the synchronized game starts."""
+    global screen
+    title_font = pygame.font.Font(None, max(42, int(min(width, height) * 0.09)))
+    small_font = pygame.font.Font(None, 28)
+
+    while True:
+        events = session.poll(width, height)
+        game_started = any(event.get("type") == "game_started" for event in events)
+        server_stopped = any(event.get("type") == "server_stopped" for event in events)
+        if server_stopped:
+            return False
+        if game_started or session.phase == "game":
+            return True
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                session.stop()
+                pygame.quit()
+                raise SystemExit
+            if event.type == pygame.VIDEORESIZE:
+                width = max(480, event.w)
+                height = max(360, event.h)
+                screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return False
+
+        screen.fill((5, 6, 18))
+        title = title_font.render("3  2  1  GO!", True, (255, 255, 255))
+        screen.blit(title, title.get_rect(center=(width // 2, height // 2 - 50)))
+
+        import time
+        remaining = max(0.0, session.client.started_at - time.time())
+        if session.phase == "countdown" and remaining > 0:
+            number = str(max(1, int(remaining) + 1))
+            count_font = pygame.font.Font(None, max(70, int(min(width, height) * 0.18)))
+            surface = count_font.render(number, True, (120, 220, 255))
+            screen.blit(surface, surface.get_rect(center=(width // 2, height // 2 + 30)))
+        else:
+            message = small_font.render("Warte auf die anderen Spieler...", True, (170, 180, 195))
+            screen.blit(message, message.get_rect(center=(width // 2, height // 2 + 45)))
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
+def run_singleplayer_flow():
+    global screen
+    while True:
+        faction_choice, new_width, new_height = faction_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            rebel_logo_img,
+            empire_logo_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        difficulty_choice, new_width, new_height = difficulty_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            DEFAULT_DIFFICULTY,
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            faction_choice,
+            faction_logo_img,
+            x_wing_img,
+            millennium_falcon_img,
+            tiefighter_img,
+            battle_droid_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        result = run_game_session(faction_choice, difficulty_choice, ship_choice)
+        restart = death_screen(screen, clock, result["score"], WIDTH, HEIGHT)
+        if not restart:
+            return "menu"
+
+
+def set_dimensions(width, height):
+    global WIDTH, HEIGHT, screen
+    WIDTH = max(480, int(width))
+    HEIGHT = max(360, int(height))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    set_window_icon()
+
+
+def run_multiplayer_flow(config):
+    global screen
+    session = MultiplayerSession(debug=NETWORK_DEBUG)
+
+    try:
+        if config["action"] == "host":
+            session.host(config["name"])
+        else:
+            session.join(config["ip"], config["name"])
+
+        # Lobby is non-blocking from the network perspective.  A failed connect
+        # becomes an on-screen message and can be cancelled with ESC.
+        lobby_result = lobby_screen(screen, clock, session, WIDTH, HEIGHT)
+        if lobby_result == "back":
+            return "menu"
+        if lobby_result == "host_disconnected":
+            return "menu"
+
+        # Every player keeps the original faction/difficulty/ship selection.
+        # The server waits until everyone has sent READY before starting the
+        # synchronized countdown, so local menus may take different amounts of time.
+        faction_choice, new_width, new_height = faction_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            rebel_logo_img,
+            empire_logo_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        difficulty_choice, new_width, new_height = difficulty_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            DEFAULT_DIFFICULTY,
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            faction_choice,
+            faction_logo_img,
+            x_wing_img,
+            millennium_falcon_img,
+            tiefighter_img,
+            battle_droid_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        session.send_ready(ship_choice, difficulty_choice)
+        if not wait_for_multiplayer_start(session, WIDTH, HEIGHT):
+            return "menu"
+
+        result = run_game_session(
+            faction_choice,
+            difficulty_choice,
+            ship_choice,
+            multiplayer=session,
+        )
+
+        if result["host_disconnected"]:
+            # A client should return directly to the LAN menu after a host stop.
+            return "menu"
+
+        return "menu"
+    finally:
+        session.stop()
+
+
+
+def run_local_pvp_flow(duel_mode):
+    """Start a local two-player PvP duel without creating a network connection."""
+    global screen
+
+    for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
+        if local_pvp_player_prompt(screen, clock, WIDTH, HEIGHT, player_number) is None:
+            return "menu"
+
+        faction_choice, new_width, new_height = faction_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            rebel_logo_img,
+            empire_logo_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            faction_choice,
+            faction_logo_img,
+            x_wing_img,
+            millennium_falcon_img,
+            tiefighter_img,
+            battle_droid_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        if player_number == 1:
+            player1 = {
+                "name": player_name,
+                "faction": faction_choice,
+                "ship": ship_choice,
+            }
+        else:
+            player2 = {
+                "name": player_name,
+                "faction": faction_choice,
+                "ship": ship_choice,
+            }
+
+    duel = LocalPvPDuelSession(player1, player2, assets, mode=duel_mode)
+    result = duel.run(screen, clock)
+    if result.get("quit"):
+        return "menu"
+    return "menu"
+
+
+def run_pvp_flow(config, duel_mode):
+    global screen
+    session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode="pvp", max_players=PVP_MAX_PLAYERS)
+
+    try:
+        if config["action"] == "host":
+            session.host(config["name"])
+        else:
+            session.join(config["ip"], config["name"])
+
+        lobby_result = lobby_screen(
+            screen,
+            clock,
+            session,
+            WIDTH,
+            HEIGHT,
+            title_text="STAR WARS – PvP-DUELL LOBBY",
+            max_players=PVP_MAX_PLAYERS,
+            start_requires_full=True,
+        )
+        if lobby_result != "start":
+            return "menu"
+
+        faction_choice, new_width, new_height = faction_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            rebel_logo_img,
+            empire_logo_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            faction_choice,
+            faction_logo_img,
+            x_wing_img,
+            millennium_falcon_img,
+            tiefighter_img,
+            battle_droid_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        # Difficulty stays shared and neutral in PvP; the selected duel rule
+        # is carried to the server so the host rule becomes authoritative.
+        session.send_ready(ship_choice, DEFAULT_DIFFICULTY, game_rule=duel_mode)
+        if not wait_for_multiplayer_start(session, WIDTH, HEIGHT):
+            return "menu"
+
+        duel = PvPDuelSession(session, assets, mode=duel_mode, debug=NETWORK_DEBUG)
+        result = duel.run(screen, clock)
+        if result.get("quit"):
+            return "menu"
+        return "menu"
+    finally:
+        session.stop()
+
+
+def main():
+    global screen, WIDTH, HEIGHT
+
+    while True:
+        mode = main_menu(screen, clock, WIDTH, HEIGHT)
+        current_surface = pygame.display.get_surface()
+        if current_surface is not None:
+            screen = current_surface
+            WIDTH, HEIGHT = screen.get_size()
+        if mode == "quit":
+            break
+
+        if mode == "singleplayer":
+            run_singleplayer_flow()
+            continue
+
+        if mode == "multiplayer":
+            multiplayer_mode = multiplayer_menu(screen, clock, WIDTH, HEIGHT)
+            current_surface = pygame.display.get_surface()
+            if current_surface is not None:
+                screen = current_surface
+                WIDTH, HEIGHT = screen.get_size()
+            if multiplayer_mode == "back":
+                continue
+
+            # The visible LAN Multiplayer entry is the existing host-authoritative
+            # PvP mode. The older non-PvP LAN flow remains in the source for
+            # compatibility, but it is no longer reachable from the menus.
+            if multiplayer_mode in {"lan_pvp", "local_pvp"}:
+                duel_mode = pvp_mode_menu(screen, clock, WIDTH, HEIGHT)
+                current_surface = pygame.display.get_surface()
+                if current_surface is not None:
+                    screen = current_surface
+                    WIDTH, HEIGHT = screen.get_size()
+                if duel_mode is None:
+                    continue
+
+                if multiplayer_mode == "lan_pvp":
+                    config = pvp_lan_menu(screen, clock, WIDTH, HEIGHT, duel_mode)
+                    current_surface = pygame.display.get_surface()
+                    if current_surface is not None:
+                        screen = current_surface
+                        WIDTH, HEIGHT = screen.get_size()
+                    if config is not None:
+                        run_pvp_flow(config, duel_mode)
+                else:
+                    run_local_pvp_flow(duel_mode)
+                continue
+
+    pygame.quit()
+    sys.exit()
+
+
+if __name__ == "__main__":
+    main()
