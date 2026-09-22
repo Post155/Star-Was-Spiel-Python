@@ -1,63 +1,62 @@
 # 🚀 Star Wars: Galactic Assault
 
-Ein actionreiches 2D-Arcade-Weltraumspiel mit **Python** und **Pygame**.
+Ein actionreiches 2D-Arcade-Weltraumspiel, entwickelt mit **Python** und **Pygame**.
 
-Übernimm die Kontrolle über verschiedene Raumschiffe, durchquere dynamische
-Sternensysteme, kämpfe gegen KI-Gegner und tritt im lokalen oder LAN-basierten
-Mehrspielermodus gegen andere Spieler an.
+Übernimm die Kontrolle über verschiedene Raumschiffe, durchquere dynamische Sternensysteme, kämpfe gegen KI-Gegner und tritt in verschiedenen lokalen und LAN-basierten Mehrspielermodi an.
 
-## ✨ Highlights
-
-- 🚀 4 spielbare Raumschiffe
-- 🤖 Dynamisches KI-Gegnersystem
-- ☄️ Dynamisches Asteroidensystem
-- 🌌 Fortschritt durch mehrere Sternensysteme
-- ⚙️ 4 Schwierigkeitsstufen
-- 🎮 Lokaler PvP-Modus
-- 🌐 LAN-Multiplayer
-- 🏆 Score- und Highscore-System
-- 💥 Laser, Torpedos und Explosionen
+Das Projekt wurde als **Lern-, Entwicklungs- und Demonstrationsprojekt** erstellt.
 
 ---
 
-## 📑 Inhaltsverzeichnis
+## ✨ Highlights
 
-- [📦 Installation](#-installation)
-- [▶ Spiel starten](#-spiel-starten)
+* 🚀 4 spielbare Raumschiffe
+* 🤖 Dynamisches KI-Gegnersystem
+* ☄️ Dynamisches Asteroidensystem
+* 🌌 Mehrere Sternensysteme und Welten
+* ⚙️ 4 Schwierigkeitsstufen
+* 🎮 Einzelspieler
+* 🏆 Punktekampf
+* ⚔️ Letzter Überlebender
+* 🌐 LAN-Multiplayer
+* 🖥️ Lokaler Mehrspielermodus
+* 📊 Echtzeit-Score- und Ranglistensystem
+* 💥 Laser und Torpedos
+* ❤️ 3-Leben-System
+* 🌠 Pixel-Art-Grafiken und dynamische Weltraumhintergründe
 
-- [🚀 Features](#-features)
-  - [🎮 Spielmodi](#-spielmodi)
-  - [🚀 Spielbare Schiffe](#-spielbare-schiffe)
-  - [☄️ Asteroidensystem](#-asteroidensystem)
-  - [💥 Waffen](#-waffen)
+---
 
-- [🌐 Mehrspielermodi](#-mehrspielermodi)
-  - [LAN Multiplayer](#lan-multiplayer)
-  - [LAN PvP](#lan-pvp)
-  - [Lokaler PvP](#lokaler-pvp)
+# 📑 Inhaltsverzeichnis
 
-- [🏆 Score-System](#-score-system)
+* [📦 Installation](#-installation)
 
-- [⚙️ Schwierigkeitssystem](#️-schwierigkeitssystem)
-  - [Verfügbare Schwierigkeitsstufen](#verfügbare-schwierigkeitsstufen)
-  - [Balancing & Konfiguration](#balancing--konfiguration)
-  - [Gegner-Freischaltungen](#gegner-freischaltungen)
-  - [Sternensystem-Skalierung](#sternensystem-skalierung)
+  * [Voraussetzungen](#voraussetzungen)
+  * [Automatische Installation unter Windows](#automatische-installation-unter-windows)
+  * [Manuelle Installation](#manuelle-installation)
+* [▶️ Spiel starten](#️-spiel-starten)
+* [🚀 Features](#-features)
 
-- [📈 Progression & Sternensysteme](#-progression--sternensysteme)
+  * [🎮 Spielmodi](#-spielmodi)
+  * [🚀 Spielbare Schiffe](#-spielbare-schiffe)
+  * [☄️ Asteroidensystem](#️-asteroidensystem)
+  * [💥 Waffen](#-waffen)
+* [🌐 Mehrspielermodi](#-mehrspielermodi)
 
-- [🧠 KI-System](#-ki-system)
-  - [Komponenten](#komponenten)
-  - [Gruppenrollen](#gruppenrollen)
-  - [Dodge-System](#dodge-system)
-  - [Dynamische Schwierigkeit](#dynamische-schwierigkeit)
-
-- [🎯 Spielziel](#-spielziel)
-- [🎮 Steuerung](#-steuerung)
-- [📂 Projektstruktur](#-projektstruktur)
-- [🪐 Planeten & Welten](#-planeten--welten)
-- [⚠️ Rechtlicher Hinweis](#️-rechtlicher-hinweis)
-
+  * [🏆 Punktekampf](#-punktekampf)
+  * [⚔️ Letzter Überlebender](#️-letzter-überlebender)
+  * [🌐 LAN](#-lan)
+  * [🖥️ Lokaler Mehrspielermodus](#️-lokaler-mehrspielermodus)
+* [🏆 Score-System](#-score-system)
+* [⚙️ Schwierigkeitssystem](#️-schwierigkeitssystem)
+* [📈 Progression & Sternensysteme](#-progression--sternensysteme)
+* [🧠 KI-System](#-ki-system)
+* [🎯 Spielziel](#-spielziel)
+* [🎮 Steuerung](#-steuerung)
+* [📂 Projektstruktur](#-projektstruktur)
+* [🪐 Planeten & Welten](#-planeten--welten)
+* [🔧 Fehlerbehebung](#-fehlerbehebung)
+* [⚠️ Rechtlicher Hinweis](#️-rechtlicher-hinweis)
 
 ---
 
@@ -65,49 +64,170 @@ Mehrspielermodus gegen andere Spieler an.
 
 ## Voraussetzungen
 
-- Python **3.8 oder neuer**
-- Windows / Linux / macOS
-- Eine Netzwerkverbindung wird nur für den LAN-Multiplayer benötigt
+Für die Ausführung des Spiels werden benötigt:
 
-## Installation
+* **Python 3.8 oder neuer**
+* **Pygame 2.5 oder neuer**
+* Windows, Linux oder macOS
+* Für LAN-Modi: ein gemeinsames lokales Netzwerk
 
-Repository klonen oder herunterladen:
-
-```bash
-git clone https://github.com/Post155/Star-Was-Spiel-Python.git
-cd StarWars
-```
-
-Abhängigkeiten installieren:
-
-```bash
-pip install -r requirements.txt
-```
-
-Alternativ kann Pygame direkt installiert werden:
-
-```bash
-pip install pygame
-```
-
-> 💡 Für eine saubere Entwicklungsumgebung empfiehlt sich zusätzlich eine
-> virtuelle Python-Umgebung.
+> **Hinweis:** Die bereitgestellten `.bat`-Dateien sind für **Windows** vorgesehen.
 
 ---
 
-# ▶ Spiel starten
+## Automatische Installation unter Windows
 
-Nach der Installation kann das Spiel mit folgendem Befehl gestartet werden:
+Für Windows wird die Verwendung der mitgelieferten Installationsdatei empfohlen.
+
+Im Projektordner befinden sich:
+
+```text
+install.bat
+start.bat
+requirements.txt
+```
+
+### 1. Installation
+
+Einmalig:
+
+```text
+install.bat
+```
+
+ausführen.
+
+Das Installationsskript:
+
+1. sucht nach einer vorhandenen Python-Installation,
+2. erstellt im Projektordner eine virtuelle Python-Umgebung,
+3. installiert `pip` innerhalb dieser Umgebung,
+4. installiert die benötigten Python-Abhängigkeiten,
+5. installiert Pygame innerhalb der virtuellen Umgebung.
+
+Die virtuelle Umgebung befindet sich anschließend unter:
+
+```text
+.venv/
+```
+
+### Warum eine virtuelle Umgebung?
+
+Das Projekt verwendet eine eigene virtuelle Python-Umgebung.
+
+Dadurch werden die für das Spiel benötigten Python-Pakete nicht in die globale Python-Installation des Computers installiert.
+
+Die Struktur sieht anschließend beispielsweise so aus:
+
+```text
+Star-Wars-Spiel/
+│
+├── .venv/
+├── install.bat
+├── start.bat
+├── requirements.txt
+├── StarWarsGame.py
+├── game/
+└── Pixelarts/
+```
+
+> Die `.venv` sollte normalerweise **nicht in Git eingecheckt oder mit dem Projekt verteilt werden**. Sie kann auf jedem Computer mit `install.bat` neu erstellt werden.
+
+---
+
+## Manuelle Installation
+
+Falls die automatische Installation nicht verwendet werden soll, kann die Umgebung auch manuell eingerichtet werden.
+
+### Virtuelle Umgebung erstellen
+
+Windows:
+
+```powershell
+py -m venv .venv
+```
+
+Linux/macOS:
+
+```bash
+python3 -m venv .venv
+```
+
+### Virtuelle Umgebung aktivieren
+
+Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Windows CMD:
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+### Abhängigkeiten installieren
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Die aktuelle `requirements.txt` enthält:
+
+```text
+pygame>=2.5
+```
+
+---
+
+# ▶️ Spiel starten
+
+## Windows
+
+Nach der Installation kann das Spiel über:
+
+```text
+start.bat
+```
+
+gestartet werden.
+
+`start.bat` verwendet ausschließlich:
+
+```text
+.venv\Scripts\python.exe
+```
+
+und startet dadurch das Spiel innerhalb der virtuellen Umgebung.
+
+Alternativ kann das Spiel innerhalb der aktivierten virtuellen Umgebung manuell gestartet werden:
 
 ```bash
 python StarWarsGame.py
 ```
 
-Nach dem Start stehen die verfügbaren Spielmodi über das Mehrspieler-/Spielmenü
-zur Auswahl.
+---
 
-> Für LAN-Spielmodi müssen sich die beteiligten Computer im selben lokalen
-> Netzwerk befinden.
+## ⚠️ Wichtiger Hinweis zur Installation
+
+Das Installationsskript setzt voraus, dass Python auf dem System bereits vorhanden ist.
+
+Falls Python nicht gefunden wird, muss Python zunächst über eine vertrauenswürdige Quelle installiert werden.
+
+Für Windows wird die offizielle Python-Distribution empfohlen:
+
+```text
+https://www.python.org/
+```
+
+Die Installationsdateien von Python und Pygame stammen nicht aus diesem Projekt.
 
 ---
 
@@ -115,182 +235,303 @@ zur Auswahl.
 
 ## 🎮 Spielmodi
 
-Das Projekt unterstützt mehrere Spielvarianten:
+Das Spiel besitzt mehrere voneinander getrennte Spielmodi:
 
-- 🎮 **Einzelspieler**
-- 🌐 **LAN Multiplayer**
-- ⚔️ **LAN PvP**
-- 🎮 **Lokaler PvP**
+* 🎮 **Einzelspieler**
+* 🏆 **Punktekampf**
+* ⚔️ **Letzter Überlebender**
+* 🌐 **LAN-Spielmodi**
+* 🖥️ **Lokaler Mehrspielermodus**
 
-Der Einzelspieler konzentriert sich auf Progression, Asteroiden und KI-Gegner.
-Die Mehrspielermodi erweitern das Spiel um den Wettbewerb zwischen mehreren
-Spielern.
-
-## 🚀 Spielbare Schiffe
-
-- X-Wing
-- Millennium Falcon
-- TIE-Fighter
-- Battle Droid Fighter
-
-Jedes Schiff verfügt über eigene Eigenschaften, Waffen und
-Flugcharakteristiken.
-
-## ☄️ Asteroidensystem
-
-Das Asteroidensystem bildet einen zentralen Teil des Gameplays.
-
-- Mehrere Asteroidengrößen
-- Individuelle Geschwindigkeiten
-- Dynamische Spawnraten
-- Steigende Asteroidendichte
-- Kollisions- und Schadenssystem
-- Fortschrittsabhängige Skalierung
-
-## 💥 Waffen
-
-Die Raumschiffe verfügen über unterschiedliche Waffen:
-
-- Laser
-- Torpedos
-
-Laser dienen als reguläre Angriffe, während Torpedos als zusätzliche
-Angriffsoption eingesetzt werden.
+Die beiden PvP-orientierten Hauptmodi **Punktekampf** und **Letzter Überlebender** verwenden unterschiedliche Spielregeln.
 
 ---
 
-# 🌐 Mehrspielermodi
+# 🏆 Punktekampf
 
-Das Spiel enthält neben dem Einzelspieler mehrere Mehrspielervarianten.
+Der Punktekampf ist **kein klassischer PvP-Kampf**.
 
-## LAN Multiplayer
+Er basiert auf dem Einzelspieler-Gameplay.
 
-Der LAN-Multiplayer ermöglicht das gemeinsame Spielen über ein lokales
-Netzwerk.
+Das Grundprinzip:
 
-### Verbindung
+> Jeder Spieler spielt gleichzeitig seine **eigene Einzelspieler-Runde** und vergleicht seinen Score mit den anderen Spielern.
 
-- Die beteiligten PCs befinden sich im selben lokalen Netzwerk.
-- Es wird keine externe Server-Infrastruktur benötigt.
-- Das Spiel kann über die vorhandenen LAN-Funktionen verbunden werden.
+### Jeder Spieler besitzt seine eigene Spielwelt
+
+Jeder Spieler hat:
+
+* eigenes Schiff
+* eigene Asteroiden
+* eigene KI-Gegner
+* eigene Projektile
+* eigene Kollisionen
+* eigenen Score
+* eigenes Sternensystem
+* eigenes Leben-System
+* eigene Spielprogression
+
+Die Spielwelt eines Spielers wird nicht durch die Spielwelt eines anderen Spielers beeinflusst.
+
+### Ghost-Spieler
+
+Andere Spieler werden ausschließlich als **Geister/Ghost-Spieler** dargestellt.
+
+Ein Ghost dient nur zur Anzeige von:
+
+* Spielername
+* Position
+* Schiffstyp
+* Punktestand
+* aktuellem Sternensystem
+
+Ghost-Spieler:
+
+* besitzen keine Kollisions-Hitbox,
+* können nicht getroffen werden,
+* können keinen Schaden verursachen,
+* können keinen Schaden erhalten,
+* können nicht beschossen werden,
+* können nicht mit Asteroiden kollidieren,
+* können keine KI-Gegner beeinflussen,
+* können keine Projektile beeinflussen,
+* beeinflussen die eigene Spielwelt nicht.
+
+Der Ghost ist damit ausschließlich eine **visuelle Netzwerkdarstellung**.
+
+### Netzwerkdaten im Punktekampf
+
+Für die Ghost-Darstellung werden nur die dafür benötigten Informationen übertragen:
+
+```text
+Spielername
+Schiffstyp
+X-Position
+Y-Position
+Punktestand
+Sternensystem
+```
+
+Es werden für den Punktekampf keine PvP-Treffer oder PvP-Schadensereignisse benötigt.
+
+### Spielziel
+
+Nach dem Ende der Runde werden die Punktestände miteinander verglichen.
+
+Der Spieler mit dem höchsten Score erzielt die höchste Platzierung.
+
+---
+
+# ⚔️ Letzter Überlebender
+
+Der Modus **Letzter Überlebender** ist ein echter PvP-Modus.
+
+Hier kämpfen die Spieler direkt gegeneinander.
 
 ### Spielprinzip
 
-Jeder Spieler spielt mit seiner eigenen Spielansicht und kann gleichzeitig mit
-anderen Spielern im selben Match antreten.
+* Spieler können sich gegenseitig beschießen.
+* Laser können gegnerische Spieler treffen.
+* Torpedos können gegnerische Spieler treffen.
+* Treffer verursachen Schaden.
+* Spieler können Leben verlieren.
+* Ein Spieler kann einen anderen Spieler besiegen.
+* Der letzte noch lebende Spieler gewinnt die Runde.
 
-Das Score-/Highscore-System dient dabei als gemeinsamer Wettbewerbsrahmen.
+### Spielfeld
 
-## LAN PvP
+Die Spieler stehen sich gegenüber:
 
-Im LAN-PvP treten Spieler direkt gegeneinander an.
+```text
+        Spieler 2
+           ↓
 
-Die Netzwerkvariante nutzt die vorhandenen PvP-Regeln, Waffen und
-Trefferlogiken und erweitert sie um die Netzwerkverbindung zwischen den PCs.
+     gemeinsames
+      Spielfeld
 
-## Lokaler PvP
+           ↑
+        Spieler 1
+```
 
-Der lokale PvP-Modus ermöglicht ein direktes Duell auf **einem einzigen PC**.
+Spieler 1 startet im unteren Bereich.
 
-Dieser Modus benötigt keine Netzwerkverbindung.
+Spieler 2 startet im oberen Bereich.
 
-### Lokale Steuerung
+Im Gegensatz zum Punktekampf verwenden beide Spieler hier **eine gemeinsame PvP-Spielwelt**.
 
-**Spieler 1 – unteres Schiff**
+### Asteroiden
 
-- `A / D` → Bewegen
-- `W` → Laser
-- `S` → Torpedo
+Asteroiden bleiben aktiv.
 
-**Spieler 2 – oberes Schiff**
+Es werden jedoch keine KI-Gegner eingesetzt.
 
-- `← / →` → Bewegen
-- `↑` → Laser
-- `↓` → Torpedo
+Asteroiden können unter anderem auf folgenden symmetrischen Bahnen auftreten:
 
-Die lokale PvP-Steuerung ist ausschließlich für diesen Spielmodus aktiv.
-Einzelspieler und Netzwerkmodi verwenden weiterhin ihre vorgesehenen Eingaben.
+```text
+links  → rechts
+rechts → links
 
-### Mehrspieler-Menü
+links unten → rechts oben
+rechts unten → links oben
 
-1. LAN Multiplayer
-2. LAN PvP
-3. Lokaler PvP
+links oben → rechts unten
+rechts oben → links unten
+```
+
+Die Flugbahnen werden so angelegt, dass nicht dauerhaft eine Spielfeldhälfte bevorzugt wird.
+
+---
+
+# 🔀 Technische Trennung der Mehrspielermodi
+
+Die beiden Modi verfolgen unterschiedliche technische Konzepte.
+
+```text
+PUNKTEKAMPF
+│
+├── eigene Einzelspieler-Welt
+├── eigene KI
+├── eigene Asteroiden
+├── eigene Projektile
+├── eigener Score
+├── eigenes Sternensystem
+└── Ghost-Spieler als reine Anzeige
+
+
+LETZTER ÜBERLEBENDER
+│
+├── gemeinsame PvP-Welt
+├── Spieler gegen Spieler
+├── PvP-Projektile
+├── PvP-Schaden
+├── Treffer
+├── Leben
+└── Abschüsse
+```
+
+Die Spielmodi sollen dadurch unterschiedliche Spielerlebnisse bieten und nicht dieselben Kampfregeln verwenden.
+
+---
+
+# 🌐 LAN
+
+Die LAN-Funktionen ermöglichen Mehrspielerpartien innerhalb eines lokalen Netzwerks.
+
+### Voraussetzungen
+
+* Die beteiligten Computer müssen sich im selben lokalen Netzwerk befinden.
+* Eine Internetverbindung ist für die eigentliche LAN-Verbindung nicht erforderlich.
+* Die Kommunikation erfolgt zwischen den beteiligten Computern.
+* Ein externer Spielserver wird für die LAN-Verbindung nicht benötigt.
+
+Ein Netzwerk-Switch oder ein entsprechendes lokales Netzwerk kann verwendet werden.
+
+### Netzwerkbedingungen
+
+Die tatsächliche Verbindungsqualität kann unter anderem von folgenden Faktoren abhängen:
+
+* Netzwerkhardware
+* Firewall-Einstellungen
+* Betriebssystem
+* IP-Konfiguration
+* Auslastung des lokalen Netzwerks
+* Sicherheitssoftware
+
+Das Projekt übernimmt keine Garantie dafür, dass eine Verbindung in jeder Netzwerkumgebung hergestellt werden kann.
+
+---
+
+# 🖥️ Lokaler Mehrspielermodus
+
+Der lokale Mehrspielermodus ermöglicht das Spielen mehrerer Spieler auf einem einzelnen Computer, soweit der jeweilige Spielmodus dies unterstützt.
+
+Der lokale PvP-Modus verwendet unterschiedliche Eingaben für die beiden Spieler.
+
+## Spieler 1 – unteres Schiff
+
+| Taste   | Aktion  |
+| ------- | ------- |
+| `A / D` | Bewegen |
+| `W`     | Laser   |
+| `S`     | Torpedo |
+
+## Spieler 2 – oberes Schiff
+
+| Taste   | Aktion  |
+| ------- | ------- |
+| `← / →` | Bewegen |
+| `↑`     | Laser   |
+| `↓`     | Torpedo |
+
+Diese Steuerung ist für den lokalen PvP-Modus vorgesehen.
 
 ---
 
 # 🏆 Score-System
 
-Das Spiel verwendet ein Punktesystem für den Spielfortschritt und den
-Wettbewerb.
+Das Spiel verwendet ein Punktesystem für den Spielfortschritt und den Wettbewerb.
 
-Der Score ist unter anderem relevant für:
+Punkte können unter anderem durch das Zerstören von:
 
-- Gegner-Freischaltungen
-- Progression
-- Highscore
-- Mehrspieler-Wettbewerb
+* Asteroiden
+* KI-Gegnern
 
-Im Einzelspieler ist der Score eng mit der Freischaltung neuer Gegnerstufen
-verbunden.
+erreicht werden.
 
-Im Mehrspielermodus können die aktuellen Spielstände der Spieler miteinander
-verglichen werden.
+Im Punktekampf dient der Score als zentrale Vergleichsgröße zwischen den Spielern.
+
+Eine Rangliste kann während des Mehrspielerspiels den aktuellen Stand anzeigen.
+
+Angezeigt werden können unter anderem:
+
+* Platzierung
+* Spielername
+* Punktestand
+* aktuelles Sternensystem
 
 ---
 
 # ⚙️ Schwierigkeitssystem
 
-Zu Beginn jeder Spielrunde kann eine Schwierigkeitsstufe ausgewählt werden.
+Zu Beginn einer Spielrunde kann eine Schwierigkeitsstufe ausgewählt werden.
 
 ## Verfügbare Schwierigkeitsstufen
 
-| Schwierigkeit | Beschreibung |
-|---|---|
-| Einfach | Ideal für Einsteiger |
-| Normal | Ausgewogenes Standard-Erlebnis |
-| Schwer | Höhere Herausforderung durch aggressivere Gegner |
-| Experte | Maximale Schwierigkeit für erfahrene Spieler |
+| Schwierigkeit | Beschreibung              |
+| ------------- | ------------------------- |
+| Einfach       | Geringere Herausforderung |
+| Normal        | Standard-Spielbalance     |
+| Schwer        | Erhöhte Herausforderung   |
+| Experte       | Sehr hohe Herausforderung |
 
-Die gewählte Schwierigkeit beeinflusst:
+Die konkrete Balance kann sich mit der jeweiligen Version des Spiels ändern.
 
-- Gegnerische Trefferquote
-- Gegner-Lebenspunkte
-- Gegnergeschwindigkeit
-- Gegner-Aggressivität
-- Verfolgungsverhalten
-- Gegner-Spawnrate
-- Maximale Anzahl aktiver Gegner
-- Asteroidendichte
-- Asteroidengeschwindigkeit
-- Asteroidengröße
+Je nach Konfiguration können unter anderem beeinflusst werden:
+
+* Gegnerische Trefferquote
+* Gegner-Lebenspunkte
+* Gegnergeschwindigkeit
+* Gegner-Aggressivität
+* Verfolgungsverhalten
+* Gegner-Spawnrate
+* Maximale Anzahl aktiver Gegner
+* Asteroidendichte
+* Asteroidengeschwindigkeit
+* Asteroidengröße
 
 ---
 
 # ⚖️ Balancing & Konfiguration
 
-Alle wichtigen Gameplay-Werte befinden sich in:
+Wichtige Gameplay-Konfigurationen befinden sich unter anderem in:
 
 ```text
 game/constants.py
 ```
 
-## Difficulty Presets
+Je nach Version können dort beispielsweise Werte für Schwierigkeitsstufen, Spawnraten und Skalierungsfaktoren definiert sein.
 
-Über `DIFFICULTY_SETTINGS` können unter anderem folgende Werte angepasst
-werden:
-
-- `enemy_accuracy`
-- `enemy_hp`
-- `enemy_speed`
-- `enemy_aggression`
-- `enemy_max`
-- `enemy_spawn`
-- `asteroid_density`
-- `asteroid_speed`
-- `asteroid_size`
-
-### Beispiel
+Beispielsweise können Konfigurationen dieser Art verwendet werden:
 
 ```python
 DIFFICULTY_SETTINGS = {
@@ -300,21 +541,18 @@ DIFFICULTY_SETTINGS = {
         "enemy_speed": 0.85,
         "enemy_aggression": 0.70,
     },
-
     "normal": {
         "enemy_accuracy": 0.65,
         "enemy_hp": 1.00,
         "enemy_speed": 1.00,
         "enemy_aggression": 1.00,
     },
-
     "hard": {
         "enemy_accuracy": 0.80,
         "enemy_hp": 1.15,
         "enemy_speed": 1.15,
         "enemy_aggression": 1.20,
     },
-
     "expert": {
         "enemy_accuracy": 0.92,
         "enemy_hp": 1.35,
@@ -324,7 +562,15 @@ DIFFICULTY_SETTINGS = {
 }
 ```
 
-## Gegner-Freischaltungen
+> Diese Werte dienen der Dokumentation des Konzepts. Die tatsächlich verwendeten Werte können sich zwischen verschiedenen Versionen des Projekts ändern.
+
+---
+
+# 🔓 Gegner-Freischaltungen
+
+In der aktuellen Spielkonzeption werden Gegner abhängig vom erreichten Score freigeschaltet.
+
+Beispielhafte Schwellenwerte:
 
 ```python
 ENEMY_UNLOCK_STANDARD_POINTS = 1000
@@ -332,16 +578,22 @@ ENEMY_UNLOCK_HEAVY_POINTS = 3000
 ENEMY_UNLOCK_ELITE_POINTS = 6000
 ```
 
-Vor **1.000 Punkten** erscheinen keine Gegner.
+| Punkte | Freischaltung  |
+| -----: | -------------- |
+|  0–999 | Nur Asteroiden |
+|  1.000 | Standardgegner |
+|  3.000 | Schwere Gegner |
+|  6.000 | Elite-Gegner   |
 
-| Punkte | Freischaltung |
-|---:|---|
-| 0–999 | Nur Asteroiden |
-| 1.000 | Standardgegner |
-| 3.000 | Schwere Gegner |
-| 6.000 | Elite-Gegner |
+Die tatsächlichen Werte sind konfigurationsabhängig und können sich in zukünftigen Versionen ändern.
 
-## Sternensystem-Skalierung
+---
+
+# 🌌 Sternensystem-Skalierung
+
+Mit fortschreitendem Spiel können zusätzliche Schwierigkeitsfaktoren angewendet werden.
+
+Beispiel:
 
 ```python
 SYSTEM_DIFFICULTY_BONUS = (
@@ -352,157 +604,105 @@ SYSTEM_DIFFICULTY_BONUS = (
 )
 ```
 
-| Sternensystem | Bonus |
-|---|---:|
-| System 1 | +0 % |
-| System 2 | +15 % |
-| System 3 | +30 % |
-| System 4 | +50 % |
+| Sternensystem | Beispielhafter Bonus |
+| ------------- | -------------------: |
+| System 1      |                 +0 % |
+| System 2      |                +15 % |
+| System 3      |                +30 % |
+| System 4      |                +50 % |
 
-Spätere Systeme verwenden automatisch den zuletzt definierten Wert.
+Je nach Implementierung können unter anderem folgende Faktoren skaliert werden:
 
-Der Bonus beeinflusst:
-
-- Gegner-Lebenspunkte
-- Gegner-Geschwindigkeit
-- Gegner-Treffergenauigkeit
-- Gegner-Aggressivität
-- Asteroidendichte
-- Asteroidengeschwindigkeit
-- Asteroidengröße
+* Gegner-Lebenspunkte
+* Gegnergeschwindigkeit
+* Gegner-Treffergenauigkeit
+* Gegner-Aggressivität
+* Asteroidendichte
+* Asteroidengeschwindigkeit
+* Asteroidengröße
 
 ---
 
 # 📈 Progression & Sternensysteme
 
-Zu Beginn befindet sich der Spieler allein im Sternensystem und kämpft
-ausschließlich gegen Asteroiden. Dadurch können Steuerung und Waffen zunächst
-ohne Druck erlernt werden.
+Zu Beginn einer Spielrunde liegt der Schwerpunkt zunächst auf dem Asteroidensystem.
 
-## Gegner-Freischaltung
+Mit zunehmendem Score können weitere Gegnerklassen freigeschaltet werden.
 
-| Punkte | Ereignis |
-|---:|---|
-| 0–999 | Nur Asteroiden |
-| 1.000 | Erste feindliche Schiffe erscheinen |
-| 3.000 | Erweiterte Gegnerklassen werden freigeschaltet |
-| 6.000 | Elite-Gegner erscheinen |
+Beispiel:
 
-Vor jeder neuen Gegnerstufe wird eine Warnmeldung angezeigt.
+| Punkte | Ereignis                 |
+| -----: | ------------------------ |
+|  0–999 | Nur Asteroiden           |
+|  1.000 | Erste feindliche Schiffe |
+|  3.000 | Erweiterte Gegnerklassen |
+|  6.000 | Elite-Gegner             |
 
-Beispiele:
-
-```text
-⚠ Feindliche Schiffe wurden entdeckt!
-⚠ Verstärkte Aktivitäten im System festgestellt!
-⚠ Elite-Einheit im Anflug!
-⚠ Unbekanntes Signal erkannt!
-```
-
-## Dynamische Sternensysteme
-
-Zusätzlich zur gewählten Schwierigkeit erhöht jedes neue Sternensystem die
-Gesamtgefahr.
-
-| Sternensystem | Schwierigkeitsbonus |
-|---|---:|
-| System 1 | +0 % |
-| System 2 | +15 % |
-| System 3 | +30 % |
-| System 4 | +50 % |
-
-Die Skalierung beeinflusst unter anderem:
-
-- Gegnerstärke
-- Gegnerverhalten
-- Spawnraten
-- Asteroidendichte
-- Asteroidengeschwindigkeit
-
-Dadurch steigt die Herausforderung mit dem Fortschritt durch die Systeme.
+Zusätzlich kann sich die Schwierigkeit durch den Wechsel in weitere Sternensysteme erhöhen.
 
 ---
 
 # 🧠 KI-System
 
-Die Gegner-KI wurde modular aufgebaut und ist vollständig erweiterbar.
+Die Gegner-KI ist modular aufgebaut.
 
 ## Komponenten
 
-| Komponente | Aufgabe |
-|---|---|
-| **EnemyBase** | Lebenspunkte, Hitbox, Sprite und Basisschnittstelle |
-| **EnemyBrain** | Zielwahl, Reaktionszeit und Entscheidungslogik |
-| **EnemyMovement** | Weiche, beschleunigungsbasierte Bewegung |
-| **EnemyWeaponSystem** | Salven, Zielvorhalt und Torpedos |
-| **EnemyManager** | Spawnlogik, Schwierigkeit, Gruppenbildung und Score-System |
+| Komponente            | Aufgabe                         |
+| --------------------- | ------------------------------- |
+| **EnemyBase**         | Basiseigenschaften von Gegnern  |
+| **EnemyBrain**        | Zielwahl und Entscheidungslogik |
+| **EnemyMovement**     | Gegnerbewegung                  |
+| **EnemyWeaponSystem** | Gegnerische Waffen und Angriffe |
+| **EnemyManager**      | Spawn- und Gegnerverwaltung     |
 
 ## Gruppenrollen
 
 ### Attacker
 
-Folgt dem Spieler direkt und führt regelmäßige Angriffe aus.
+Greift den Spieler direkt an.
 
 ### Flanker Left
 
-Greift versetzt von links an.
+Greift aus einer seitlich versetzten Position an.
 
 ### Flanker Right
 
-Greift versetzt von rechts an.
+Greift aus der entgegengesetzten Seite an.
 
 ### Support
 
-Bleibt weiter entfernt und unterstützt andere Gegner.
-
-Dadurch bewegen sich mehrere Gegner nicht auf identischen Flugbahnen.
-
-## Dodge-System
-
-Die KI prüft nur in bestimmten Reaktionsintervallen, ob ein Projektil ihre
-Flugbahn kreuzt.
-
-Dadurch entstehen keine unrealistisch perfekten Ausweichmanöver und
-gleichzeitig bleibt die CPU-Last gering.
-
-- Elite-Gegner reagieren schneller
-- Standardgegner reagieren ausgewogen
-- Schwere Gegner reagieren träger
-
-## Dynamische Schwierigkeit
-
-Der `EnemyManager` berechnet einen dynamischen Schwierigkeitsfaktor aus:
-
-- aktuellem Sternensystem
-- Spielerpunktzahl
-- gewähltem Schwierigkeitsgrad
-
-Beeinflusst werden:
-
-- Maximale Gegnerzahl
-- Spawnintervall
-- Geschwindigkeit
-- Feuerfrequenz
-- Zielgenauigkeit
-- Elite-Wahrscheinlichkeit
-- Torpedonutzung
+Unterstützt andere Gegner aus einer größeren Entfernung.
 
 ---
 
 # 🎯 Spielziel
 
-Überlebe möglichst lange und erreiche die höchste Punktzahl.
+## Einzelspieler
 
-Der Spieler muss:
+Das Ziel besteht darin, möglichst lange zu überleben und einen hohen Score zu erreichen.
 
-- Asteroiden zerstören
-- Feindliche Schiffe besiegen
-- Torpedos ausweichen
-- Sternensysteme durchqueren
-- Hohe Punktzahlen erzielen
-- Immer stärkere Bedrohungen überleben
+Dazu müssen unter anderem:
 
-Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
+* Asteroiden zerstört,
+* KI-Gegner bekämpft,
+* Projektilen ausgewichen,
+* Sternensysteme durchquert und
+* Leben möglichst lange erhalten
+
+werden.
+
+## Punktekampf
+
+Im Punktekampf steht der Vergleich der erreichten Punktzahlen im Mittelpunkt.
+
+Jeder Spieler spielt dabei seine eigene Einzelspieler-Spielwelt.
+
+## Letzter Überlebender
+
+Im Modus „Letzter Überlebender“ besteht das Ziel darin, den direkten PvP-Kampf zu überstehen.
+
+Der letzte noch lebende Spieler gewinnt die Runde.
 
 ---
 
@@ -510,100 +710,350 @@ Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
 
 ## Einzelspieler
 
-| Taste | Aktion |
-|---|---|
-| `A / ←` | Nach links bewegen |
-| `D / →` | Nach rechts bewegen |
-| `W / ↑` | Nach oben bewegen |
-| `Leertaste` | Laser schießen |
-| `S / ↓` | Torpedo abfeuern |
-| `H` | Hitboxen anzeigen |
-| `1 / 2 / 3 / 4` | Schiff wechseln (Debug) |
-| `ESC` | Pause / Zurück |
+| Taste           | Aktion                  |
+| --------------- | ----------------------- |
+| `A / ←`         | Nach links bewegen      |
+| `D / →`         | Nach rechts bewegen     |
+| `W / ↑`         | Nach oben bewegen       |
+| `Leertaste`     | Laser schießen          |
+| `S / ↓`         | Torpedo abfeuern        |
+| `H`             | Hitboxen anzeigen       |
+| `1 / 2 / 3 / 4` | Schiff wechseln – Debug |
+| `ESC`           | Pause / Zurück          |
+
+> Einzelne Debug-Tasten können in veröffentlichten Versionen deaktiviert oder geändert werden.
 
 ## Lokaler PvP
 
 ### Spieler 1 – unteres Schiff
 
-| Taste | Aktion |
-|---|---|
+| Taste   | Aktion  |
+| ------- | ------- |
 | `A / D` | Bewegen |
-| `W` | Laser |
-| `S` | Torpedo |
+| `W`     | Laser   |
+| `S`     | Torpedo |
 
 ### Spieler 2 – oberes Schiff
 
-| Taste | Aktion |
-|---|---|
+| Taste   | Aktion  |
+| ------- | ------- |
 | `← / →` | Bewegen |
-| `↑` | Laser |
-| `↓` | Torpedo |
+| `↑`     | Laser   |
+| `↓`     | Torpedo |
 
-> Die lokale PvP-Steuerung ist ausschließlich im lokalen PvP-Modus aktiv.
+---
+
+# ❤️ Leben-System
+
+Im Einzelspieler und im Modus **Letzter Überlebender** wird ein Leben-System verwendet.
+
+Ein Spieler startet mit:
+
+```text
+3 Leben
+```
+
+Die Leben werden durch Lichtschwertsymbole dargestellt.
+
+Für jedes verlorene Leben verschwindet ein Symbol.
+
+Wenn keine Leben mehr vorhanden sind, gilt der Spieler als besiegt.
+
+> Im Punktekampf besitzt jeder Spieler seine eigene Spielwelt und damit auch sein eigenes Spielgeschehen. Andere Spieler können dieses Leben-System nicht beeinflussen.
 
 ---
 
 # 📂 Projektstruktur
 
+Die Projektstruktur kann je nach Entwicklungsstand leicht variieren.
+
+Eine typische Struktur des Projekts ist:
+
 ```text
-StarWars/
+Star-Wars-Spiel-Python/
 │
-├── StarWarsGame.py       # Hauptprogramm
-├── README.md             # Projektdokumentation
-├── requirements.txt      # Python-Abhängigkeiten
+├── StarWarsGame.py
+├── README.md
+├── requirements.txt
+├── install.bat
+├── start.bat
 │
-└── game/
-    ├── assets.py         # Assets und Grafiken
-    ├── background.py     # Hintergrundsystem
-    ├── constants.py      # Globale Konfiguration
-    ├── entities.py       # Spielobjekte
-    ├── ui.py             # Benutzeroberfläche
-    │
-    └── enemies/
-        ├── __init__.py
-        ├── ai.py
-        ├── base.py
-        ├── config.py
-        ├── manager.py
-        ├── movement.py
-        ├── projectiles.py
-        ├── weapons.py
-        └── audio.py
+├── game/
+│   ├── __init__.py
+│   ├── assets.py
+│   ├── constants.py
+│   ├── entities.py
+│   ├── entities_old.py
+│   ├── highscore.py
+│   ├── local_pvp.py
+│   ├── multiplayer.py
+│   ├── network.py
+│   ├── pvp_duel.py
+│   ├── pvp_input.py
+│   ├── scoreboard.py
+│   │
+│   ├── background/
+│   │   ├── manager.py
+│   │   ├── objects.py
+│   │   ├── planet_manager.py
+│   │   ├── starfield.py
+│   │   ├── systems.py
+│   │   ├── system_manager.py
+│   │   └── transition_manager.py
+│   │
+│   ├── entities/
+│   │   ├── asteroid.py
+│   │   ├── explosion.py
+│   │   ├── player.py
+│   │   ├── projectiles.py
+│   │   └── ships.py
+│   │
+│   ├── enemies/
+│   │   ├── ai.py
+│   │   ├── base.py
+│   │   ├── config.py
+│   │   ├── manager.py
+│   │   ├── movement.py
+│   │   ├── projectiles.py
+│   │   └── weapons.py
+│   │
+│   └── ui/
+│       ├── common.py
+│       ├── death.py
+│       ├── difficulty.py
+│       ├── faction.py
+│       ├── multiplayer.py
+│       └── ship.py
+│
+└── Pixelarts/
+    ├── Astroids/
+    ├── Planets/
+    ├── Battle_Droid.png
+    ├── Explosion.png
+    ├── Galactic-Empire-Logo.png
+    ├── Hyperraum.png
+    ├── lichtschwerter.png
+    ├── millennium.png
+    ├── Star-Wars-Rebel-Logo.png
+    ├── tie-fighter.png
+    ├── Torpedo.png
+    └── X_Wing.png
 ```
+
 ---
 
 # 🪐 Planeten & Welten
 
-Die verfügbaren Welten und Weltraumobjekte befinden sich unter
-`Pixelarts/Planets`.
+Die Welt- und Weltraumgrafiken befinden sich unter:
 
-| Welt | Asset |
-|---|---|
-| Tatooine | ![Tatooine](Pixelarts/Planets/core_worlds/planet_tatooine.png) |
-| Kamino |  ![Kamino](Pixelarts/Planets/core_worlds/planet_kamino.png) |
-| Coruscant |  ![Coruscant](Pixelarts/Planets/core_worlds/planet_corusant.png) |
-| Hoth |  ![Hoth](Pixelarts/Planets/core_worlds/planet_hoth.png) |
-| Endor |  ![Endor](Pixelarts/Planets/core_worlds/planet_endor.png) |
-| Mustafar | ![Mustafar](Pixelarts/Planets/core_worlds/planet_Mustafar.png) |
-| Earth | ![Earth](Pixelarts/Planets/milkyway/planet_earth.png) |
-| Saturn | ![Saturn](Pixelarts/Planets/milkyway/planet_saturn.png) |
-| Schwarzes Loch | ![Schwarzes Loch](Pixelarts/Planets/milkyway/planet_schwarzesLoch.png) |
-| Purpurplanet | ![Purpurplanet](Pixelarts/Planets/core_worlds/planet_purple.png) |
-| Todesstern | ![Todesstern](Pixelarts/Planets/death_star/TodesternEins.png) |
-| Todesstern II | ![Todesstern](Pixelarts/Planets/death_star/TodesternZwei.png) |
-| Sternzerstörer | ![Sternzerstörer](Pixelarts/Planets/death_star/Sternzerstörer.png) |
+```text
+Pixelarts/Planets/
+```
 
+Unter anderem sind folgende Welten bzw. Objekte vorhanden:
 
-### Die Welt-Assets dienen als visuelle Bestandteile der verschiedenen Sternensysteme.
+| Welt / Objekt  | Asset                               |
+| -------------- | ----------------------------------- |
+| Tatooine       | `core_worlds/planet_tatooine.png`   |
+| Kamino         | `core_worlds/planet_kamino.png`     |
+| Coruscant      | `core_worlds/planet_corusant.png`   |
+| Hoth           | `core_worlds/planet_hoth.png`       |
+| Endor          | `core_worlds/planet_endor.png`      |
+| Mustafar       | `core_worlds/planet_Mustafar.png`   |
+| Earth          | `milkyway/planet_earth.png`         |
+| Saturn         | `milkyway/planet_saturn.png`        |
+| Schwarzes Loch | `milkyway/planet_schwarzesLoch.png` |
+| Purpurplanet   | `core_worlds/planet_purple.png`     |
+| Todesstern     | `death_star/TodesternEins.png`      |
+| Todesstern II  | `death_star/TodesternZwei.png`      |
+| Sternzerstörer | `death_star/Sternzerstörer.png`     |
+
+Die Assets dienen der visuellen Darstellung der verschiedenen Spielwelten und Sternensysteme.
+
+---
+
+# 🔧 Fehlerbehebung
+
+## Python wird nicht gefunden
+
+Wenn `install.bat` meldet, dass Python nicht gefunden wurde:
+
+1. Python installieren.
+2. Eine unterstützte Python-Version verwenden.
+3. Danach `install.bat` erneut ausführen.
+
+## `.venv` wurde nicht gefunden
+
+Wenn `start.bat` meldet:
+
+```text
+Die virtuelle Python-Umgebung wurde nicht gefunden.
+```
+
+zuerst:
+
+```text
+install.bat
+```
+
+ausführen.
+
+## Pygame fehlt
+
+Wenn Pygame nicht gefunden wird, `install.bat` erneut ausführen.
+
+Alternativ kann innerhalb der virtuellen Umgebung installiert werden:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+## LAN funktioniert nicht
+
+Mögliche Ursachen:
+
+* Computer befinden sich nicht im selben Netzwerk.
+* Windows-Firewall blockiert die Verbindung.
+* Eine Sicherheitssoftware blockiert die Anwendung.
+* IP-Adresse oder Port sind nicht erreichbar.
+* Das Netzwerk erlaubt keine direkte Kommunikation zwischen den Geräten.
+
+Das Projekt kann die Konfiguration eines fremden Netzwerks oder einer Firewall nicht garantieren.
+
+## Spiel startet nicht
+
+Zunächst prüfen:
+
+```text
+Python-Version
+Pygame-Installation
+Projektdateien
+Asset-Dateien
+Firewall
+```
+
+Fehlermeldungen aus der Konsole können bei der Fehlersuche hilfreich sein.
+
+---
+
+# 🧪 Entwicklungsstatus
+
+Das Projekt befindet sich in Entwicklung.
+
+Daher können sich zwischen verschiedenen Versionen unter anderem ändern:
+
+* Gameplay
+* Balancing
+* Steuerung
+* Spielmodi
+* Netzwerkfunktionen
+* Dateistruktur
+* Assets
+* Python-/Pygame-Anforderungen
+* Fehlerbehandlung
+* Benutzeroberfläche
+
+Eine bestimmte Funktion oder Spielmechanik wird nur dann als dauerhaft garantiert betrachtet, wenn sie in der jeweiligen veröffentlichten Version ausdrücklich entsprechend dokumentiert ist.
 
 ---
 
 # ⚠️ Rechtlicher Hinweis
 
-Dieses Projekt wurde ausschließlich zu **Lern-, Demonstrations- und
-Entwicklungszwecken** erstellt.
+## Fanprojekt und Markenrechte
 
-**Star Wars** sowie die damit verbundenen Namen, Charaktere, Designs und
-Marken gehören ihren jeweiligen Rechteinhabern.
+**Star Wars** sowie damit verbundene Namen, Figuren, Logos, Designs, Fahrzeuge, Orte und andere geschützte Inhalte sind Eigentum der jeweiligen Rechteinhaber.
 
-Dieses Fanprojekt steht in keiner offiziellen Verbindung zu den Rechteinhabern.
+Dieses Projekt ist ein **nicht offizielles Fan-, Lern- und Entwicklungsprojekt**.
+
+Es besteht keine behauptete oder beabsichtigte offizielle Verbindung, Partnerschaft, Unterstützung oder Autorisierung durch die jeweiligen Rechteinhaber.
+
+Die Verwendung entsprechender Namen oder Bezeichnungen in dieser Dokumentation dient der Beschreibung des Projekts.
+
+## Keine kommerzielle Zugehörigkeit
+
+Dieses Projekt soll nicht den Eindruck erwecken, dass es von den Rechteinhabern veröffentlicht, unterstützt oder autorisiert wurde.
+
+Falls einzelne Inhalte des Projekts Rechte Dritter berühren, bleiben die entsprechenden Rechte bei den jeweiligen Rechteinhabern.
+
+Für eine öffentliche oder kommerzielle Veröffentlichung sollte vorab geprüft werden, ob für verwendete Namen, Marken, Grafiken, Sounds, Modelle oder sonstige Inhalte entsprechende Rechte oder Lizenzen erforderlich sind.
+
+---
+
+# ⚖️ Haftungs- und Nutzungshinweis
+
+Die Software wird, soweit gesetzlich zulässig, **ohne Zusicherung einer bestimmten Beschaffenheit oder Eignung für einen bestimmten Zweck** bereitgestellt.
+
+Die Nutzung erfolgt grundsätzlich auf eigene Verantwortung.
+
+Es kann trotz sorgfältiger Entwicklung nicht garantiert werden, dass:
+
+* die Software auf jedem Computersystem funktioniert,
+* alle Python- und Pygame-Versionen kompatibel sind,
+* das Spiel jederzeit fehlerfrei läuft,
+* alle Netzwerkumgebungen unterstützt werden,
+* alle Hardware- und Treiberkonfigurationen kompatibel sind,
+* keine Daten verloren gehen,
+* keine Abstürze oder sonstigen technischen Probleme auftreten.
+
+Der Entwickler übernimmt, soweit gesetzlich zulässig, keine Verantwortung für Schäden oder Beeinträchtigungen, die ausschließlich durch die Nutzung der Software entstehen.
+
+Dies gilt insbesondere für Probleme, die durch:
+
+* fehlerhafte Systemkonfiguration,
+* inkompatible Hardware,
+* inkompatible Software,
+* Drittanbieter-Software,
+* Netzwerkprobleme,
+* Firewall- oder Sicherheitseinstellungen,
+* Änderungen am Quellcode durch Dritte,
+* nicht vorgesehene Änderungen an Projektdateien
+
+verursacht werden.
+
+**Zwingende gesetzliche Haftungsansprüche bleiben von diesem Hinweis unberührt.** Insbesondere soll dieser Hinweis keine Haftung ausschließen, soweit ein Haftungsausschluss nach dem jeweils anwendbaren Recht nicht zulässig ist.
+
+---
+
+# 🔒 Drittanbieter-Software
+
+Das Projekt verwendet externe Software bzw. Bibliotheken, insbesondere:
+
+* **Python**
+* **Pygame**
+
+Für diese Software gelten die jeweiligen Lizenzbedingungen und rechtlichen Hinweise der jeweiligen Rechteinhaber bzw. Anbieter.
+
+Dieses Projekt übernimmt keine Verantwortung für Änderungen, Sicherheitsprobleme oder Fehler in Drittanbieter-Software.
+
+Bei einer Weitergabe des Projekts sollten die jeweils geltenden Lizenzbedingungen der verwendeten Drittanbieter-Komponenten beachtet werden.
+
+---
+
+# 📜 Lizenz und Inhalte
+
+Sofern für einzelne Dateien oder Inhalte dieses Projekts keine eigene Lizenz angegeben ist, sollte nicht automatisch davon ausgegangen werden, dass diese frei kopiert, verändert oder kommerziell verwendet werden dürfen.
+
+Für Inhalte Dritter gelten deren jeweilige Rechte und Lizenzbedingungen.
+
+Bei Unsicherheit über die Verwendung eines Assets sollte vor der Weitergabe oder Veröffentlichung geprüft werden, ob eine entsprechende Nutzung erlaubt ist.
+
+---
+
+# 📌 Hinweis für Nutzer
+
+Durch die Installation oder Verwendung dieser Software wird keine Garantie dafür übernommen, dass die Software auf jedem System ohne Anpassungen funktioniert.
+
+Bei Problemen sollte zunächst geprüft werden, ob:
+
+1. eine unterstützte Python-Version verwendet wird,
+2. die virtuelle Umgebung korrekt erstellt wurde,
+3. die benötigten Abhängigkeiten installiert wurden,
+4. alle Projektdateien vorhanden sind,
+5. die verwendeten Assets an den erwarteten Speicherorten liegen,
+6. das Betriebssystem und die Firewall die erforderlichen Funktionen zulassen.
+
+---
+
+## 🚀 Viel Spaß beim Spielen!
+
+**Star Wars: Galactic Assault** ist ein eigenständiges Lern- und Entwicklungsprojekt mit Fokus auf Python, Pygame, Spielentwicklung, KI, Netzwerkprogrammierung und Multiplayer-Systeme.
