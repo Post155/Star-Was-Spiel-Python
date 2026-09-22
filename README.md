@@ -332,29 +332,6 @@ StarWars/
 
 ---
 
-# 🛣️ Roadmap
-
-## Version 1.1
-
-- Erste Bossgegner
-- Neue Gegnerklassen
-- Verbesserte Partikeleffekte
-
-## Version 1.2
-
-- Koop-Modus
-- Neue Sternensysteme
-- Zufällige Weltraum-Events
-
-## Version 2.0
-
-- Story-Kampagne
-- Fraktionssystem
-- Schiffs-Upgrades
-- Anpassbare Raumschiffe
-
----
-
 ## 🎮 Lokaler PvP-Duell-Modus
 
 Der bestehende PvP-Duell-Modus kann zusätzlich **lokal auf einem einzigen PC** gespielt werden.
