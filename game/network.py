@@ -128,11 +128,10 @@ class LANServer:
     does not simulate any game object.
     """
 
-    def __init__(self, port: int = LAN_PORT, max_players: int = MAX_PLAYERS, debug: bool = True, game_mode: str = "lan"):
+    def __init__(self, port: int = LAN_PORT, max_players: int = MAX_PLAYERS, debug: bool = True):
         self.port = int(port)
         self.max_players = max(1, min(MAX_PLAYERS, int(max_players)))
         self.debug = debug
-        self.game_mode = str(game_mode or "lan")
         self._socket: Optional[socket.socket] = None
         self._thread: Optional[threading.Thread] = None
         self._broadcast_thread: Optional[threading.Thread] = None
@@ -144,8 +143,6 @@ class LANServer:
         self._phase = "lobby"
         self._start_requested = False
         self._started_at = 0.0
-        self._pvp_inputs: Dict[str, Dict[str, Any]] = {}
-        self._pvp_fire_queue: Dict[str, List[Dict[str, Any]]] = {}
 
     @property
     def host_id(self) -> Optional[str]:
@@ -235,10 +232,6 @@ class LANServer:
             if _safe_int(first.get("version"), -1) != PROTOCOL_VERSION:
                 connection.send({"type": "error", "reason": "Protokollversion passt nicht."})
                 return
-            requested_mode = str(first.get("game_mode") or "lan")[:24]
-            if requested_mode != self.game_mode:
-                connection.send({"type": "error", "reason": "Dieser Server erwartet einen anderen Spielmodus."})
-                return
 
             with self._lock:
                 if self._phase != "lobby" or len(self._players) >= self.max_players:
@@ -263,15 +256,12 @@ class LANServer:
                     "connected": True,
                     "address": str(address[0]) if address else "",
                 }
-                self._pvp_inputs[player_id] = {"left": False, "right": False}
-                self._pvp_fire_queue[player_id] = []
 
             connection.send({
                 "type": "welcome",
                 "id": player_id,
                 "host_id": self._host_id,
                 "port": self.port,
-                "game_mode": self.game_mode,
             })
             self._log(f"Player connected: {self._players[player_id]['name']}")
             self._broadcast_lobby()
@@ -306,30 +296,6 @@ class LANServer:
                 player["alive"] = bool(message.get("alive", player["alive"]))
             return
 
-        if message_type == "pvp_input":
-            if self.game_mode != "pvp":
-                return
-            with self._lock:
-                if player_id in self._pvp_inputs:
-                    self._pvp_inputs[player_id] = {
-                        "left": bool(message.get("left", False)),
-                        "right": bool(message.get("right", False)),
-                    }
-            return
-
-        if message_type == "pvp_fire":
-            if self.game_mode != "pvp":
-                return
-            weapon = str(message.get("weapon") or "laser")[:16]
-            if weapon not in {"laser", "torpedo"}:
-                return
-            sequence = _safe_int(message.get("sequence"), 0, 0, 2_147_483_647)
-            with self._lock:
-                queue_for_player = self._pvp_fire_queue.setdefault(player_id, [])
-                if len(queue_for_player) < 16:
-                    queue_for_player.append({"weapon": weapon, "sequence": sequence})
-            return
-
         if message_type == "name":
             with self._lock:
                 player = self._players.get(player_id)
@@ -341,11 +307,6 @@ class LANServer:
         if message_type == "start_request":
             with self._lock:
                 if player_id != self._host_id or self._phase != "lobby":
-                    return
-                if self.game_mode == "pvp" and len(self._players) != 2:
-                    connection = self._connections.get(player_id)
-                    if connection:
-                        connection.send({"type": "error", "reason": "Für PvP-Duell müssen genau zwei Spieler verbunden sein."})
                     return
                 self._phase = "setup"
                 self._start_requested = True
@@ -364,10 +325,6 @@ class LANServer:
                 player["ready"] = True
                 player["name"] = _safe_name(message.get("name", player["name"]))
                 player["ship"] = str(message.get("ship") or "xwing")[:32]
-                if self.game_mode == "pvp":
-                    rule = str(message.get("game_rule") or "last_survivor")[:24]
-                    if rule in {"last_survivor", "points"}:
-                        player["game_rule"] = rule
             self._maybe_start_countdown()
             return
 
@@ -431,8 +388,6 @@ class LANServer:
         with self._lock:
             player = self._players.pop(player_id, None)
             connection = self._connections.pop(player_id, None)
-            self._pvp_inputs.pop(player_id, None)
-            self._pvp_fire_queue.pop(player_id, None)
             is_host = player_id == self._host_id
             if is_host:
                 self._host_id = None
@@ -449,26 +404,6 @@ class LANServer:
                     self._start_requested = True
             self._broadcast_lobby()
             self._maybe_start_countdown()
-
-    def consume_pvp_inputs(self) -> tuple[Dict[str, Dict[str, Any]], List[Dict[str, Any]]]:
-        """Return the latest inputs and one-shot fire events collected by the server."""
-        with self._lock:
-            inputs = {player_id: dict(state) for player_id, state in self._pvp_inputs.items()}
-            fires = []
-            for player_id, queue_for_player in self._pvp_fire_queue.items():
-                for item in queue_for_player:
-                    fires.append({"player_id": player_id, **dict(item)})
-            for queue_for_player in self._pvp_fire_queue.values():
-                queue_for_player.clear()
-        return inputs, fires
-
-    def broadcast_pvp_snapshot(self, snapshot: Dict[str, Any]) -> None:
-        """Broadcast an authoritative PvP world snapshot to every player."""
-        if self.game_mode != "pvp":
-            return
-        payload = dict(snapshot)
-        payload["type"] = "pvp_snapshot"
-        self._broadcast(payload)
 
     def _log(self, message: str) -> None:
         if self.debug:
@@ -495,15 +430,13 @@ class LANClient:
         self.players: Dict[str, Dict[str, Any]] = {}
         self.started_at = 0.0
         self.host_disconnected = False
-        self.game_mode = "lan"
 
-    def connect_async(self, host: str, port: int, name: str, game_mode: str = "lan") -> None:
+    def connect_async(self, host: str, port: int, name: str) -> None:
         self.disconnect()
         self._stop_event.clear()
         self.connecting = True
         self.error = None
         self.host_disconnected = False
-        self.game_mode = str(game_mode or "lan")[:24]
         self._connect_thread = threading.Thread(
             target=self._connect_worker,
             args=(str(host).strip(), int(port), _safe_name(name)),
@@ -522,7 +455,7 @@ class LANClient:
             self._connection = connection
             self.connecting = False
             self.connected = True
-            connection.send({"type": "hello", "version": PROTOCOL_VERSION, "name": name, "game_mode": self.game_mode})
+            connection.send({"type": "hello", "version": PROTOCOL_VERSION, "name": name})
             self._receiver_thread = threading.Thread(target=self._receive_loop, daemon=True)
             self._receiver_thread.start()
             self._log(f"Mit {host}:{port} verbunden")
@@ -576,28 +509,19 @@ class LANClient:
             "alive": bool(alive),
         })
 
-    def send_pvp_input(self, left: bool, right: bool) -> None:
-        self.send({"type": "pvp_input", "left": bool(left), "right": bool(right)})
-
-    def send_pvp_fire(self, weapon: str, sequence: int) -> None:
-        self.send({"type": "pvp_fire", "weapon": str(weapon)[:16], "sequence": int(sequence)})
-
     def send_name(self, name: str) -> None:
         self.send({"type": "name", "name": _safe_name(name)})
 
     def request_start(self) -> None:
         self.send({"type": "start_request"})
 
-    def send_ready(self, name: str, ship: str, difficulty: str, game_rule: Optional[str] = None) -> None:
-        payload = {
+    def send_ready(self, name: str, ship: str, difficulty: str) -> None:
+        self.send({
             "type": "ready",
             "name": _safe_name(name),
             "ship": str(ship)[:32],
             "difficulty": str(difficulty)[:32],
-        }
-        if game_rule in {"last_survivor", "points"}:
-            payload["game_rule"] = game_rule
-        self.send(payload)
+        })
 
     def poll(self) -> List[Dict[str, Any]]:
         events = []

@@ -13,7 +13,7 @@ from game.constants import (
     SHIP_SCALE_TIEFIGHTER,
     SHIP_SCALE_XWING,
 )
-from game.network import LANClient, LANServer, LAN_PORT, MAX_PLAYERS
+from game.network import LANClient, LANServer, LAN_PORT
 
 SHIP_SCALES = {
     "xwing": SHIP_SCALE_XWING,
@@ -72,10 +72,8 @@ class RemotePlayer:
 class MultiplayerSession:
     """Owns one LAN server/client pair and the remote-player cache."""
 
-    def __init__(self, debug: bool = True, game_mode: str = "lan", max_players: int = MAX_PLAYERS):
+    def __init__(self, debug: bool = True):
         self.debug = debug
-        self.game_mode = str(game_mode or "lan")
-        self.max_players = max(1, min(MAX_PLAYERS, int(max_players)))
         self.server: Optional[LANServer] = None
         self.client = LANClient(debug=debug)
         self.remote_players: Dict[str, RemotePlayer] = {}
@@ -116,16 +114,16 @@ class MultiplayerSession:
 
     def host(self, name: str, port: int = LAN_PORT) -> None:
         self.local_name = name.strip() or "Host"
-        self.server = LANServer(port=port, debug=self.debug, game_mode=self.game_mode, max_players=self.max_players)
+        self.server = LANServer(port=port, debug=self.debug)
         self.server.start()
         self.hosting = True
         # The host is a normal client too.  This keeps all lobby/game paths identical.
-        self.client.connect_async("127.0.0.1", port, self.local_name, game_mode=self.game_mode)
+        self.client.connect_async("127.0.0.1", port, self.local_name)
 
     def join(self, host: str, name: str, port: int = LAN_PORT) -> None:
         self.local_name = name.strip() or "Spieler"
         self.hosting = False
-        self.client.connect_async(host, port, self.local_name, game_mode=self.game_mode)
+        self.client.connect_async(host, port, self.local_name)
 
     def request_start(self) -> None:
         self.client.request_start()
@@ -160,9 +158,9 @@ class MultiplayerSession:
 
         return events
 
-    def send_ready(self, ship: str, difficulty: str, game_rule: Optional[str] = None) -> None:
+    def send_ready(self, ship: str, difficulty: str) -> None:
         self.local_ship = ship
-        self.client.send_ready(self.local_name, ship, difficulty, game_rule=game_rule)
+        self.client.send_ready(self.local_name, ship, difficulty)
 
     def update_local_state(self, player, ship: str, score: int, width: int, height: int) -> None:
         self.local_ship = ship

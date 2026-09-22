@@ -71,18 +71,6 @@ class SystemManager:
         sys = self.current_system()
         return getattr(sys, 'id_name', '') if sys else ''
 
-    def set_order_by_ids(self, ids: List[str]) -> None:
-        """Apply the host's randomized system order on another machine."""
-        if not ids:
-            return
-        by_id = {system.id_name: system for system in self.systems}
-        ordered = [by_id[item] for item in ids if item in by_id]
-        if ordered:
-            remaining = [system for system in self.systems if system.id_name not in ids]
-            self.order = ordered + remaining
-            self.order_index = min(self.order_index, max(0, len(self.order) - 1))
-            self.level_index = 0
-
     def get_available_planet_keys(self, system: Optional[StarSystem], assets: dict) -> List[str]:
         if system is None:
             return []
