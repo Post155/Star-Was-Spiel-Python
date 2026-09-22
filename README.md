@@ -6,29 +6,38 @@ Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschl
 
 ---
 
-# 📑 Inhaltsverzeichnis
+## 📑 Inhaltsverzeichnis
 
-- [-star-wars-galactic-assault
-- [-features
-  - [Spielbare Schiffe](#- #gegner-ki
-  - [Gegnerzuordnung](#- #asteroidensystem
-- [⚙️ Schwierigkeitssystem](#️#verfügbare-schwierigkeitsstufen
-- #️-balancing--konfiguration
-  - [Difficulty Presets](#difficulty-reischaltungen
-  - [Sternensystem-Skalierung
-- #-progression-system
-- [🌌 Dynamische Sternensysteme](#-dynamische-st#komponenten
-  - #gruppenrollen
-  - #dodge-system
-  - [Dynamische Schwierigkeit
-- #-spielziel
-- [-steuerung
-- #-installation
-- [-spiel-starten
-- [-projektstruktur
+- [Features](#-features)
+  - [Spielbare Schiffe](#spielbare-schiffe)
+  - [Gegner-KI](#gegner-ki)
+  - [Gegnerzuordnung](#gegnerzuordnung)
+  - [Asteroidensystem](#asteroidensystem)
+- [⚙️ Schwierigkeitssystem](#️-schwierigkeitssystem)
+  - [Verfügbare Schwierigkeitsstufen](#verfügbare-schwierigkeitsstufen)
+  - [Balancing & Konfiguration](#️-balancing--konfiguration)
+  - [Difficulty Presets](#difficulty-presets)
+  - [Gegner-Freischaltungen](#gegner-freischaltungen)
+  - [Sternensystem-Skalierung](#sternensystem-skalierung)
+- [📈 Progression-System](#-progression-system)
+- [🌌 Dynamische Sternensysteme](#-dynamische-sternensysteme)
+- [🧠 KI-System](#-ki-system)
+  - [Komponenten](#komponenten)
+  - [Gruppenrollen](#gruppenrollen)
+  - [Dodge-System](#dodge-system)
+  - [Dynamische Schwierigkeit](#dynamische-schwierigkeit)
+- [🎯 Spielziel](#-spielziel)
+- [🎮 Steuerung](#-steuerung)
+- [📦 Installation](#-installation)
+- [▶ Spiel starten](#-spiel-starten)
+- [📂 Projektstruktur](#-projektstruktur)
 - [🛣️ Roadmap](#️-roadmap)
--modus
-- [⚠️ Rechtlicher Hinweis](#️-rechtlicherres
+- [🎮 Lokaler PvP-Modus](#-lokaler-pvp-modus)
+- [⚠️ Rechtlicher Hinweis](#️-rechtlicher-hinweis)
+
+---
+
+# 🚀 Features
 
 ## Spielbare Schiffe
 
@@ -63,7 +72,7 @@ Die KI kann:
 Jedes Spielerschiff besitzt einen fest definierten Gegenspieler.
 
 | Spielerschiff | KI-Gegner |
-|--------------|-----------|
+|---|---|
 | X-Wing | TIE-Fighter |
 | Millennium Falcon | Battle Droid Fighter |
 | TIE-Fighter | X-Wing |
@@ -87,7 +96,7 @@ Zu Beginn jeder Spielrunde kann eine Schwierigkeitsstufe ausgewählt werden.
 ## Verfügbare Schwierigkeitsstufen
 
 | Schwierigkeit | Beschreibung |
-|--------------|--------------|
+|---|---|
 | Einfach | Ideal für Einsteiger |
 | Normal | Ausgewogenes Standard-Erlebnis |
 | Schwer | Höhere Herausforderung durch aggressivere Gegner |
@@ -120,15 +129,15 @@ game/constants.py
 
 Über `DIFFICULTY_SETTINGS` können folgende Werte angepasst werden:
 
-- enemy_accuracy
-- enemy_hp
-- enemy_speed
-- enemy_aggression
-- enemy_max
-- enemy_spawn
-- asteroid_density
-- asteroid_speed
-- asteroid_size
+- `enemy_accuracy`
+- `enemy_hp`
+- `enemy_speed`
+- `enemy_aggression`
+- `enemy_max`
+- `enemy_spawn`
+- `asteroid_density`
+- `asteroid_speed`
+- `asteroid_size`
 
 ### Beispiel
 
@@ -172,14 +181,14 @@ ENEMY_UNLOCK_HEAVY_POINTS = 3000
 ENEMY_UNLOCK_ELITE_POINTS = 6000
 ```
 
-Vor 1000 Punkten erscheinen keine Gegner.
+Vor 1.000 Punkten erscheinen keine Gegner.
 
 | Punkte | Freischaltung |
-|---------|---------------|
-| 0 - 999 | Nur Asteroiden |
-| 1000 | Standardgegner |
-| 3000 | Schwere Gegner |
-| 6000 | Elite-Gegner |
+|---:|---|
+| 0–999 | Nur Asteroiden |
+| 1.000 | Standardgegner |
+| 3.000 | Schwere Gegner |
+| 6.000 | Elite-Gegner |
 
 ## Sternensystem-Skalierung
 
@@ -193,7 +202,7 @@ SYSTEM_DIFFICULTY_BONUS = (
 ```
 
 | Sternensystem | Bonus |
-|---------------|--------|
+|---|---:|
 | System 1 | +0 % |
 | System 2 | +15 % |
 | System 3 | +30 % |
@@ -220,7 +229,7 @@ Zu Beginn befindet sich der Spieler allein im Sternensystem und kämpft ausschli
 ## Gegner-Freischaltung
 
 ```text
-0 - 999 Punkte
+0–999 Punkte
 └─ Nur Asteroiden
 
 1.000 Punkte
@@ -251,7 +260,7 @@ Vor jeder neuen Gegnerstufe wird eine Warnmeldung angezeigt.
 Zusätzlich zur gewählten Schwierigkeit erhöht jedes neue Sternensystem die Gesamtgefahr.
 
 | Sternensystem | Schwierigkeitsbonus |
-|---------------|---------------------|
+|---|---:|
 | System 1 | +0 % |
 | System 2 | +15 % |
 | System 3 | +30 % |
@@ -275,11 +284,11 @@ Die Gegner-KI wurde modular aufgebaut und ist vollständig erweiterbar.
 
 ## Komponenten
 
-- EnemyBase: Lebenspunkte, Hitbox, Sprite und Basisschnittstelle
-- EnemyBrain: Zielwahl, Reaktionszeit und Entscheidungslogik
-- EnemyMovement: Weiche, beschleunigungsbasierte Bewegung
-- EnemyWeaponSystem: Salven, Zielvorhalt und Torpedos
-- EnemyManager: Spawnlogik, Schwierigkeit, Gruppenbildung und Score-System
+- **EnemyBase:** Lebenspunkte, Hitbox, Sprite und Basisschnittstelle
+- **EnemyBrain:** Zielwahl, Reaktionszeit und Entscheidungslogik
+- **EnemyMovement:** Weiche, beschleunigungsbasierte Bewegung
+- **EnemyWeaponSystem:** Salven, Zielvorhalt und Torpedos
+- **EnemyManager:** Spawnlogik, Schwierigkeit, Gruppenbildung und Score-System
 
 ## Gruppenrollen
 
@@ -313,11 +322,11 @@ Dadurch entstehen keine unrealistisch perfekten Ausweichmanöver und gleichzeiti
 
 ## Dynamische Schwierigkeit
 
-Der EnemyManager berechnet einen dynamischen Schwierigkeitsfaktor aus:
+Der `EnemyManager` berechnet einen dynamischen Schwierigkeitsfaktor aus:
 
-- Aktuellem Sternensystem
+- aktuellem Sternensystem
 - Spielerpunktzahl
-- Gewähltem Schwierigkeitsgrad
+- gewähltem Schwierigkeitsgrad
 
 Beeinflusst werden:
 
@@ -351,7 +360,7 @@ Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
 # 🎮 Steuerung
 
 | Taste | Aktion |
-|--------|---------|
+|---|---|
 | A / ← | Nach links bewegen |
 | D / → | Nach rechts bewegen |
 | W / ↑ | Nach oben bewegen |
@@ -368,7 +377,7 @@ Je weiter der Spieler fortschreitet, desto schwieriger werden die Gefechte.
 ## Voraussetzungen
 
 - Python 3.8 oder neuer
-- pygame oder pygame-ce
+- `pygame` oder `pygame-ce`
 
 ### pygame installieren
 
