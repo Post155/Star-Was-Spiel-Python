@@ -852,21 +852,21 @@ Pixelarts/Planets/
 
 Unter anderem sind folgende Welten bzw. Objekte vorhanden:
 
-| Welt / Objekt  | Asset                               |
-| -------------- | ----------------------------------- |
-| Tatooine       | `core_worlds/planet_tatooine.png`   |
-| Kamino         | `core_worlds/planet_kamino.png`     |
-| Coruscant      | `core_worlds/planet_corusant.png`   |
-| Hoth           | `core_worlds/planet_hoth.png`       |
-| Endor          | `core_worlds/planet_endor.png`      |
-| Mustafar       | `core_worlds/planet_Mustafar.png`   |
-| Earth          | `milkyway/planet_earth.png`         |
-| Saturn         | `milkyway/planet_saturn.png`        |
-| Schwarzes Loch | `milkyway/planet_schwarzesLoch.png` |
-| Purpurplanet   | `core_worlds/planet_purple.png`     |
-| Todesstern     | `death_star/TodesternEins.png`      |
-| Todesstern II  | `death_star/TodesternZwei.png`      |
-| Sternzerstörer | `death_star/Sternzerstörer.png`     |
+| Welt | Asset |
+|---|---|
+| Tatooine | ![Tatooine](Pixelarts/Planets/core_worlds/planet_tatooine.png) |
+| Kamino |  ![Kamino](Pixelarts/Planets/core_worlds/planet_kamino.png) |
+| Coruscant |  ![Coruscant](Pixelarts/Planets/core_worlds/planet_corusant.png) |
+| Hoth |  ![Hoth](Pixelarts/Planets/core_worlds/planet_hoth.png) |
+| Endor |  ![Endor](Pixelarts/Planets/core_worlds/planet_endor.png) |
+| Mustafar | ![Mustafar](Pixelarts/Planets/core_worlds/planet_Mustafar.png) |
+| Earth | ![Earth](Pixelarts/Planets/milkyway/planet_earth.png) |
+| Saturn | ![Saturn](Pixelarts/Planets/milkyway/planet_saturn.png) |
+| Schwarzes Loch | ![Schwarzes Loch](Pixelarts/Planets/milkyway/planet_schwarzesLoch.png) |
+| Purpurplanet | ![Purpurplanet](Pixelarts/Planets/core_worlds/planet_purple.png) |
+| Todesstern | ![Todesstern](Pixelarts/Planets/death_star/TodesternEins.png) |
+| Todesstern II | ![Todesstern](Pixelarts/Planets/death_star/TodesternZwei.png) |
+| Sternzerstörer | ![Sternzerstörer](Pixelarts/Planets/death_star/Sternzerstörer.png) |
 
 Die Assets dienen der visuellen Darstellung der verschiedenen Spielwelten und Sternensysteme.
 
