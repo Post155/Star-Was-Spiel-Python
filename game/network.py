@@ -364,6 +364,7 @@ class LANServer:
                 player["ready"] = True
                 player["name"] = _safe_name(message.get("name", player["name"]))
                 player["ship"] = str(message.get("ship") or "xwing")[:32]
+                player["difficulty"] = str(message.get("difficulty") or "normal")[:24]
                 if self.game_mode == "pvp":
                     rule = str(message.get("game_rule") or "last_survivor")[:24]
                     if rule in {"last_survivor", "points"}:
@@ -563,7 +564,7 @@ class LANClient:
         if connection is not None and self.connected:
             connection.send(payload)
 
-    def send_state(self, *, x: float, y: float, width: int, height: int, ship: str, score: int, lives: int, alive: bool) -> None:
+    def send_state(self, *, x: float, y: float, width: int, height: int, ship: str, score: int, lives: int, alive: bool, system_index: int = 0, system_name: str = "") -> None:
         self.send({
             "type": "state",
             "x": _safe_float(x),
@@ -574,6 +575,8 @@ class LANClient:
             "score": _safe_int(score, 0, 0),
             "lives": _safe_int(lives, 0, 0, 99),
             "alive": bool(alive),
+            "system_index": _safe_int(system_index, 0, 0, 99),
+            "system_name": str(system_name or "")[:40],
         })
 
     def send_pvp_input(self, left: bool, right: bool) -> None:

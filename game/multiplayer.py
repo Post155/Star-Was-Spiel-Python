@@ -46,6 +46,8 @@ class RemotePlayer:
     alive: bool = True
     connected: bool = True
     ready: bool = False
+    system_index: int = 0
+    system_name: str = ""
     last_update: float = field(default_factory=time.monotonic)
 
     def update_from_dict(self, data: dict, local_width: int, local_height: int) -> None:
@@ -62,6 +64,8 @@ class RemotePlayer:
         self.alive = bool(data.get("alive", self.alive))
         self.connected = bool(data.get("connected", True))
         self.ready = bool(data.get("ready", False))
+        self.system_index = int(data.get("system_index", self.system_index) or 0)
+        self.system_name = str(data.get("system_name") or self.system_name)[:40]
         self.last_update = time.monotonic()
 
     def interpolate(self, factor: float = 0.28) -> None:
@@ -164,7 +168,7 @@ class MultiplayerSession:
         self.local_ship = ship
         self.client.send_ready(self.local_name, ship, difficulty, game_rule=game_rule)
 
-    def update_local_state(self, player, ship: str, score: int, width: int, height: int) -> None:
+    def update_local_state(self, player, ship: str, score: int, width: int, height: int, system_index: int = 0, system_name: str = "") -> None:
         self.local_ship = ship
         self.local_score = int(score)
         self.local_lives = int(getattr(player, "lives", 0))
@@ -184,9 +188,11 @@ class MultiplayerSession:
             score=self.local_score,
             lives=self.local_lives,
             alive=self.local_alive,
+            system_index=int(system_index),
+            system_name=str(system_name)[:40],
         )
 
-    def set_final_local_state(self, player, ship: str, score: int, width: int, height: int) -> None:
+    def set_final_local_state(self, player, ship: str, score: int, width: int, height: int, system_index: int = 0, system_name: str = "") -> None:
         self.local_ship = ship
         self.local_score = int(score)
         self.local_lives = int(getattr(player, "lives", 0))
@@ -200,6 +206,8 @@ class MultiplayerSession:
             score=self.local_score,
             lives=self.local_lives,
             alive=self.local_alive,
+            system_index=int(system_index),
+            system_name=str(system_name)[:40],
         )
 
     def is_host(self) -> bool:
@@ -219,6 +227,8 @@ class MultiplayerSession:
                 "alive": self.local_alive,
                 "ship": self.local_ship,
                 "lives": self.local_lives,
+                "system_index": 0,
+                "system_name": "",
             })
         rows.sort(key=lambda item: int(item.get("score", 0)), reverse=True)
         return rows
@@ -244,8 +254,12 @@ class MultiplayerSession:
             label_text = remote.name if remote.alive else f"{remote.name} – GAME OVER"
             label = font.render(label_text, True, (230, 245, 255))
             label.set_alpha(220 if remote.alive else 150)
-            label_rect = label.get_rect(center=(rect.centerx, rect.top - 10))
+            label_rect = label.get_rect(center=(rect.centerx, rect.top - 18))
             screen.blit(label, label_rect)
+            info_text = f"{remote.score} P • {remote.system_name or ("System " + str(remote.system_index + 1))}"
+            info = pygame.font.Font(None, 20).render(info_text, True, (185, 215, 235))
+            info.set_alpha(205 if remote.alive else 120)
+            screen.blit(info, info.get_rect(center=(rect.centerx, rect.top + 5)))
 
     def stop(self, graceful: bool = True) -> None:
         self.client.disconnect(graceful=graceful)

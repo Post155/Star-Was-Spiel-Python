@@ -246,3 +246,153 @@ class LocalPvPDuelSession(PvPDuelSession):
             pygame.display.flip()
 
         return {"result": self.result}
+
+class LocalPointsFightSession:
+    """Two independent single-player worlds sharing one local score match."""
+
+    def __init__(self, player1: Dict[str, str], player2: Dict[str, str], assets: dict, difficulty: str = "normal"):
+        from game.points_fight import PointFightWorld
+        self.PointFightWorld = PointFightWorld
+        self.assets = assets
+        self.player1 = player1
+        self.player2 = player2
+        self.difficulty = difficulty
+        self.worlds = []
+        self.match_started_at = 0.0
+        self.match_over = False
+        self.result = None
+
+    def _new_worlds(self, width, height):
+        half_h = max(360, height // 2 - 4)
+        self.worlds = [
+            self.PointFightWorld(width, half_h, self.assets, self.player1["ship"], self.difficulty),
+            self.PointFightWorld(width, half_h, self.assets, self.player2["ship"], self.difficulty),
+        ]
+        self.match_started_at = pygame.time.get_ticks()
+
+    def _draw_lives(self, surface, lives, faction, x=8, y=30):
+        key = "lightsaber_blue_img" if faction == "rebels" else "lightsaber_red_img"
+        image = self.assets.get(key)
+        if image is None:
+            return
+        target_h = 20
+        scale = target_h / max(1, image.get_height())
+        saber = pygame.transform.smoothscale(
+            image, (max(45, int(image.get_width() * scale)), target_h)
+        )
+        for index in range(max(0, int(lives))):
+            surface.blit(saber, (x, y + index * (target_h + 5)))
+
+    def _draw_world_panel(self, screen, world, name, faction, y_offset, player_number, warning=True):
+        panel_h = screen.get_height() // 2
+        view = screen.subsurface(pygame.Rect(0, y_offset, screen.get_width(), panel_h)).copy()
+        world.draw(view)
+        font = pygame.font.Font(None, max(24, int(panel_h * 0.055)))
+        small = pygame.font.Font(None, max(20, int(panel_h * 0.040)))
+        header = f"P{player_number} {name}  •  {world.score} Punkte  •  {world.system_name}"
+        screen.blit(font.render(header, True, (255, 255, 255)), (10, y_offset + 8))
+        self._draw_lives(screen, world.lives, faction, 8, y_offset + 42)
+        if warning and world.warning_text and not world.dead:
+            overlay = pygame.Surface((screen.get_width(), panel_h), pygame.SRCALPHA)
+            overlay.fill((120, 0, 0, 75))
+            screen.blit(overlay, (0, y_offset))
+            msg = small.render(world.warning_text, True, (255, 235, 150))
+            screen.blit(msg, msg.get_rect(center=(screen.get_width() // 2, y_offset + panel_h // 2)))
+        if world.dead:
+            dead = font.render("GAME OVER", True, (255, 120, 120))
+            screen.blit(dead, dead.get_rect(center=(screen.get_width() // 2, y_offset + panel_h // 2)))
+
+    def _draw_result(self, screen):
+        width, height = screen.get_size()
+        overlay = pygame.Surface((width, height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 190))
+        screen.blit(overlay, (0, 0))
+        font = pygame.font.Font(None, max(48, int(height * 0.09)))
+        small = pygame.font.Font(None, max(24, int(height * 0.038)))
+        p1, p2 = self.worlds
+        if p1.score > p2.score:
+            title = f"SIEGER: {self.player1['name']}"
+        elif p2.score > p1.score:
+            title = f"SIEGER: {self.player2['name']}"
+        else:
+            title = "UNENTSCHIEDEN"
+        screen.blit(font.render(title, True, (255, 235, 150)), (width // 2 - font.size(title)[0] // 2, height // 3))
+        detail = f"{self.player1['name']}: {p1.score}   •   {self.player2['name']}: {p2.score}"
+        screen.blit(small.render(detail, True, (230, 235, 245)), (width // 2 - small.size(detail)[0] // 2, height // 2))
+        hint = small.render("ENTER / LEERTASTE / ESC = zurück zum Menü", True, (170, 180, 195))
+        screen.blit(hint, hint.get_rect(center=(width // 2, height - 35)))
+
+    def run(self, screen, clock) -> dict:
+        self._new_worlds(*screen.get_size())
+        running = True
+        while running:
+            dt = min(0.05, clock.tick(60) / 1000.0)
+            width, height = screen.get_size()
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    raise SystemExit
+                if event.type == pygame.VIDEORESIZE:
+                    width = max(480, event.w)
+                    height = max(720, event.h)
+                    screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                    self._new_worlds(width, height)
+                    continue
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.match_over:
+                    return {"result": self.result}
+
+            keys = pygame.key.get_pressed()
+            elapsed = pygame.time.get_ticks() - self.match_started_at
+            time_up = elapsed >= PVP_SCORE_LIMIT_MS
+
+            if not self.match_over:
+                self.worlds[0].move(keys[pygame.K_a], keys[pygame.K_d])
+                self.worlds[1].move(keys[pygame.K_LEFT], keys[pygame.K_RIGHT])
+                for event in events:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key in (pygame.K_w, pygame.K_SPACE):
+                            self.worlds[0].shoot("laser")
+                        elif event.key == pygame.K_s:
+                            self.worlds[0].shoot("torpedo")
+                        elif event.key == pygame.K_UP:
+                            self.worlds[1].shoot("laser")
+                        elif event.key == pygame.K_DOWN:
+                            self.worlds[1].shoot("torpedo")
+                self.worlds[0].update(dt)
+                self.worlds[1].update(dt)
+                if time_up:
+                    self.match_over = True
+                    self.result = {"mode": "points"}
+
+            screen.fill((0, 0, 0))
+            half = height // 2
+            self._draw_world_panel(screen, self.worlds[0], self.player1["name"], self.player1.get("faction", "rebels"), 0, 1)
+            pygame.draw.line(screen, (120, 210, 255), (0, half), (width, half), 2)
+            self._draw_world_panel(screen, self.worlds[1], self.player2["name"], self.player2.get("faction", "empire"), half, 2)
+
+            remaining = max(0, PVP_SCORE_LIMIT_MS - elapsed)
+            timer = pygame.font.Font(None, max(24, int(height * 0.035))).render(
+                f"PUNKTEKAMPF  •  {remaining // 60000:02d}:{(remaining % 60000) // 1000:02d}",
+                True, (255, 255, 255)
+            )
+            screen.blit(timer, timer.get_rect(center=(width // 2, height // 2)))
+
+            from game.scoreboard import draw_scoreboard, draw_live_ranking
+            rows = [
+                {"id": "local_p1", "name": self.player1["name"], "score": self.worlds[0].score, "alive": not self.worlds[0].dead, "system_name": self.worlds[0].system_name, "system_index": self.worlds[0].system_index},
+                {"id": "local_p2", "name": self.player2["name"], "score": self.worlds[1].score, "alive": not self.worlds[1].dead, "system_name": self.worlds[1].system_name, "system_index": self.worlds[1].system_index},
+            ]
+            rows.sort(key=lambda row: int(row["score"]), reverse=True)
+            draw_live_ranking(screen, rows, "local_p1")
+            if pygame.key.get_pressed()[pygame.K_TAB] and not self.match_over:
+                draw_scoreboard(screen, rows, "local_p1")
+
+            if self.match_over:
+                self._draw_result(screen)
+                pressed = pygame.key.get_pressed()
+                if pressed[pygame.K_RETURN] or pressed[pygame.K_SPACE] or pressed[pygame.K_ESCAPE]:
+                    return {"result": self.result}
+
+            pygame.display.flip()
+        return {"result": self.result}

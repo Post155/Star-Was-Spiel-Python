@@ -30,8 +30,8 @@ def draw_scoreboard(screen: pygame.Surface, players: list[dict], local_id: str |
     top = panel.y + header_h
     pygame.draw.line(screen, (100, 120, 150), (panel.x + 18, top), (panel.right - 18, top), 1)
 
-    columns = [panel.x + 24, panel.x + 82, panel.x + int(panel_w * 0.52), panel.right - 96]
-    headers = [("#", columns[0]), ("Spieler", columns[1]), ("Punkte", columns[2]), ("Status", columns[3])]
+    columns = [panel.x + 20, panel.x + 72, panel.x + int(panel_w * 0.45), panel.x + int(panel_w * 0.69), panel.right - 120]
+    headers = [("#", columns[0]), ("Spieler", columns[1]), ("Punkte", columns[2]), ("System", columns[3]), ("Status", columns[4])]
     for text, x in headers:
         surface = small_font.render(text, True, (170, 185, 205))
         screen.blit(surface, (x, top + 8))
@@ -48,6 +48,7 @@ def draw_scoreboard(screen: pygame.Surface, players: list[dict], local_id: str |
         score = f"{max(0, int(player.get('score', 0))):,}".replace(",", ".")
         alive = bool(player.get("alive", True))
         status = "LIVE" if alive else "GAME OVER"
+        system = str(player.get("system_name") or "System " + str(int(player.get("system_index", 0)) + 1))[:16]
         text_color = (255, 255, 255) if alive else (160, 165, 175)
         if is_local:
             text_color = (170, 235, 255)
@@ -56,8 +57,36 @@ def draw_scoreboard(screen: pygame.Surface, players: list[dict], local_id: str |
             (str(index), columns[0], text_color),
             (name, columns[1], text_color),
             (score, columns[2], text_color),
-            (status, columns[3], (120, 240, 150) if alive else (255, 145, 145)),
+            (system, columns[3], text_color),
+            (status, columns[4], (120, 240, 150) if alive else (255, 145, 145)),
         ]
         for value, x, color in values:
             surface = text_font.render(value, True, color)
             screen.blit(surface, (x, y))
+
+
+def draw_live_ranking(screen: pygame.Surface, players: list[dict], local_id: str | None) -> None:
+    """Compact always-visible ranking for PunkteKampf."""
+    width, height = screen.get_size()
+    rows = sorted(players, key=lambda item: int(item.get("score", 0)), reverse=True)[:10]
+    font = pygame.font.Font(None, max(20, int(height * 0.028)))
+    small = pygame.font.Font(None, max(17, int(height * 0.023)))
+    row_h = max(23, int(height * 0.038))
+    panel_w = min(320, max(230, int(width * 0.28)))
+    panel_h = 40 + len(rows) * row_h
+    panel = pygame.Rect(width - panel_w - 12, 10, panel_w, panel_h)
+    surface = pygame.Surface(panel.size, pygame.SRCALPHA)
+    surface.fill((5, 8, 18, 165))
+    screen.blit(surface, panel.topleft)
+    title = font.render("PUNKTEKAMPF – RANGLISTE", True, (245, 245, 250))
+    screen.blit(title, (panel.x + 10, panel.y + 7))
+    for index, player in enumerate(rows, start=1):
+        y = panel.y + 34 + (index - 1) * row_h
+        local = str(player.get("id")) == str(local_id)
+        name = str(player.get("name") or "Spieler")[:15]
+        score = f"{int(player.get('score', 0)):,}".replace(",", ".")
+        system = str(player.get("system_name") or ("System " + str(int(player.get("system_index", 0)) + 1)))[:15]
+        text = f"{index}. {name}"
+        screen.blit(small.render(text, True, (170, 235, 255) if local else (235, 240, 248)), (panel.x + 10, y))
+        score_surface = small.render(f"{score} • {system}", True, (220, 225, 235))
+        screen.blit(score_surface, (panel.right - score_surface.get_width() - 10, y))
