@@ -294,7 +294,7 @@ def pvp_mode_menu(screen, clock, width, height):
         screen.fill((7, 8, 20))
         title = title_font.render("PvP-DUELL", True, (255, 255, 255))
         screen.blit(title, title.get_rect(center=(width // 2, int(height * 0.18))))
-        subtitle = small_font.render("Letzter Überlebender = PvP • Punktekampf = Einzelspieler-Regeln", True, (165, 185, 215))
+        subtitle = small_font.render("Punktekampf = eigene Einzelspieler-Welt • Letzter Überlebender = echtes PvP", True, (165, 185, 215))
         screen.blit(subtitle, subtitle.get_rect(center=(width // 2, int(height * 0.27))))
         for rect, text, _ in buttons:
             _draw_button(screen, rect, text, font, rect.collidepoint(mouse))

@@ -34,6 +34,7 @@ from game.ui.multiplayer import (
 )
 from game.pvp_duel import PvPDuelSession
 from game.local_pvp import LocalPvPDuelSession
+from game.points_fight import LocalPointsFightSession, PointsPlayerConfig
 from game.constants import (
     PVP_MAX_PLAYERS,
     LOCAL_PVP_PLAYER1_NAME,
@@ -186,7 +187,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
 
     if multiplayer is not None:
         multiplayer.poll(WIDTH, HEIGHT)
-        multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT)
+        multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT, background.get_current_system_name())
 
     while running:
         # The AI system uses seconds, while the original asteroid/player
@@ -441,7 +442,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
             if show_scoreboard:
                 draw_scoreboard(screen, multiplayer.get_scoreboard_rows(), multiplayer.local_id)
 
-            multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT)
+            multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT, background.get_current_system_name())
 
         pygame.display.flip()
 
@@ -449,7 +450,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
             running = False
 
     if multiplayer is not None:
-        multiplayer.set_final_local_state(spieler, ship_choice, score, WIDTH, HEIGHT)
+        multiplayer.set_final_local_state(spieler, ship_choice, score, WIDTH, HEIGHT, background.get_current_system_name())
 
     return {
         "score": score,
@@ -555,9 +556,9 @@ def set_dimensions(width, height):
     set_window_icon()
 
 
-def run_multiplayer_flow(config):
+def run_multiplayer_flow(config, game_mode="points"):
     global screen
-    session = MultiplayerSession(debug=NETWORK_DEBUG)
+    session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode=game_mode, max_players=10)
 
     try:
         if config["action"] == "host":
@@ -629,6 +630,46 @@ def run_multiplayer_flow(config):
     finally:
         session.stop()
 
+
+
+def run_local_points_flow():
+    """Run two completely independent single-player simulations side-by-side."""
+    global screen
+    configs = []
+
+    for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
+        if local_pvp_player_prompt(screen, clock, WIDTH, HEIGHT, player_number) is None:
+            return "menu"
+
+        faction_choice, new_width, new_height = faction_selection(
+            screen, clock, WIDTH, HEIGHT, rebel_logo_img, empire_logo_img
+        )
+        set_dimensions(new_width, new_height)
+
+        difficulty_choice, new_width, new_height = difficulty_selection(
+            screen, clock, WIDTH, HEIGHT, DEFAULT_DIFFICULTY
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img,
+            x_wing_img, millennium_falcon_img, tiefighter_img, battle_droid_img
+        )
+        set_dimensions(new_width, new_height)
+
+        configs.append(PointsPlayerConfig(
+            name=player_name,
+            ship=ship_choice,
+            faction=faction_choice,
+            difficulty=difficulty_choice,
+        ))
+
+    session = LocalPointsFightSession(configs, assets)
+    result = session.run(screen, clock)
+    if result.get("quit"):
+        return "menu"
+    return "menu"
 
 
 def run_local_pvp_flow(duel_mode):
@@ -772,9 +813,6 @@ def main():
             if multiplayer_mode == "back":
                 continue
 
-            # The visible LAN Multiplayer entry is the existing host-authoritative
-            # PvP mode. The older non-PvP LAN flow remains in the source for
-            # compatibility, but it is no longer reachable from the menus.
             if multiplayer_mode in {"lan_pvp", "local_pvp"}:
                 duel_mode = pvp_mode_menu(screen, clock, WIDTH, HEIGHT)
                 current_surface = pygame.display.get_surface()
@@ -784,16 +822,22 @@ def main():
                 if duel_mode is None:
                     continue
 
-                if multiplayer_mode == "lan_pvp":
+                if multiplayer_mode == "local_pvp":
+                    if duel_mode == "points":
+                        run_local_points_flow()
+                    else:
+                        run_local_pvp_flow(duel_mode)
+                else:
                     config = pvp_lan_menu(screen, clock, WIDTH, HEIGHT, duel_mode)
                     current_surface = pygame.display.get_surface()
                     if current_surface is not None:
                         screen = current_surface
                         WIDTH, HEIGHT = screen.get_size()
                     if config is not None:
-                        run_pvp_flow(config, duel_mode)
-                else:
-                    run_local_pvp_flow(duel_mode)
+                        if duel_mode == "points":
+                            run_multiplayer_flow(config, game_mode="points")
+                        else:
+                            run_pvp_flow(config, duel_mode)
                 continue
 
     pygame.quit()

@@ -259,6 +259,7 @@ class LANServer:
                     "score": 0,
                     "lives": 3,
                     "alive": True,
+                    "system": "Unbekannt",
                     "ready": False,
                     "connected": True,
                     "address": str(address[0]) if address else "",
@@ -291,7 +292,24 @@ class LANServer:
 
     def _handle_message(self, player_id: str, message: Dict[str, Any]) -> None:
         message_type = message.get("type")
+        if message_type == "points_state":
+            if self.game_mode != "points":
+                return
+            with self._lock:
+                player = self._players.get(player_id)
+                if not player:
+                    return
+                player["x"] = max(0.0, min(1.0, _safe_float(message.get("x"), player.get("x", 0.5))))
+                player["y"] = max(0.0, min(1.0, _safe_float(message.get("y"), player.get("y", 0.85))))
+                player["ship"] = str(message.get("ship") or player["ship"])[:32]
+                player["score"] = _safe_int(message.get("score"), player.get("score", 0), 0, 2_147_483_647)
+                player["system"] = str(message.get("system") or player.get("system", "Unbekannt"))[:48]
+            return
+
         if message_type == "state":
+            # Generic state packets are deliberately disabled for Points Fight.
+            if self.game_mode == "points":
+                return
             with self._lock:
                 player = self._players.get(player_id)
                 if not player:
@@ -364,7 +382,6 @@ class LANServer:
                 player["ready"] = True
                 player["name"] = _safe_name(message.get("name", player["name"]))
                 player["ship"] = str(message.get("ship") or "xwing")[:32]
-                player["difficulty"] = str(message.get("difficulty") or "normal")[:24]
                 if self.game_mode == "pvp":
                     rule = str(message.get("game_rule") or "last_survivor")[:24]
                     if rule in {"last_survivor", "points"}:
@@ -409,9 +426,30 @@ class LANServer:
 
     def _broadcast_snapshot(self) -> None:
         with self._lock:
-            players = [dict(player) for player in self._players.values()]
-            host_id = self._host_id
             phase = self._phase
+            host_id = self._host_id
+            raw_players = [dict(player) for player in self._players.values()]
+
+            if self.game_mode == "points":
+                # Points Fight has a deliberately tiny ghost protocol.  No
+                # lives, hit state, projectile data, collision data, dimensions
+                # or PvP events are ever exposed to clients.
+                players = [
+                    {
+                        "id": player["id"],
+                        "name": player["name"],
+                        "x": float(player.get("x", 0.5)),
+                        "y": float(player.get("y", 0.85)),
+                        "ship": player.get("ship", "xwing"),
+                        "score": int(player.get("score", 0)),
+                        "system": player.get("system", "Unbekannt"),
+                        "ready": bool(player.get("ready", False)),
+                    }
+                    for player in raw_players
+                ]
+            else:
+                players = raw_players
+
         self._broadcast({
             "type": "snapshot",
             "phase": phase,
@@ -564,7 +602,7 @@ class LANClient:
         if connection is not None and self.connected:
             connection.send(payload)
 
-    def send_state(self, *, x: float, y: float, width: int, height: int, ship: str, score: int, lives: int, alive: bool, system_index: int = 0, system_name: str = "") -> None:
+    def send_state(self, *, x: float, y: float, width: int, height: int, ship: str, score: int, lives: int, alive: bool) -> None:
         self.send({
             "type": "state",
             "x": _safe_float(x),
@@ -575,8 +613,17 @@ class LANClient:
             "score": _safe_int(score, 0, 0),
             "lives": _safe_int(lives, 0, 0, 99),
             "alive": bool(alive),
-            "system_index": _safe_int(system_index, 0, 0, 99),
-            "system_name": str(system_name or "")[:40],
+        })
+
+    def send_points_state(self, *, x: float, y: float, ship: str, score: int, system: str) -> None:
+        """Send only the data permitted by Points Fight's ghost protocol."""
+        self.send({
+            "type": "points_state",
+            "x": max(0.0, min(1.0, float(x))),
+            "y": max(0.0, min(1.0, float(y))),
+            "ship": str(ship or "xwing")[:32],
+            "score": _safe_int(score, 0, 0),
+            "system": str(system or "Unbekannt")[:48],
         })
 
     def send_pvp_input(self, left: bool, right: bool) -> None:
@@ -596,8 +643,9 @@ class LANClient:
             "type": "ready",
             "name": _safe_name(name),
             "ship": str(ship)[:32],
-            "difficulty": str(difficulty)[:32],
         }
+        if self.game_mode != "points":
+            payload["difficulty"] = str(difficulty)[:32]
         if game_rule in {"last_survivor", "points"}:
             payload["game_rule"] = game_rule
         self.send(payload)
