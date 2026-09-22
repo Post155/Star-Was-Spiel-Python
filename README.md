@@ -13,7 +13,6 @@ Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschl
   - [Gegner-KI](#gegner-ki)
   - [Gegnerzuordnung](#gegnerzuordnung)
   - [Asteroidensystem](#asteroidensystem)
-- [📸 Screenshots](#-screenshots)
 - [⚙️ Schwierigkeitssystem](#️-schwierigkeitssystem)
   - [Verfügbare Schwierigkeitsstufen](#verfügbare-schwierigkeitsstufen)
   - [Balancing & Konfiguration](#️-balancing--konfiguration)
@@ -164,18 +163,6 @@ Jedes Spielerschiff besitzt einen fest definierten Gegenspieler.
 - Nicht alle im Spiel enthaltenen Planetensprites sind canonische Star-Wars-Standorte; einige dienen als generische Weltraumkulissen.
 - Die hier aufgeführten Eckdaten entsprechen den meistgesicherten, offiziellen Star-Wars-Angaben, soweit die Film- und Serienquellen eine klare, konsistente Beschreibung liefern.
 - Die Darstellung im Spiel ist bewusst stilisiert und dient der Spielsensation – die zugrundeliegenden Star-Wars-Identitäten sind jedoch auf die kanonischen Namens- und Umgebungsmerkmale zurückzuführen.
-
-## 📸 Screenshots
-
-<p align="center">
-  <img src="docs/menu.png" width="48%" alt="Hauptmenü">
-  <img src="docs/combat.png" width="48%" alt="Kampf und Gameplay">
-</p>
-
-<p align="center">
-  <img src="docs/pvp.png" width="48%" alt="PvP-Modus">
-  <img src="docs/gameplay.png" width="48%" alt="Gameplay">
-</p>
 
 # ⚙️ Schwierigkeitssystem
 
