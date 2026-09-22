@@ -1,8 +1,31 @@
 # 🚀 Star Wars: Galactic Assault
 
-Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschlachten.
+Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschlachten. Übernimm die Kontrolle über ikonische Raumschiffe, durchquere gefährliche Asteroidenfelder und stelle dich intelligenten KI-Gegnern. Mit jedem erreichten Sternensystem steigt die Herausforderung, während neue Gegner und Bedrohungen freigeschaltet werden. 【1-ca9f37】
 
-Übernimm die Kontrolle über ikonische Raumschiffe, durchquere gefährliche Asteroidenfelder und stelle dich intelligenten KI-Gegnern. Mit jedem erreichten Sternensystem steigt die Herausforderung, während neue Gegner und Bedrohungen freigeschaltet werden.
+---
+
+# 📑 Inhaltsverzeichnis
+
+- [🚀tar-wars-galactic-assault
+- [🎮 Features](##spielbare-schiffe
+  - [Gegner-KI](#- #gegnerzuordnung
+  - [Asteroidensystem](#asterhwierigkeitssystem
+  - [Verfügbare Schwierigkeitsstufen
+- #️-balancing--konfiguration
+  - #difficulty-presets
+  - #gegner-freischaltungen
+  - [Sternensystem-Skalierung](#sterngression-system
+- [🌌 Dynamische Sternensysteme](#-dynamische-- #komponenten
+  - [Gruppenrollen
+  - #dodge-system
+  - [Dynamische Schwierigkeit
+- #-spielziel
+- [🎮 Steuerung](#-nstallation
+- [-spiel-starten
+- [📂 Projektruktur
+- [️-roadmap
+- [🎮 Lokalervp-modus
+- [️-rechtlicher-hinweis
 
 ---
 
@@ -15,9 +38,7 @@ Ein actionreiches 2D-Arcade-Weltraumspiel im Stil klassischer Star-Wars-Raumschl
 - TIE-Fighter
 - Battle Droid Fighter
 
-Jedes Schiff verfügt über eigene Eigenschaften, Waffen und Flugcharakteristiken.
-
----
+Jedes Schiff verfügt über eigene Eigenschaften, Waffen und Flugcharakteristiken. 【1-ca9f37】
 
 ## Gegner-KI
 
@@ -38,20 +59,18 @@ Die KI kann:
 - Taktische Torpedos einsetzen
 - Dynamisch auf Spielsituationen reagieren
 
----
+【1-ca9f37】【2-a644b4】
 
 ## Gegnerzuordnung
 
-Jedes Spielerschiff besitzt einen fest definierten Gegenspieler:
+Jedes Spielerschiff besitzt einen fest definierten Gegenspieler. 【2-a644b4】
 
-| Spielerschiff | Gegner |
-|--------------|---------|
+| Spielerschiff | KI-Gegner |
+|--------------|-----------|
 | X-Wing | TIE-Fighter |
 | Millennium Falcon | Battle Droid Fighter |
 | TIE-Fighter | X-Wing |
 | Battle Droid Fighter | Millennium Falcon |
-
----
 
 ## Asteroidensystem
 
@@ -62,11 +81,46 @@ Jedes Spielerschiff besitzt einen fest definierten Gegenspieler:
 - Kollisions- und Schadenssystem
 - Fortschrittsabhängige Skalierung
 
+【1-ca9f37】
+
 ---
 
 # ⚙️ Schwierigkeitssystem
 
-Zu Beginn jeder Spielrunde kann eine Schwierigkeitsstufe ausgewählt werden.
+Zu Beginn jeder Spielrunde kann eine Schwierigkeitsstufe ausgewählt werden. 【1-ca9f37】
+
+## Verfügbare Schwierigkeitsstufen
+
+| Schwierigkeit | Beschreibung |
+|--------------|--------------|
+| Einfach | Ideal für Einsteiger |
+| Normal | Ausgewogenes Standard-Erlebnis |
+| Schwer | Höhere Herausforderung durch aggressivere Gegner |
+| Experte | Maximale Schwierigkeit für erfahrene Spieler |
+
+Die gewählte Schwierigkeit beeinflusst:
+
+- Gegnerische Trefferquote
+- Gegner-Lebenspunkte
+- Gegnergeschwindigkeit
+- Gegner-Aggressivität
+- Verfolgungsverhalten
+- Gegner-Spawnrate
+- Maximale Anzahl aktiver Gegner
+- Asteroidendichte
+- Asteroidengeschwindigkeit
+- Asteroidengröße
+
+【1-ca9f37】
+
+---
+
+# ⚖️ Balancing & Konfiguration
+
+Alle wichtigen Gameplay-Werte befinden sich in:
+
+```python
+game/constants.py
 
 ## Verfügbare Schwierigkeitsstufen
 
