@@ -7,7 +7,6 @@ xref-StarWarsGame.html
 *.exe
 StarWarsGame.spec
 StarWarsGame.exe
-
 # PyInstaller build artifacts
 /dist/
 /build/
@@ -20,3 +19,7 @@ StarWarsGame.exe
 *.pyz
 # Egg/metadata
 *.egg-info/
+# Python virtual environments
+.venv/
+__pycache__/
+*.pyc
