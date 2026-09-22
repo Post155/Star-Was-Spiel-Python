@@ -23,7 +23,9 @@ from game.network import NETWORK_DEBUG
 from game.scoreboard import draw_scoreboard
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
-from game.ui.multiplayer import lan_menu, lobby_screen, main_menu
+from game.ui.multiplayer import lan_menu, lobby_screen, main_menu, pvp_lan_menu, pvp_mode_menu
+from game.pvp_duel import PvPDuelSession
+from game.constants import PVP_MAX_PLAYERS
 
 
 pygame.init()
@@ -615,6 +617,70 @@ def run_multiplayer_flow(config):
         session.stop()
 
 
+
+def run_pvp_flow(config, duel_mode):
+    global screen
+    session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode="pvp", max_players=PVP_MAX_PLAYERS)
+
+    try:
+        if config["action"] == "host":
+            session.host(config["name"])
+        else:
+            session.join(config["ip"], config["name"])
+
+        lobby_result = lobby_screen(
+            screen,
+            clock,
+            session,
+            WIDTH,
+            HEIGHT,
+            title_text="STAR WARS – PvP-DUELL LOBBY",
+            max_players=PVP_MAX_PLAYERS,
+            start_requires_full=True,
+        )
+        if lobby_result != "start":
+            return "menu"
+
+        faction_choice, new_width, new_height = faction_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            rebel_logo_img,
+            empire_logo_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            faction_choice,
+            faction_logo_img,
+            x_wing_img,
+            millennium_falcon_img,
+            tiefighter_img,
+            battle_droid_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        # Difficulty stays shared and neutral in PvP; the selected duel rule
+        # is carried to the server so the host rule becomes authoritative.
+        session.send_ready(ship_choice, DEFAULT_DIFFICULTY, game_rule=duel_mode)
+        if not wait_for_multiplayer_start(session, WIDTH, HEIGHT):
+            return "menu"
+
+        duel = PvPDuelSession(session, assets, mode=duel_mode, debug=NETWORK_DEBUG)
+        result = duel.run(screen, clock)
+        if result.get("quit"):
+            return "menu"
+        return "menu"
+    finally:
+        session.stop()
+
+
 def main():
     global screen, WIDTH, HEIGHT
 
@@ -629,6 +695,24 @@ def main():
 
         if mode == "singleplayer":
             run_singleplayer_flow()
+            continue
+
+        if mode == "pvp_duel":
+            duel_mode = pvp_mode_menu(screen, clock, WIDTH, HEIGHT)
+            current_surface = pygame.display.get_surface()
+            if current_surface is not None:
+                screen = current_surface
+                WIDTH, HEIGHT = screen.get_size()
+            if duel_mode is None:
+                continue
+            config = pvp_lan_menu(screen, clock, WIDTH, HEIGHT, duel_mode)
+            current_surface = pygame.display.get_surface()
+            if current_surface is not None:
+                screen = current_surface
+                WIDTH, HEIGHT = screen.get_size()
+            if config is None:
+                continue
+            run_pvp_flow(config, duel_mode)
             continue
 
         config = lan_menu(screen, clock, WIDTH, HEIGHT)

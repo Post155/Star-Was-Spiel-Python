@@ -26,10 +26,12 @@ class BackgroundManager:
     """
 
     def __init__(self, width: int = DEFAULT_WIDTH, height: int = DEFAULT_HEIGHT, assets: Optional[dict] = None,
-                 switch_points: int = SYSTEM_SWITCH_POINTS, switch_time_ms: int = SYSTEM_SWITCH_TIME_MS) -> None:
+                 switch_points: int = SYSTEM_SWITCH_POINTS, switch_time_ms: int = SYSTEM_SWITCH_TIME_MS,
+                 auto_switch: bool = True) -> None:
         self.width = width
         self.height = height
         self.assets = assets or {}
+        self.auto_switch = bool(auto_switch)
 
         # subsystems
         self.systems = SystemManager(self.assets)
@@ -85,6 +87,33 @@ class BackgroundManager:
     def notify_score_anchor(self, score: int) -> None:
         self.last_score_at_switch = score
         self.last_switch_time = pygame.time.get_ticks()
+
+    def set_system_order_by_ids(self, ids: list[str]) -> None:
+        """Synchronize the randomized system order from the host."""
+        self.systems.set_order_by_ids(list(ids or []))
+        self._apply_system_visuals()
+
+    def sync_to_system_index(self, index: int) -> None:
+        """Jump to a host-authoritative system without triggering a local switch."""
+        self.systems.advance_to_index(int(index))
+        self._apply_system_visuals()
+        self.planet_manager.clear_all()
+        self.layer4_objects.clear()
+        self.system_enter_time = pygame.time.get_ticks()
+        self.last_switch_time = pygame.time.get_ticks()
+
+    def start_synchronized_transition(self, target_index: int, elapsed_ms: int, duration_ms: int) -> None:
+        """Start the same transition locally at the same approximate progress."""
+        target_index = int(target_index)
+        if not self.systems.order:
+            return
+        current = self.systems.current_system()
+        target = self.systems.order[target_index % len(self.systems.order)]
+        self.planet_manager.start_exit_all()
+        self.transition_manager.transition_from_planets = self.systems.get_available_planet_keys(current, self.assets)
+        self.transition_manager.transition_to_planets = self.systems.get_available_planet_keys(target, self.assets)
+        self.transition_manager.start_transition(current, target, target_index, int(duration_ms))
+        self.transition_manager.transition_start = pygame.time.get_ticks() - max(0, int(elapsed_ms))
 
     def get_current_difficulty(self):
         # Gameplay difficulty is selected in the menu. System progression is
@@ -195,7 +224,8 @@ class BackgroundManager:
     # --- Update / Draw ---
     def update(self, current_score: int = 0) -> None:
         # possibly start transition
-        self.request_switch_if_needed(current_score)
+        if self.auto_switch:
+            self.request_switch_if_needed(current_score)
 
         # update stars
         self.starfield.update()
