@@ -13,12 +13,14 @@ import pygame
 class Laser:
     """Simple rectangular laser projectile."""
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, direction=-1, owner_id=None):
         self.rect = pygame.Rect(x, y, 3, 20)
         self.speed = 15
+        self.direction = -1 if direction < 0 else 1
+        self.owner_id = owner_id
 
     def update(self):
-        self.rect.y -= self.speed
+        self.rect.y += self.speed * self.direction
 
     def draw(self, screen):
         pygame.draw.rect(screen, (255, 0, 0), self.rect)
@@ -27,7 +29,7 @@ class Laser:
 class Torpedo:
     """Image-based torpedo projectile."""
 
-    def __init__(self, x, y, torpedo_img):
+    def __init__(self, x, y, torpedo_img, direction=-1, owner_id=None):
         # torpedo_img expected to be a pygame.Surface or None
         if torpedo_img is None:
             # fallback to a small rect if image missing
@@ -37,12 +39,11 @@ class Torpedo:
             self.image = pygame.transform.scale_by(torpedo_img, 0.50)
             self.rect = self.image.get_rect(center=(x + 4, y + 10))
         self.speed = 10
+        self.direction = -1 if direction < 0 else 1
+        self.owner_id = owner_id
 
     def update(self):
-        if self.image is None:
-            self.rect.y -= self.speed
-        else:
-            self.rect.y -= self.speed
+        self.rect.y += self.speed * self.direction
 
     def draw(self, screen):
         if self.image is None:

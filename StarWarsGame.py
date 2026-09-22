@@ -23,7 +23,22 @@ from game.network import NETWORK_DEBUG
 from game.scoreboard import draw_scoreboard
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
-from game.ui.multiplayer import lan_menu, lobby_screen, main_menu
+from game.ui.multiplayer import (
+    lan_menu,
+    lobby_screen,
+    local_pvp_player_prompt,
+    main_menu,
+    multiplayer_menu,
+    pvp_lan_menu,
+    pvp_mode_menu,
+)
+from game.pvp_duel import PvPDuelSession
+from game.local_pvp import LocalPvPDuelSession
+from game.constants import (
+    PVP_MAX_PLAYERS,
+    LOCAL_PVP_PLAYER1_NAME,
+    LOCAL_PVP_PLAYER2_NAME,
+)
 
 
 pygame.init()
@@ -615,6 +630,123 @@ def run_multiplayer_flow(config):
         session.stop()
 
 
+
+def run_local_pvp_flow(duel_mode):
+    """Start a local two-player PvP duel without creating a network connection."""
+    global screen
+
+    for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
+        if local_pvp_player_prompt(screen, clock, WIDTH, HEIGHT, player_number) is None:
+            return "menu"
+
+        faction_choice, new_width, new_height = faction_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            rebel_logo_img,
+            empire_logo_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            faction_choice,
+            faction_logo_img,
+            x_wing_img,
+            millennium_falcon_img,
+            tiefighter_img,
+            battle_droid_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        if player_number == 1:
+            player1 = {
+                "name": player_name,
+                "faction": faction_choice,
+                "ship": ship_choice,
+            }
+        else:
+            player2 = {
+                "name": player_name,
+                "faction": faction_choice,
+                "ship": ship_choice,
+            }
+
+    duel = LocalPvPDuelSession(player1, player2, assets, mode=duel_mode)
+    result = duel.run(screen, clock)
+    if result.get("quit"):
+        return "menu"
+    return "menu"
+
+
+def run_pvp_flow(config, duel_mode):
+    global screen
+    session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode="pvp", max_players=PVP_MAX_PLAYERS)
+
+    try:
+        if config["action"] == "host":
+            session.host(config["name"])
+        else:
+            session.join(config["ip"], config["name"])
+
+        lobby_result = lobby_screen(
+            screen,
+            clock,
+            session,
+            WIDTH,
+            HEIGHT,
+            title_text="STAR WARS – PvP-DUELL LOBBY",
+            max_players=PVP_MAX_PLAYERS,
+            start_requires_full=True,
+        )
+        if lobby_result != "start":
+            return "menu"
+
+        faction_choice, new_width, new_height = faction_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            rebel_logo_img,
+            empire_logo_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+        ship_choice, new_width, new_height = ship_selection(
+            screen,
+            clock,
+            WIDTH,
+            HEIGHT,
+            faction_choice,
+            faction_logo_img,
+            x_wing_img,
+            millennium_falcon_img,
+            tiefighter_img,
+            battle_droid_img,
+        )
+        set_dimensions(new_width, new_height)
+
+        # Difficulty stays shared and neutral in PvP; the selected duel rule
+        # is carried to the server so the host rule becomes authoritative.
+        session.send_ready(ship_choice, DEFAULT_DIFFICULTY, game_rule=duel_mode)
+        if not wait_for_multiplayer_start(session, WIDTH, HEIGHT):
+            return "menu"
+
+        duel = PvPDuelSession(session, assets, mode=duel_mode, debug=NETWORK_DEBUG)
+        result = duel.run(screen, clock)
+        if result.get("quit"):
+            return "menu"
+        return "menu"
+    finally:
+        session.stop()
+
+
 def main():
     global screen, WIDTH, HEIGHT
 
@@ -631,14 +763,38 @@ def main():
             run_singleplayer_flow()
             continue
 
-        config = lan_menu(screen, clock, WIDTH, HEIGHT)
-        current_surface = pygame.display.get_surface()
-        if current_surface is not None:
-            screen = current_surface
-            WIDTH, HEIGHT = screen.get_size()
-        if config is None:
-            continue
-        run_multiplayer_flow(config)
+        if mode == "multiplayer":
+            multiplayer_mode = multiplayer_menu(screen, clock, WIDTH, HEIGHT)
+            current_surface = pygame.display.get_surface()
+            if current_surface is not None:
+                screen = current_surface
+                WIDTH, HEIGHT = screen.get_size()
+            if multiplayer_mode == "back":
+                continue
+
+            # The visible LAN Multiplayer entry is the existing host-authoritative
+            # PvP mode. The older non-PvP LAN flow remains in the source for
+            # compatibility, but it is no longer reachable from the menus.
+            if multiplayer_mode in {"lan_pvp", "local_pvp"}:
+                duel_mode = pvp_mode_menu(screen, clock, WIDTH, HEIGHT)
+                current_surface = pygame.display.get_surface()
+                if current_surface is not None:
+                    screen = current_surface
+                    WIDTH, HEIGHT = screen.get_size()
+                if duel_mode is None:
+                    continue
+
+                if multiplayer_mode == "lan_pvp":
+                    config = pvp_lan_menu(screen, clock, WIDTH, HEIGHT, duel_mode)
+                    current_surface = pygame.display.get_surface()
+                    if current_surface is not None:
+                        screen = current_surface
+                        WIDTH, HEIGHT = screen.get_size()
+                    if config is not None:
+                        run_pvp_flow(config, duel_mode)
+                else:
+                    run_local_pvp_flow(duel_mode)
+                continue
 
     pygame.quit()
     sys.exit()

@@ -367,6 +367,30 @@ docs/bossfight.png
 
 *Sobald erste spielbare Versionen verfügbar sind, können hier Screenshots und GIFs eingefügt werden.*
 
+## 🎮 Lokaler PvP-Duell-Modus
+
+Der bestehende PvP-Duell-Modus kann zusätzlich **lokal auf einem einzigen PC** gespielt werden.
+
+### Steuerung
+
+- **Spieler 1 (unteres Schiff):** `A` / `D` bewegen, `W` Laser, `S` Torpedo
+- **Spieler 2 (oberes Schiff):** `←` / `→` bewegen, `↑` Laser, `↓` Torpedo
+
+Die lokale Steuerung ist ausschließlich für den lokalen PvP-Modus aktiv. Einzelspieler,
+LAN-Multiplayer und LAN-PvP verwenden weiterhin ihre bisherigen Eingaben.
+
+### Menü
+
+`Mehrspieler` enthält:
+
+1. LAN Multiplayer
+2. LAN PvP
+3. Lokaler PvP
+
+Der lokale PvP-Modus verwendet dieselben PvP-Regeln, Asteroiden, Waffen, Treffer,
+Weltenwechsel, Score-Regeln und Ergebnisanzeigen wie LAN-PvP, benötigt aber keine
+Netzwerkverbindung.
+
 ---
 
 # ⚠️ Rechtlicher Hinweis
