@@ -10,6 +10,7 @@ Pygame wait for network traffic.
 from __future__ import annotations
 
 import math
+import random
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -272,6 +273,8 @@ class PvPDuelSession:
             return
         if len(self.asteroids) >= 36:
             return
+        if not self.assets.get("asteroid_images"):
+            return
 
         difficulty = self.background.get_current_difficulty()
         system_bonus = float(difficulty.get("system_bonus", 0.0))
@@ -283,49 +286,126 @@ class PvPDuelSession:
         )
         size_multiplier = profile["asteroid_size"] * (1.0 + system_bonus * 0.18)
 
-        asteroid = Asteroid(
-            self.source_width,
-            self.source_height,
-            self.assets.get("asteroid_images", []),
-            size_multiplier=size_multiplier,
-            speed_multiplier=speed_multiplier,
-        )
-        if not self.assets.get("asteroid_images"):
-            return
-
-        # The Asteroid constructor normally starts above the screen. For PvP the
-        # authoritative world intentionally picks a visible safe spawn position.
+        # Spawns are deliberately offscreen and follow pre-defined, mirrored lanes.
+        # This avoids starting items directly on top of the ships while keeping the
+        # collision risk symmetrical for both players.
+        spawn_directions = [
+            "left_to_right",
+            "right_to_left",
+            "diag_left_bottom_to_right_top",
+            "diag_right_top_to_left_bottom",
+            "diag_left_top_to_right_bottom",
+            "diag_right_bottom_to_left_top",
+        ]
+        direction = random.choice(spawn_directions)
+        safe_asteroid = None
         for _ in range(PVP_ASTEROID_SPAWN_ATTEMPTS):
-            max_y = max(
-                PVP_ASTEROID_SPAWN_MIN_Y,
-                int(self.source_height * PVP_ASTEROID_SPAWN_MAX_Y_RATIO),
+            candidate = Asteroid(
+                self.source_width,
+                self.source_height,
+                self.assets.get("asteroid_images", []),
+                size_multiplier=size_multiplier,
+                speed_multiplier=speed_multiplier,
             )
-            import random
-            x_value = random.randint(
-                PVP_PLAYER_HORIZONTAL_PADDING,
-                max(PVP_PLAYER_HORIZONTAL_PADDING, self.source_width - asteroid.width - PVP_PLAYER_HORIZONTAL_PADDING),
-            )
-            y_value = random.randint(
-                PVP_ASTEROID_SPAWN_MIN_Y,
-                max(PVP_ASTEROID_SPAWN_MIN_Y, max_y),
-            )
-            candidate = pygame.Rect(int(x_value), int(y_value), asteroid.width, asteroid.height)
+            candidate.vx = 0.0
+            candidate.vy = max(1.6, abs(candidate.speed))
+            candidate.x, candidate.y, candidate.vx, candidate.vy = self._spawn_lane_position(direction, candidate)
+            rect = candidate.get_rect()
             safe = True
             for player in self.players.values():
                 expanded = player.ship.hitbox.inflate(
                     PVP_ASTEROID_PLAYER_SAFE_DISTANCE * 2,
                     PVP_ASTEROID_PLAYER_SAFE_DISTANCE * 2,
                 )
-                if candidate.colliderect(expanded):
+                if rect.colliderect(expanded):
                     safe = False
                     break
             if safe:
-                asteroid.x = candidate.x
-                asteroid.y = candidate.y
-                asteroid.update()
-                asteroid.y = candidate.y
-                self.asteroids[uuid.uuid4().hex[:10]] = asteroid
-                return
+                safe_asteroid = candidate
+                break
+
+        if safe_asteroid is None:
+            return
+
+        self.asteroids[uuid.uuid4().hex[:10]] = safe_asteroid
+
+    def _spawn_lane_position(self, direction: str, asteroid: Asteroid):
+        width = max(1, self.source_width)
+        height = max(1, self.source_height)
+        ship_safe = max(60, int(PVP_ASTEROID_PLAYER_SAFE_DISTANCE * 1.2))
+        min_x = -asteroid.width * 2
+        max_x = width + asteroid.width * 2
+        min_y = -asteroid.height * 2
+        max_y = height + asteroid.height * 2
+
+        if direction == "left_to_right":
+            x = -asteroid.width - random.randint(12, 80)
+            y = random.randint(
+                int(height * 0.12),
+                max(int(height * 0.12), int(height * 0.82) - asteroid.height),
+            )
+            vx = random.uniform(1.3, 2.6) * (1.15 + max(0.0, (self.source_width / 800.0) - 1.0) * 0.6)
+            vy = random.uniform(-0.5, 0.7)
+            return x, y, vx, vy
+
+        if direction == "right_to_left":
+            x = width + random.randint(12, 80)
+            y = random.randint(
+                int(height * 0.18),
+                max(int(height * 0.18), int(height * 0.82) - asteroid.height),
+            )
+            vx = -random.uniform(1.3, 2.6) * (1.15 + max(0.0, (self.source_width / 800.0) - 1.0) * 0.6)
+            vy = random.uniform(-0.5, 0.7)
+            return x, y, vx, vy
+
+        if direction == "diag_left_bottom_to_right_top":
+            x = random.randint(-int(width * 0.25), -asteroid.width)
+            y = height + random.randint(20, int(height * 0.22))
+            vx = random.uniform(1.0, 2.1)
+            vy = -random.uniform(1.0, 1.9)
+            return x, y, vx, vy
+
+        if direction == "diag_right_top_to_left_bottom":
+            x = width + random.randint(20, int(width * 0.20))
+            y = -random.randint(20, int(height * 0.20))
+            vx = -random.uniform(1.0, 2.1)
+            vy = random.uniform(1.0, 1.9)
+            return x, y, vx, vy
+
+        if direction == "diag_left_top_to_right_bottom":
+            x = -random.randint(20, int(width * 0.20))
+            y = random.randint(-int(height * 0.20), 0)
+            vx = random.uniform(1.0, 2.1)
+            vy = random.uniform(1.0, 1.9)
+            return x, y, vx, vy
+
+        x = width + random.randint(20, int(width * 0.20))
+        y = height + random.randint(20, int(height * 0.22))
+        vx = -random.uniform(1.0, 2.1)
+        vy = -random.uniform(1.0, 1.9)
+        return x, y, vx, vy
+
+    def _update_host_asteroids(self) -> None:
+        if self.background is None:
+            return
+        difficulty = self.background.get_current_difficulty()
+        profile = DIFFICULTY_SETTINGS[DEFAULT_DIFFICULTY]
+        system_bonus = float(difficulty.get("system_bonus", 0.0))
+        density = profile["asteroid_density"] * (1.0 + system_bonus * 0.80)
+        interval = max(
+            PVP_ASTEROID_MIN_SPAWN_INTERVAL,
+            int(PVP_ASTEROID_BASE_SPAWN_INTERVAL / max(0.35, density)),
+        )
+        interval = max(PVP_ASTEROID_MIN_SPAWN_INTERVAL, interval)
+        self._asteroid_spawn_timer += 1
+        if self._asteroid_spawn_timer >= interval:
+            self._spawn_safe_asteroid()
+            self._asteroid_spawn_timer = 0
+
+        for asteroid_id, asteroid in list(self.asteroids.items()):
+            asteroid.update()
+            if asteroid.x > self.source_width + asteroid.width * 2 or asteroid.x < -asteroid.width * 3 or asteroid.y > self.source_height + asteroid.height * 2 or asteroid.y < -asteroid.height * 3:
+                self.asteroids.pop(asteroid_id, None)
 
     def _add_effect(self, x: float, y: float, scale: float = 0.8) -> None:
         effect_id = uuid.uuid4().hex[:10]

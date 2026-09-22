@@ -20,7 +20,7 @@ from game.entities.explosion import Explosion
 from game.entities.ships import BattleDroid, MillenniumFalcon, Tiefighter, XWing
 from game.multiplayer import MultiplayerSession
 from game.network import NETWORK_DEBUG
-from game.scoreboard import draw_scoreboard
+from game.scoreboard import draw_scoreboard, draw_live_ranking
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
 from game.ui.multiplayer import (
@@ -33,10 +33,10 @@ from game.ui.multiplayer import (
     pvp_mode_menu,
 )
 from game.pvp_duel import PvPDuelSession
-from game.local_pvp import LocalPvPDuelSession
-from game.points_fight import LocalPointsFightSession, PointsPlayerConfig
+from game.local_pvp import LocalPvPDuelSession, LocalPointsFightSession
 from game.constants import (
     PVP_MAX_PLAYERS,
+    PVP_SCORE_LIMIT_MS,
     LOCAL_PVP_PLAYER1_NAME,
     LOCAL_PVP_PLAYER2_NAME,
 )
@@ -161,7 +161,7 @@ def destroy_asteroid(asteroid, explosion_list):
     )
 
 
-def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer=None):
+def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer=None, points_match=False):
     """Run the existing local game simulation, optionally with LAN overlays."""
     global screen, WIDTH, HEIGHT
 
@@ -179,6 +179,8 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
     local_dead = False
     host_disconnected = False
     show_scoreboard = False
+    points_match_started_at = None
+    points_match_over = False
 
     try:
         background.notify_score_anchor(score)
@@ -187,7 +189,14 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
 
     if multiplayer is not None:
         multiplayer.poll(WIDTH, HEIGHT)
-        multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT, background.get_current_system_name())
+        multiplayer.update_local_state(
+            spieler, ship_choice, score, WIDTH, HEIGHT,
+            background.get_current_difficulty().get("system_index", 0),
+            background.get_current_system_name(),
+        )
+        if points_match:
+            import time
+            points_match_started_at = multiplayer.client.started_at or time.time()
 
     while running:
         # The AI system uses seconds, while the original asteroid/player
@@ -257,7 +266,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
                     running = False
 
         keys = pygame.key.get_pressed()
-        if not local_dead:
+        if not local_dead and not points_match_over:
             if keys[pygame.K_a] or keys[pygame.K_LEFT]:
                 spieler.move_left()
             if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
@@ -268,7 +277,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
         # ------------------------------------------------------------
         # PLAYER PROJECTILES
         # ------------------------------------------------------------
-        if not local_dead:
+        if not local_dead and not points_match_over:
             for laser in laser_list[:]:
                 laser.update()
                 if laser.rect.bottom < 0 and laser in laser_list:
@@ -381,6 +390,12 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
             if enemy_result.player_dead or spieler.lives <= 0:
                 local_dead = True
 
+        if points_match and not points_match_over:
+            import time
+            elapsed_ms = int(max(0.0, time.time() - points_match_started_at) * 1000) if points_match_started_at else 0
+            if elapsed_ms >= PVP_SCORE_LIMIT_MS:
+                points_match_over = True
+
         # ------------------------------------------------------------
         # RENDERING
         # ------------------------------------------------------------
@@ -426,6 +441,16 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
 
         score_text = font.render(f"Punkte: {score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
+        if points_match:
+            import time
+            elapsed_ms = int(max(0.0, time.time() - points_match_started_at) * 1000) if points_match_started_at else 0
+            remaining_ms = max(0, PVP_SCORE_LIMIT_MS - elapsed_ms)
+            timer_surface = font.render(
+                f"PUNKTEKAMPF  {remaining_ms // 60000:02d}:{(remaining_ms % 60000) // 1000:02d}",
+                True,
+                (255, 255, 255),
+            )
+            screen.blit(timer_surface, timer_surface.get_rect(center=(WIDTH // 2, 18)))
         draw_lives(screen, getattr(spieler, "lives", 0), faction_for_player(spieler))
 
         if multiplayer is not None:
@@ -437,20 +462,53 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
                 net_text = pygame.font.Font(None, 28).render("Netzwerkverbindung verloren", True, (255, 160, 100))
                 screen.blit(net_text, net_text.get_rect(center=(WIDTH // 2, 30)))
 
-            # TAB is intentionally a hold-to-show overlay, so it never pauses the game.
+            # PunkteKampf keeps a compact live ranking visible at all times.
+            if points_match:
+                draw_live_ranking(screen, multiplayer.get_scoreboard_rows(), multiplayer.local_id)
+
+            # TAB is intentionally a hold-to-show detailed overlay, so it never pauses the game.
             show_scoreboard = keys[pygame.K_TAB]
             if show_scoreboard:
                 draw_scoreboard(screen, multiplayer.get_scoreboard_rows(), multiplayer.local_id)
 
-            multiplayer.update_local_state(spieler, ship_choice, score, WIDTH, HEIGHT, background.get_current_system_name())
+            multiplayer.update_local_state(
+                spieler, ship_choice, score, WIDTH, HEIGHT,
+                background.get_current_difficulty().get("system_index", 0),
+                background.get_current_system_name(),
+            )
+
+        if points_match_over:
+            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 185))
+            screen.blit(overlay, (0, 0))
+            title_font = pygame.font.Font(None, max(48, int(HEIGHT * 0.085)))
+            small_font = pygame.font.Font(None, max(22, int(HEIGHT * 0.035)))
+            rows = multiplayer.get_scoreboard_rows() if multiplayer is not None else []
+            rows.sort(key=lambda row: int(row.get("score", 0)), reverse=True)
+            top_score = int(rows[0].get("score", 0)) if rows else score
+            tied = len(rows) > 1 and top_score == int(rows[1].get("score", 0))
+            title_text = "UNENTSCHIEDEN" if tied else f"SIEGER: {rows[0].get('name', 'Spieler') if rows else 'Spieler'}"
+            title = title_font.render(title_text, True, (255, 235, 150))
+            screen.blit(title, title.get_rect(center=(WIDTH // 2, int(HEIGHT * 0.32))))
+            detail = "   •   ".join(f"{row.get('name', 'Spieler')}: {int(row.get('score', 0))}" for row in rows[:2])
+            detail_surface = small_font.render(detail, True, (225, 230, 240))
+            screen.blit(detail_surface, detail_surface.get_rect(center=(WIDTH // 2, int(HEIGHT * 0.45))))
+            hint = small_font.render("ENTER / LEERTASTE / ESC = zurück zum Menü", True, (170, 180, 195))
+            screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 35)))
 
         pygame.display.flip()
 
-        if multiplayer is None and local_dead:
+        if points_match_over and (keys[pygame.K_RETURN] or keys[pygame.K_SPACE] or keys[pygame.K_ESCAPE]):
+            running = False
+        elif multiplayer is None and local_dead:
             running = False
 
     if multiplayer is not None:
-        multiplayer.set_final_local_state(spieler, ship_choice, score, WIDTH, HEIGHT, background.get_current_system_name())
+        multiplayer.set_final_local_state(
+            spieler, ship_choice, score, WIDTH, HEIGHT,
+            background.get_current_difficulty().get("system_index", 0),
+            background.get_current_system_name(),
+        )
 
     return {
         "score": score,
@@ -556,9 +614,9 @@ def set_dimensions(width, height):
     set_window_icon()
 
 
-def run_multiplayer_flow(config, game_mode="points"):
+def run_multiplayer_flow(config):
     global screen
-    session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode=game_mode, max_players=10)
+    session = MultiplayerSession(debug=NETWORK_DEBUG)
 
     try:
         if config["action"] == "host":
@@ -632,53 +690,20 @@ def run_multiplayer_flow(config, game_mode="points"):
 
 
 
-def run_local_points_flow():
-    """Run two completely independent single-player simulations side-by-side."""
-    global screen
-    configs = []
-
-    for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
-        if local_pvp_player_prompt(screen, clock, WIDTH, HEIGHT, player_number) is None:
-            return "menu"
-
-        faction_choice, new_width, new_height = faction_selection(
-            screen, clock, WIDTH, HEIGHT, rebel_logo_img, empire_logo_img
-        )
-        set_dimensions(new_width, new_height)
-
-        difficulty_choice, new_width, new_height = difficulty_selection(
-            screen, clock, WIDTH, HEIGHT, DEFAULT_DIFFICULTY
-        )
-        set_dimensions(new_width, new_height)
-
-        faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
-        ship_choice, new_width, new_height = ship_selection(
-            screen, clock, WIDTH, HEIGHT, faction_choice, faction_logo_img,
-            x_wing_img, millennium_falcon_img, tiefighter_img, battle_droid_img
-        )
-        set_dimensions(new_width, new_height)
-
-        configs.append(PointsPlayerConfig(
-            name=player_name,
-            ship=ship_choice,
-            faction=faction_choice,
-            difficulty=difficulty_choice,
-        ))
-
-    session = LocalPointsFightSession(configs, assets)
-    result = session.run(screen, clock)
-    if result.get("quit"):
-        return "menu"
-    return "menu"
-
-
 def run_local_pvp_flow(duel_mode):
     """Start a local two-player PvP duel without creating a network connection."""
     global screen
 
+    points_difficulty = DEFAULT_DIFFICULTY
     for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
         if local_pvp_player_prompt(screen, clock, WIDTH, HEIGHT, player_number) is None:
             return "menu"
+
+        if duel_mode == "points" and player_number == 1:
+            points_difficulty, new_width, new_height = difficulty_selection(
+                screen, clock, WIDTH, HEIGHT, DEFAULT_DIFFICULTY
+            )
+            set_dimensions(new_width, new_height)
 
         faction_choice, new_width, new_height = faction_selection(
             screen,
@@ -718,8 +743,12 @@ def run_local_pvp_flow(duel_mode):
                 "ship": ship_choice,
             }
 
-    duel = LocalPvPDuelSession(player1, player2, assets, mode=duel_mode)
-    result = duel.run(screen, clock)
+    if duel_mode == "points":
+        points = LocalPointsFightSession(player1, player2, assets, difficulty=points_difficulty)
+        result = points.run(screen, clock)
+    else:
+        duel = LocalPvPDuelSession(player1, player2, assets, mode=duel_mode)
+        result = duel.run(screen, clock)
     if result.get("quit"):
         return "menu"
     return "menu"
@@ -759,6 +788,15 @@ def run_pvp_flow(config, duel_mode):
         set_dimensions(new_width, new_height)
 
         faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
+
+        if duel_mode == "points":
+            difficulty_choice, new_width, new_height = difficulty_selection(
+                screen, clock, WIDTH, HEIGHT, DEFAULT_DIFFICULTY
+            )
+            set_dimensions(new_width, new_height)
+        else:
+            difficulty_choice = DEFAULT_DIFFICULTY
+
         ship_choice, new_width, new_height = ship_selection(
             screen,
             clock,
@@ -775,12 +813,23 @@ def run_pvp_flow(config, duel_mode):
 
         # Difficulty stays shared and neutral in PvP; the selected duel rule
         # is carried to the server so the host rule becomes authoritative.
-        session.send_ready(ship_choice, DEFAULT_DIFFICULTY, game_rule=duel_mode)
+        session.send_ready(ship_choice, difficulty_choice, game_rule=duel_mode)
         if not wait_for_multiplayer_start(session, WIDTH, HEIGHT):
             return "menu"
 
-        duel = PvPDuelSession(session, assets, mode=duel_mode, debug=NETWORK_DEBUG)
-        result = duel.run(screen, clock)
+        if duel_mode == "points":
+            host_data = session.players.get(str(session.host_id), {})
+            difficulty_choice = str(host_data.get("difficulty") or difficulty_choice)
+            result = run_game_session(
+                faction_choice,
+                difficulty_choice,
+                ship_choice,
+                multiplayer=session,
+                points_match=True,
+            )
+        else:
+            duel = PvPDuelSession(session, assets, mode=duel_mode, debug=NETWORK_DEBUG)
+            result = duel.run(screen, clock)
         if result.get("quit"):
             return "menu"
         return "menu"
@@ -813,6 +862,9 @@ def main():
             if multiplayer_mode == "back":
                 continue
 
+            # The visible LAN Multiplayer entry is the existing host-authoritative
+            # PvP mode. The older non-PvP LAN flow remains in the source for
+            # compatibility, but it is no longer reachable from the menus.
             if multiplayer_mode in {"lan_pvp", "local_pvp"}:
                 duel_mode = pvp_mode_menu(screen, clock, WIDTH, HEIGHT)
                 current_surface = pygame.display.get_surface()
@@ -822,22 +874,16 @@ def main():
                 if duel_mode is None:
                     continue
 
-                if multiplayer_mode == "local_pvp":
-                    if duel_mode == "points":
-                        run_local_points_flow()
-                    else:
-                        run_local_pvp_flow(duel_mode)
-                else:
+                if multiplayer_mode == "lan_pvp":
                     config = pvp_lan_menu(screen, clock, WIDTH, HEIGHT, duel_mode)
                     current_surface = pygame.display.get_surface()
                     if current_surface is not None:
                         screen = current_surface
                         WIDTH, HEIGHT = screen.get_size()
                     if config is not None:
-                        if duel_mode == "points":
-                            run_multiplayer_flow(config, game_mode="points")
-                        else:
-                            run_pvp_flow(config, duel_mode)
+                        run_pvp_flow(config, duel_mode)
+                else:
+                    run_local_pvp_flow(duel_mode)
                 continue
 
     pygame.quit()

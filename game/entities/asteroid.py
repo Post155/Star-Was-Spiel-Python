@@ -20,7 +20,8 @@ class Asteroid:
         asteroid_images: list of pygame.Surface frames
         scale: visual scale factor
         x, y: position (top-left)
-        speed: vertical speed
+        speed: base movement speed
+        vx, vy: directional velocity
     """
 
     def __init__(self, window_width, window_height, asteroid_images, size_multiplier=1.0, speed_multiplier=1.0):
@@ -53,9 +54,12 @@ class Asteroid:
 
         # asteroid speed is chosen from ASTEROID_SPEED_RANGE in constants.py
         self.speed = random.randint(ASTEROID_SPEED_RANGE[0], ASTEROID_SPEED_RANGE[1]) * self.speed_multiplier
+        self.vx = 0.0
+        self.vy = self.speed
 
     def update(self):
-        self.y += self.speed
+        self.x += self.vx
+        self.y += self.vy
 
         self.frame_counter += 1
         if self.frame_counter >= self.frame_delay:

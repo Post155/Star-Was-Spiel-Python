@@ -42,6 +42,7 @@ class RemotePlayer:
     source_width: int = 800
     source_height: int = 600
     score: int = 0
+    system: str = "Unbekannt"
     lives: int = 3
     alive: bool = True
     connected: bool = True
@@ -55,10 +56,14 @@ class RemotePlayer:
         self.source_height = max(240, int(data.get("height", self.source_height) or self.source_height))
         raw_x = float(data.get("x", 0.0) or 0.0)
         raw_y = float(data.get("y", 0.0) or 0.0)
-        self.target_x = raw_x / self.source_width * max(1, local_width)
-        self.target_y = raw_y / self.source_height * max(1, local_height)
+        if "system" in data and "width" not in data:
+            self.target_x = raw_x * max(1, local_width)
+            self.target_y = raw_y * max(1, local_height)
+        else:
+            self.target_x = raw_x / self.source_width * max(1, local_width)
+            self.target_y = raw_y / self.source_height * max(1, local_height)
         self.score = max(0, int(data.get("score", self.score) or 0))
-        self.lives = max(0, int(data.get("lives", self.lives) or 0))
+        self.system = str(data.get("system") or self.system)[:48]
         self.alive = bool(data.get("alive", self.alive))
         self.connected = bool(data.get("connected", True))
         self.ready = bool(data.get("ready", False))
@@ -82,6 +87,7 @@ class MultiplayerSession:
         self.local_name = "Spieler"
         self.local_ship = "xwing"
         self.local_score = 0
+        self.local_system = "Unbekannt"
         self.local_lives = 3
         self.local_alive = True
         self._last_state_send = 0.0
@@ -164,9 +170,10 @@ class MultiplayerSession:
         self.local_ship = ship
         self.client.send_ready(self.local_name, ship, difficulty, game_rule=game_rule)
 
-    def update_local_state(self, player, ship: str, score: int, width: int, height: int) -> None:
+    def update_local_state(self, player, ship: str, score: int, width: int, height: int, system: str = "Unbekannt") -> None:
         self.local_ship = ship
         self.local_score = int(score)
+        self.local_system = str(system or "Unbekannt")[:48]
         self.local_lives = int(getattr(player, "lives", 0))
         self.local_alive = self.local_lives > 0
         now = time.monotonic()
@@ -175,32 +182,51 @@ class MultiplayerSession:
         self._last_state_send = now
         self._last_width = width
         self._last_height = height
-        self.client.send_state(
-            x=float(getattr(player, "x", 0.0)),
-            y=float(getattr(player, "y", 0.0)),
-            width=width,
-            height=height,
-            ship=ship,
-            score=self.local_score,
-            lives=self.local_lives,
-            alive=self.local_alive,
-        )
+        if self.game_mode == "points":
+            self.client.send_points_state(
+                x=float(getattr(player, "x", 0.0)) / max(1, width),
+                y=float(getattr(player, "y", 0.0)) / max(1, height),
+                ship=ship,
+                score=self.local_score,
+                system=str(getattr(self, "local_system", "Unbekannt")),
+            )
+        else:
+            self.client.send_state(
+                x=float(getattr(player, "x", 0.0)),
+                y=float(getattr(player, "y", 0.0)),
+                width=width,
+                height=height,
+                ship=ship,
+                score=self.local_score,
+                lives=self.local_lives,
+                alive=self.local_alive,
+            )
 
-    def set_final_local_state(self, player, ship: str, score: int, width: int, height: int) -> None:
+    def set_final_local_state(self, player, ship: str, score: int, width: int, height: int, system: str = "Unbekannt") -> None:
         self.local_ship = ship
         self.local_score = int(score)
+        self.local_system = str(system or "Unbekannt")[:48]
         self.local_lives = int(getattr(player, "lives", 0))
         self.local_alive = self.local_lives > 0
-        self.client.send_state(
-            x=float(getattr(player, "x", 0.0)),
-            y=float(getattr(player, "y", 0.0)),
-            width=width,
-            height=height,
-            ship=ship,
-            score=self.local_score,
-            lives=self.local_lives,
-            alive=self.local_alive,
-        )
+        if self.game_mode == "points":
+            self.client.send_points_state(
+                x=float(getattr(player, "x", 0.0)) / max(1, width),
+                y=float(getattr(player, "y", 0.0)) / max(1, height),
+                ship=ship,
+                score=self.local_score,
+                system=str(getattr(self, "local_system", "Unbekannt")),
+            )
+        else:
+            self.client.send_state(
+                x=float(getattr(player, "x", 0.0)),
+                y=float(getattr(player, "y", 0.0)),
+                width=width,
+                height=height,
+                ship=ship,
+                score=self.local_score,
+                lives=self.local_lives,
+                alive=self.local_alive,
+            )
 
     def is_host(self) -> bool:
         return bool(self.local_id and self.local_id == self.host_id)
@@ -246,6 +272,10 @@ class MultiplayerSession:
             label.set_alpha(220 if remote.alive else 150)
             label_rect = label.get_rect(center=(rect.centerx, rect.top - 10))
             screen.blit(label, label_rect)
+            info = font.render(f"{remote.score} • {remote.system}", True, (190, 215, 235))
+            info.set_alpha(190 if remote.alive else 120)
+            info_rect = info.get_rect(center=(rect.centerx, rect.bottom + 12))
+            screen.blit(info, info_rect)
 
     def stop(self, graceful: bool = True) -> None:
         self.client.disconnect(graceful=graceful)
