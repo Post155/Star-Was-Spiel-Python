@@ -286,6 +286,19 @@ class MillenniumFalcon(Spieler):
 class Tiefighter(Spieler):
     def __init__(self, fenster_breite, fenster_hoehe, tie_fighter_img, torpedo_img=None):
         super().__init__(tie_fighter_img, fenster_breite, fenster_hoehe, SHIP_SCALE_TIEFIGHTER)
+        self.image = pygame.transform.rotate(self.image, 180)
+        self.width, self.height = self.image.get_size()
+
+        hitbox_rect = self._calculate_alpha_hitbox()
+        self.hitbox_offset_x = int(round(hitbox_rect.x))
+        self.hitbox_offset_y = int(round(hitbox_rect.y))
+        self.hitbox = pygame.Rect(
+            self.x + self.hitbox_offset_x,
+            self.y + self.hitbox_offset_y,
+            int(round(hitbox_rect.width)),
+            int(round(hitbox_rect.height)),
+        )
+
         self.speed = SHIP_SPEED_TIEFIGHTER
         self.torpedo_img = torpedo_img
 

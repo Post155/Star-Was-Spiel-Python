@@ -5,6 +5,17 @@ import pygame
 from game.assets import set_window_icon
 
 
+def _uniform_preview_scale(image, max_width, max_height):
+    if image is None:
+        return 1.0
+
+    width, height = image.get_size()
+    if width <= 0 or height <= 0:
+        return 1.0
+
+    return min(max_width / width, max_height / height)
+
+
 def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wing_img, millennium_falcon_img, tie_fighter_img, battle_droid_img):
     """Display the ship selection screen for the chosen faction and return the chosen ship key plus the active window size."""
     while True:
@@ -78,9 +89,11 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
         screen.blit(subtitle, (width // 2 - subtitle.get_width() // 2, 160))
 
         base_scale = height / 600
+        preview_max_width = min(card_width * 0.54, 170)
+        preview_max_height = min(card_height * 0.52, 170)
 
         if faction == "rebels":
-            xwing_scale = (0.24 * base_scale if xwing_hover else 0.20 * base_scale)
+            xwing_scale = _uniform_preview_scale(x_wing_img, preview_max_width, preview_max_height)
             xwing_preview = pygame.transform.scale_by(x_wing_img, xwing_scale)
 
             pygame.draw.rect(screen, (40, 40, 70), xwing_rect, border_radius=20)
@@ -89,7 +102,7 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             text = font.render("X-Wing", True, (255, 255, 255))
             screen.blit(text, (xwing_rect.centerx - text.get_width() // 2, xwing_rect.bottom - 70))
 
-            falcon_scale = (0.75 * base_scale if falcon_hover else 0.65 * base_scale)
+            falcon_scale = _uniform_preview_scale(millennium_falcon_img, preview_max_width, preview_max_height)
             falcon_preview = pygame.transform.scale_by(millennium_falcon_img, falcon_scale)
 
             pygame.draw.rect(screen, (40, 40, 70), falcon_rect, border_radius=20)
@@ -101,10 +114,8 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             info = small_font.render("Klicke auf ein Schiff oder drücke 1 oder 2", True, (220, 220, 220))
             screen.blit(info, (width // 2 - info.get_width() // 2, height - 50))
         else:
-            desired_width = int(card_width * (1.2 if tie_hover else 1.0))
-            orig_width = tie_fighter_img.get_width()
-            tie_scale = (desired_width / orig_width) if orig_width > 0 else (0.20 * base_scale)
-            tie_preview = pygame.transform.scale_by(tie_fighter_img, tie_scale)
+            tie_scale = _uniform_preview_scale(tie_fighter_img, preview_max_width, preview_max_height)
+            tie_preview = pygame.transform.rotate(pygame.transform.scale_by(tie_fighter_img, tie_scale), 180)
 
             pygame.draw.rect(screen, (40, 40, 70), tie_rect, border_radius=20)
             pygame.draw.rect(screen, (200, 100, 200) if tie_hover else (120, 120, 120), tie_rect, 3, border_radius=20)
@@ -112,9 +123,7 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             text = font.render("TIE Fighter", True, (255, 255, 255))
             screen.blit(text, (tie_rect.centerx - text.get_width() // 2, tie_rect.bottom - 70))
 
-            desired_width = int(card_width * (0.50 if battle_hover else 0.40))
-            orig_width = battle_droid_img.get_width()
-            droid_scale = (desired_width / orig_width) if orig_width > 0 else (0.30 * base_scale)
+            droid_scale = _uniform_preview_scale(battle_droid_img, preview_max_width, preview_max_height)
             droid_preview = pygame.transform.scale_by(battle_droid_img, droid_scale)
 
             pygame.draw.rect(screen, (30, 30, 40), battle_rect, border_radius=20)
