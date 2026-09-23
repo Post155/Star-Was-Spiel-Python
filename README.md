@@ -35,9 +35,8 @@ Das Projekt wurde als **Lern-, Entwicklungs- und Demonstrationsprojekt** erstell
   * [Automatische Installation unter Windows](#automatische-installation-unter-windows)
   * [Manuelle Installation](#manuelle-installation)
 * [▶️ Spiel starten](#️-spiel-starten)
-* [🚀 Features](#-features)
 
-  * [🎮 Spielmodi](#-spielmodi)
+* [🎮 Spielmodi](#-spielmodi)
   * [🚀 Spielbare Schiffe](#-spielbare-schiffe)
   * [☄️ Asteroidensystem](#️-asteroidensystem)
   * [💥 Waffen](#-waffen)
@@ -231,8 +230,6 @@ Die Installationsdateien von Python und Pygame stammen nicht aus diesem Projekt.
 
 ---
 
-# 🚀 Features
-
 ## 🎮 Spielmodi
 
 Das Spiel besitzt mehrere voneinander getrennte Spielmodi:
@@ -240,147 +237,150 @@ Das Spiel besitzt mehrere voneinander getrennte Spielmodi:
 * 🎮 **Einzelspieler**
 * 🏆 **Punktekampf**
 * ⚔️ **Letzter Überlebender**
-* 🌐 **LAN-Spielmodi**
 * 🖥️ **Lokaler Mehrspielermodus**
+* 🌐 **LAN-Spielmodi**
 
-Die beiden PvP-orientierten Hauptmodi **Punktekampf** und **Letzter Überlebender** verwenden unterschiedliche Spielregeln.
+### 🎮 Einzelspieler
+
+Im Einzelspielermodus spielt ein einzelner Spieler gegen Asteroiden und KI-Gegner. Der Spieler sammelt Punkte, durchläuft verschiedene Sternensysteme und versucht, möglichst lange zu überleben.
+
+**Screenshot:**
+
+![Screenshot Einzelspieler](HIER_BILDQUELLE_EINTRAGEN)
 
 ---
 
-# 🏆 Punktekampf
+### 🏆 Punktekampf
 
-Der Punktekampf ist **kein klassischer PvP-Kampf**.
+Beim Punktekampf spielt jeder Spieler gleichzeitig seine eigene Einzelspieler-Runde. Die Spielwelten der Spieler sind vollständig voneinander getrennt.
 
-Er basiert auf dem Einzelspieler-Gameplay.
+Jeder Spieler besitzt eigene:
 
-Das Grundprinzip:
+* 🚀 Schiff
+* ☄️ Asteroiden
+* 🤖 KI-Gegner
+* 💥 Projektile und Kollisionen
+* 🏆 Score
+* 🌌 Sternensystem
+* ❤️ Leben-System
+* 📈 Progression
 
-> Jeder Spieler spielt gleichzeitig seine **eigene Einzelspieler-Runde** und vergleicht seinen Score mit den anderen Spielern.
+Andere Spieler werden als **Ghost-Spieler** dargestellt. Diese sind rein visuell und können weder getroffen werden noch das eigene Spiel beeinflussen.
 
-### Jeder Spieler besitzt seine eigene Spielwelt
-
-Jeder Spieler hat:
-
-* eigenes Schiff
-* eigene Asteroiden
-* eigene KI-Gegner
-* eigene Projektile
-* eigene Kollisionen
-* eigenen Score
-* eigenes Sternensystem
-* eigenes Leben-System
-* eigene Spielprogression
-
-Die Spielwelt eines Spielers wird nicht durch die Spielwelt eines anderen Spielers beeinflusst.
-
-### Ghost-Spieler
-
-Andere Spieler werden ausschließlich als **Geister/Ghost-Spieler** dargestellt.
-
-Ein Ghost dient nur zur Anzeige von:
+Angezeigt werden:
 
 * Spielername
-* Position
 * Schiffstyp
-* Punktestand
-* aktuellem Sternensystem
+* Position
+* aktueller Score
+* aktuelles Sternensystem
 
-Ghost-Spieler:
+**Ziel:** Am Ende möglichst viele Punkte zu erreichen und sich mit den anderen Spielern zu vergleichen.
 
-* besitzen keine Kollisions-Hitbox,
-* können nicht getroffen werden,
-* können keinen Schaden verursachen,
-* können keinen Schaden erhalten,
-* können nicht beschossen werden,
-* können nicht mit Asteroiden kollidieren,
-* können keine KI-Gegner beeinflussen,
-* können keine Projektile beeinflussen,
-* beeinflussen die eigene Spielwelt nicht.
+**Screenshot:**
 
-Der Ghost ist damit ausschließlich eine **visuelle Netzwerkdarstellung**.
-
-### Netzwerkdaten im Punktekampf
-
-Für die Ghost-Darstellung werden nur die dafür benötigten Informationen übertragen:
-
-```text
-Spielername
-Schiffstyp
-X-Position
-Y-Position
-Punktestand
-Sternensystem
-```
-
-Es werden für den Punktekampf keine PvP-Treffer oder PvP-Schadensereignisse benötigt.
-
-### Spielziel
-
-Nach dem Ende der Runde werden die Punktestände miteinander verglichen.
-
-Der Spieler mit dem höchsten Score erzielt die höchste Platzierung.
+![Screenshot Punktekampf](HIER_BILDQUELLE_EINTRAGEN)
 
 ---
 
-# ⚔️ Letzter Überlebender
+### ⚔️ Letzter Überlebender
 
-Der Modus **Letzter Überlebender** ist ein echter PvP-Modus.
+Der Modus **Letzter Überlebender** ist ein echter PvP-Spielmodus. Die Spieler befinden sich gemeinsam in einer Spielwelt und können sich direkt gegenseitig angreifen.
 
-Hier kämpfen die Spieler direkt gegeneinander.
+* 🚀 Spieler können sich gegenseitig beschießen
+* 🔫 Laser und Torpedos können andere Spieler treffen
+* ❤️ Treffer verursachen Schaden
+* 💀 Spieler können Leben verlieren und ausscheiden
+* 🏆 Der letzte lebende Spieler gewinnt
 
-### Spielprinzip
+Zusätzlich befinden sich Asteroiden im Spielfeld. KI-Gegner werden in diesem Modus nicht eingesetzt.
 
-* Spieler können sich gegenseitig beschießen.
-* Laser können gegnerische Spieler treffen.
-* Torpedos können gegnerische Spieler treffen.
-* Treffer verursachen Schaden.
-* Spieler können Leben verlieren.
-* Ein Spieler kann einen anderen Spieler besiegen.
-* Der letzte noch lebende Spieler gewinnt die Runde.
+**Screenshot:**
 
-### Spielfeld
-
-Die Spieler stehen sich gegenüber:
-
-```text
-        Spieler 2
-           ↓
-
-     gemeinsames
-      Spielfeld
-
-           ↑
-        Spieler 1
-```
-
-Spieler 1 startet im unteren Bereich.
-
-Spieler 2 startet im oberen Bereich.
-
-Im Gegensatz zum Punktekampf verwenden beide Spieler hier **eine gemeinsame PvP-Spielwelt**.
-
-### Asteroiden
-
-Asteroiden bleiben aktiv.
-
-Es werden jedoch keine KI-Gegner eingesetzt.
-
-Asteroiden können unter anderem auf folgenden symmetrischen Bahnen auftreten:
-
-```text
-links  → rechts
-rechts → links
-
-links unten → rechts oben
-rechts unten → links oben
-
-links oben → rechts unten
-rechts oben → links unten
-```
-
-Die Flugbahnen werden so angelegt, dass nicht dauerhaft eine Spielfeldhälfte bevorzugt wird.
+![Screenshot Letzter Überlebender](HIER_BILDQUELLE_EINTRAGEN)
 
 ---
+
+### 🖥️ Lokaler Mehrspielermodus
+
+Im lokalen Mehrspielermodus spielen mehrere Spieler gemeinsam an einem PC. Die Spieler verwenden unterschiedliche Steuerungen und teilen sich dieselbe Spielansicht.
+
+**Screenshot:**
+
+![Screenshot Lokaler Mehrspielermodus](HIER_BILDQUELLE_EINTRAGEN)
+
+---
+
+### 🌐 LAN-Spielmodi
+
+Die LAN-Spielmodi ermöglichen das Spielen über ein lokales Netzwerk.
+
+Die LAN-Varianten verwenden dieselben Spielregeln und Spielansichten wie die entsprechenden lokalen Spielmodi. Der wesentliche Unterschied besteht darin, dass die Spieler über das Netzwerk miteinander verbunden sind.
+
+> **Hinweis:** Für die LAN-Spielmodi ist kein Internetzugang oder externer Server erforderlich. Die Verbindung erfolgt direkt über das lokale Netzwerk.
+
+---
+
+## 🚀 Spielbare Schiffe
+
+Im Spiel stehen vier unterschiedliche Schiffe zur Verfügung. Jedes Schiff besitzt einen festgelegten Gegnertyp.
+
+### ✈️ X-Wing
+
+![X-Wing](Pixelarts\X_Wing.png)
+
+---
+
+### 🚀 Millennium Falcon
+
+![Millennium Falcon](Pixelarts\millennium.png)
+
+---
+
+### 🛸 TIE-Fighter
+
+![TIE-Fighter](Pixelarts\tie-fighter.png)
+
+---
+
+### 🤖 Battle Droid Fighter
+
+![Battle Droid Fighter](Pixelarts\Battle_Droid.png)
+
+---
+
+## ☄️ Asteroidensystem
+
+Das Asteroidensystem sorgt für eine dynamische Gefahr während des Spiels.
+
+Asteroiden besitzen unterschiedliche:
+
+* Größen
+* Geschwindigkeiten
+* Flugrichtungen
+* Spawn-Zeitpunkte
+
+Mit zunehmendem Spielverlauf steigt die Anzahl und Schwierigkeit der Asteroiden. Die aktuelle Schwierigkeit und das Sternensystem beeinflussen zusätzlich deren Eigenschaften.
+
+Asteroiden können mit dem Spieler kollidieren und dadurch Schaden verursachen.
+
+**Screenshot:**
+
+![Asteroidensystem](Pixelarts\Astroids\frame_00.png)
+
+---
+
+## 💥 Waffen
+
+Den Spielern stehen verschiedene Waffen zur Verfügung:
+
+### 🔫 Laser
+
+Die Standardwaffe des Schiffes. Laser können eingesetzt werden, um Asteroiden und Gegner zu zerstören.
+
+### 🚀 Torpedos
+
+Torpedos sind stärkere Projektile und eignen sich besonders für größere oder widerstandsfähigere Ziele.
 
 # 🔀 Technische Trennung der Mehrspielermodi
 
