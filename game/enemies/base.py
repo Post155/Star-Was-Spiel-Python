@@ -4,6 +4,8 @@ from __future__ import annotations
 import random
 import pygame
 
+from game.constants import normalize_ship_scale
+
 from .ai import EnemyBrain
 from .movement import EnemyMovement
 from .weapons import EnemyWeaponSystem
@@ -37,7 +39,7 @@ class EnemyBase:
         self.window_height = window_height
         self.base_image = image
         self.ship_scale = ship_scale
-        self.visual_scale = ship_scale * archetype.visual_scale_multiplier
+        self.visual_scale = normalize_ship_scale(image, ship_scale * archetype.visual_scale_multiplier)
 
         # Enemy ships fly toward the player, so use the player sprite rotated 180°.
         scaled = pygame.transform.scale_by(image, self.visual_scale)

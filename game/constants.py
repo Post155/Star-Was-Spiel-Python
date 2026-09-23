@@ -82,10 +82,36 @@ SHIP_SPEED_TIEFIGHTER = 11
 SHIP_SPEED_BATTLEDROID = 12
 
 # Scales for ship sprites (change these to resize the ships)
+# The game automatically normalizes each sprite to a common reference size
+# before hitbox calculation, so new art keeps the same visible footprint as the
+# original ships while preserving each sprite's aspect ratio.
+SHIP_REFERENCE_SIZE = 96
 SHIP_SCALE_XWING = 1
 SHIP_SCALE_MILLENNIUM = 1
 SHIP_SCALE_TIEFIGHTER = 1
 SHIP_SCALE_BATTLEDROID = 1
+
+
+def normalize_ship_scale(image, scale=1.0, target_max_dimension=None):
+    """Scale a ship sprite to a common reference height while preserving aspect ratio.
+
+    The game uses a common ship height so newly added art matches the previous
+    visual footprint without modifying the image files themselves. The hitbox is
+    then calculated from the scaled sprite, so collision bounds stay in sync with
+    the visible ship.
+    """
+    if image is None:
+        return float(scale)
+
+    width, height = image.get_size()
+    if width <= 0 or height <= 0:
+        return float(scale)
+
+    reference = SHIP_REFERENCE_SIZE if target_max_dimension is None else target_max_dimension
+    if height <= 0:
+        return float(scale)
+
+    return float(scale) * (reference / height)
 
 # Asteroid speed range (min, max)
 ASTEROID_SPEED_RANGE = (2, 8)

@@ -10,7 +10,7 @@ Public classes:
 """
 import pygame
 
-from game.constants import PLAYER_BASE_SPEED
+from game.constants import PLAYER_BASE_SPEED, normalize_ship_scale
 
 
 class Player:
@@ -23,7 +23,8 @@ class Player:
     def __init__(self, image, window_width, window_height, scale):
         self.show_hitbox = False
 
-        self.image = pygame.transform.scale_by(image, scale)
+        self.scale = normalize_ship_scale(image, scale)
+        self.image = pygame.transform.scale_by(image, self.scale)
         self.width, self.height = self.image.get_size()
 
         self.x = (window_width // 2 - self.width // 2)
