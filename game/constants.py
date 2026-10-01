@@ -183,9 +183,9 @@ DEFAULT_DIFFICULTY = "normal"
 
 # Enemy progression is score based. Before the first threshold the player
 # fights asteroids only.
-ENEMY_UNLOCK_STANDARD_POINTS = 1000
-ENEMY_UNLOCK_HEAVY_POINTS = 3000
-ENEMY_UNLOCK_ELITE_POINTS = 6000
+ENEMY_UNLOCK_STANDARD_POINTS = 2000
+ENEMY_UNLOCK_HEAVY_POINTS = 5000
+ENEMY_UNLOCK_ELITE_POINTS = 10000
 
 # Difficulty added by entering later star systems.
 # System 1 = 0%, System 2 = +15%, System 3 = +30%, System 4 = +50%.
@@ -197,7 +197,7 @@ SYSTEM_DIFFICULTY_BONUS = (0.00, 0.15, 0.30, 0.50)
 SYSTEM_PROGRESS_MAX_BONUS = 0.20
 
 # Warning display before a new enemy class can spawn.
-ENEMY_WARNING_DURATION_MS = 2600
+ENEMY_WARNING_DURATION_MS = 2500
 
 # Asteroid tuning. These are deliberately separate so they can be adjusted.
 ASTEROID_BASE_SPAWN_INTERVAL = ASTEROID_SPAWN_INTERVAL
