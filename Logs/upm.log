@@ -1,0 +1,4 @@
+[2026-10-17T18:25:28.823Z][INFO] Command-line: 'C:\\Program Files\\Unity\\Hub\\Editor\\6000.6.6f1\\Editor\\Data\\Resources\\PackageManager\\Server\\UnityPackageManager.exe' server -s 27844 --ipc-path Unity-Upm-27844 -l 2 --log-file C:\\Users\\mail\\dev\\Star-Was-Spiel-Python/Logs/upm.log
+[2026-10-17T18:25:28.842Z][INFO] IPC server started (IPC path=Unity-Upm-27844).
+[2026-10-17T18:25:28.842Z][INFO] Hint: To connect to this UPM instance, launch Unity with the command-line parameter -upmIpcPath Upm-27844.
+[2026-10-17T18:25:36.905Z][INFO] Shutting down UnityPackageManager.exe: parent process [27844] is no longer running.

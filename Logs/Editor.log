@@ -1,0 +1,101 @@
+VBCSCompilerPreWarmer: watching VBCSCompiler (PID 36384)
+VBCSCompilerPreWarmer: pre-warm launched (dotnet PID 4868)
+VBCSCompiler prewarm took 20.93 ms
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-mail" at "2026-10-17T18:25:28.4523864Z"
+Built from '6000.6/staging' branch; Version is '6000.6.6f1 (d20c9ac777da) revision 13765786'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) Professional' Language: 'de' Physical Memory: 32598 MB
+BatchMode: 0, IsHumanControllingUs: 1, StartBugReporterOnCrash: 1, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-10-17T18:25:28Z
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 44972, path: "C:/Program Files/Unity Hub/UnityLicensingClient_V1/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.3+d7ffd15
+  Session Id:              6447a09618444f0595d9eafae42601ba
+  Correlation Id:          de92b0124b0db89fa890f5efcac4ff27
+  External correlation Id: 6620743651786902677
+  Machine Id:              LMRNPvgXGm00FQYinDFD87WV76E=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-mail" (connect: 0.00s, validation: 0.00s, handshake: 0.14s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-mail-notifications" at "2026-10-17T18:25:28.5954382Z"
+[Licensing::Client] Successfully updated the access token
+[Licensing::Module] Successfully updated the access token 6-zyyWkAPJ...
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.6.6f1\Editor\Unity.exe
+-projectpath
+C:\Users\mail\dev\Star-Was-Spiel-Python
+-acceptSoftwareTermsForThisRunOnly
+-useHub
+-hubIPC
+-cloudEnvironment
+production
+-licensingIpc
+LicenseClient-mail
+-hubSessionId
+cdddd7c2-b6ef-4283-a7aa-bafea42fc516
+-accessToken
+6-zyyWkAPJXSLsPrBYCUw-rOEOF16xzVoHCMeG8Caus008f
+Successfully changed project path to: C:\Users\mail\dev\Star-Was-Spiel-Python
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 9072462901706-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+C:/Users/mail/dev/Star-Was-Spiel-Python
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-remapper-allocator-initial-capacity=32768"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-main-allocator-mimalloc-enabled=1"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+Player connection [42948]  Target information:
+
+Player connection [42948]  * "[IP] 172.16.220.140 [Port] 55504 [Flags] 2 [Guid] 3791590738 [EditorId] 3791590738 [Version] 1048832 [Id] WindowsEditor(7,Jonas) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [42948] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [42948] Host joined alternative multi-casting on [225.0.0.222:34997]...
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
+Input System module state changed to: Initialized.
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.17s
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-27844" after 0.2 seconds.
+[Licensing::Client] Successfully resolved entitlement details
+Library Redirect Path: Library/
+Rebuilding Library because the asset database could not be found!
+[ExitDontLaunchBugReporter] Exiting without the bug reporter. Application will exit with return code 0
