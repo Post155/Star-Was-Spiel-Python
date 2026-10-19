@@ -1,108 +1,100 @@
-# Star Wars – Pygame → Unity Migration Plan
+# Migrationsplan und Designentscheidungen
 
-## 1. Current Python architecture
+## 1. Ausgangslage (Analyse)
 
-The uploaded project contains 40+ Python modules around these subsystems:
+Untersucht wurden das komplette Python-Original (9 397 Zeilen in 45 Dateien) und der Vorgängerport (47 C#-Dateien, ca. 2 400 Zeilen).
 
-- `game/StarWarsGame.py`: application/game-flow coordinator, menu routing, singleplayer loop, multiplayer routing.
-- `game/constants.py`: global balancing and network constants.
-- `game/assets.py`: Pygame image loading and icon setup.
-- `game/entities/*`: Player, four ships, asteroids, projectiles and explosions.
-- `game/enemies/*`: data-driven archetypes, movement, tactical AI, enemy weapons and manager.
-- `game/background/*`: starfield, planets, foreground objects, randomized system order and system transitions.
-- `game/ui/*`: faction, difficulty, ship and multiplayer menus plus death screen.
-- `game/network.py`: threaded TCP + JSON-line LAN transport.
-- `game/multiplayer.py`: lobby/remote-player abstraction.
-- `game/points_fight.py`: two completely isolated singleplayer simulations shown side by side.
-- `game/pvp_duel.py`: host-authoritative PvP simulation, snapshots, respawn, projectiles and scoring.
-- `game/local_pvp.py` / `game/pvp_input.py`: local keyboard adapter for the same PvP rules.
-- `game/highscore.py`: JSON high-score persistence.
-- `game/scoreboard.py`: score table rendering.
+### Befunde im Python-Original
 
-### Runtime flow
+| # | Befund | Entscheidung im Unity-Port |
+|---|---|---|
+| 1 | **Zwei Einstiegspunkte.** Die Root-`StarWarsGame.py` (laut README der Startpunkt) ist korrekt; `game/StarWarsGame.py` ist eine ältere, abweichende Kopie. | Maßgeblich ist die Root-Datei. |
+| 2 | **Importfehler:** `game/StarWarsGame.py` importiert `LocalPointsFightSession` aus `game.local_pvp`. Dort existiert die Klasse nicht (`local_pvp.py` enthält nur `LocalPvPTransport`/`LocalPvPDuelSession`); sie liegt in `game/points_fight.py`. Dieselbe Datei ruft zudem `scoreboard.draw_live_ranking` auf, das es nicht gibt, und nutzt eine veraltete Konstruktor-Signatur. | Nicht übernommen. Es gibt genau eine Implementierung (`PointsFightMatch`). |
+| 3 | Doppelte/veraltete Module: `game/entities.py` (327 Z.) wird vom Paket `game/entities/` verdeckt, `entities_old.py` ist ein Stub. | Nicht portiert; das Paket ist maßgeblich. |
+| 4 | README nennt andere Zahlen (z. B. Freischaltung 1000/3000/6000) als `constants.py` (2000/5000/10000). | `constants.py` ist maßgeblich (und per Golden-Test belegt). |
+| 5 | `PvPDuelSession._update_host_asteroids` ist **zweimal** definiert; die zweite Definition (entfernt nur Asteroiden mit `y > Höhe`) verdeckt die erste. Seitlich/oben davonfliegende Lane-Asteroiden würden nie entfernt und füllen die Obergrenze von 36. | Port nutzt die beabsichtigte Bereichsprüfung in alle Richtungen (dokumentierte Korrektur, per Test belegt). |
+| 6 | `PointsFightWorld._create_asteroid` setzt `asteroid.speed` nachträglich, `Asteroid.update` nutzt aber `vy` aus dem Konstruktor ⇒ Geschwindigkeits-Multiplikator wirkt im lokalen Punktekampf **nicht**. | Alle Modi nutzen dieselbe Weltsimulation wie der Einzelspieler (Multiplikatoren wirken überall). Dokumentierte Korrektur. |
+| 7 | Gegner-Spawn: `approx_width` nutzt die **unskalierte** Bildbreite (`ship_scale = 1`, ca. 1100 px) ⇒ Gegner spawnen praktisch immer am linken Rand (x = 12). | 1:1 übernommen (Originalverhalten), im Code kommentiert. |
+| 8 | Systeme `BLACKHOLE`, `TODESSTERN`, `STERNZERSTÖRER` haben im Original **keinen** Planetenschlüssel (Asset-Namen passen nicht zu den Systemschlüsseln) ⇒ Fallback: zufälliges Bild aus allen 13 Planeten. | 1:1 übernommen (per Test belegt); der Vorgängerport hatte feste Planeten. |
+| 9 | Countdown: `started_at` ist absolute Epoch-Zeit des Hosts; Clients vergleichen mit ihrer lokalen Uhr. | Zusätzliches Feld `remaining_ms` (uhrenunabhängig); `started_at` bleibt für Kompatibilität. |
+| 10 | LAN-Punktekampf: Clients melden Punkte selbst (kein „alive“-Feld, kein Zeitlimit in der Root-Version). | Beibehalten (reine Anzeige/Ghost-Daten). Zusätzlich optionales Feld `alive` für „GAME OVER“ in der Rangliste. |
+| 11 | Das Original enthält weder Inventar, Items, Quests, ein Kampf-Framework noch Audio. | Neue Systeme sind als **neu** gekennzeichnet (Abschnitt 4). |
 
-`main()` → `main_menu()` → either singleplayer flow or multiplayer flow.
+### Befunde im Vorgängerport (Unity)
 
-Singleplayer:
-`Faction → Difficulty → Ship → run_game_session()`.
-
-During `run_game_session()`:
-`Player → Projectiles → Asteroids → EnemyManager → BackgroundManager → HUD`.
-
-Multiplayer:
-`Lobby → READY → Countdown → either Points Fight or PvP Duel`.
-
-## 2. Unity target architecture
-
-Unity uses the same responsibilities but replaces runtime primitives:
-
-| Python/Pygame | Unity |
+| # | Befund |
 |---|---|
-| `pygame.display` | Scene + Camera + Canvas |
-| `pygame.Surface` | Sprite / Texture2D / RenderTexture |
-| `pygame.sprite` | GameObject + MonoBehaviour |
-| `pygame.Rect` | Collider2D / Bounds / Rect logic |
-| `pygame.time.get_ticks()` | `Time.unscaledTime` / `Time.deltaTime` |
-| `pygame.event` | Unity Input System |
-| `pygame.key.get_pressed()` | `Keyboard.current` / Input Actions |
-| `pygame.mixer` | `AudioSource` / `AudioMixer` |
-| `pygame.draw` | SpriteRenderer / UI / GL helper |
-| Pygame main loop | Unity lifecycle (`Update`, `LateUpdate`, render pipeline) |
-| `json` files | Unity JSON + `Application.persistentDataPath` |
-| Python TCP threads | C# `TcpListener` / `TcpClient` + worker threads |
+| 1 | Nutzt `UnityEngine.InputSystem` und `UnityEngine.UI`, obwohl **weder** `com.unity.inputsystem` **noch** `com.unity.ugui` im Manifest stehen und der Input-Handler auf „Legacy“ steht ⇒ Kompilierfehler. |
+| 2 | PNG-Importer stehen auf *Default/Bilinear/Mipmaps/PPU 100*, nicht auf *Sprite* ⇒ `Resources.Load<Sprite>` liefert `null`, Pixelart wäre unscharf. |
+| 3 | Keine Szenen, keine Prefabs, leere Build Settings. |
+| 4 | LAN-Port 28000 statt 48732; LAN/PvP laut eigener `PARITY_STATUS.md` nicht mit der Spielsimulation verbunden. |
+| 5 | Asteroiden-Spawn pro Unity-`Update` (framerate-abhängig); feste Planeten für alle Systeme; Hitboxen nur als Proportions-Näherung. |
+| 6 | Doppeltes PNG mit zerstörtem Dateinamen (Sternzerstörer). |
 
-## 3. Important architecture fixes carried into the port
+## 2. Architektur
 
-1. The root `StarWarsGame.py` and `game/StarWarsGame.py` duplicate responsibilities. Unity has one flow controller.
-2. `game/entities.py` duplicates the newer `game/entities/` package. Unity has one authoritative entity layer.
-3. `game/entities_old.py` is treated as legacy and is not ported.
-4. The current Python `game/StarWarsGame.py` imports `LocalPointsFightSession` from `game.local_pvp`, although that class is defined in `game.points_fight`. Unity uses a single `PointsFightSession` target.
-5. Rendering and gameplay are separated. This prevents the Unity version from reproducing the Pygame coupling between simulation and `blit()` calls.
-6. All gameplay numbers remain centralized in `GameConstants`/data objects.
-7. LAN transport is isolated from game simulation, so local multiplayer never needs a socket.
+```
+┌────────────────────────── Unity-Schicht (Assets/Scripts/Game) ──────────────────────────┐
+│ SceneBootstrap → MenuScreens / LobbyController / *Controller   (Eingabe, UI, Audio)    │
+│ Stage + SpritePool + WorldView/PvpView/BackgroundView          (Darstellung)           │
+└───────────────▲──────────────────────────────────────────────────────────────────────────┘
+                │ liest Zustand, ruft Step(Input) im festen 60-Hz-Takt auf
+┌───────────────┴────────────── Sim (Assets/Scripts/Sim, reines C#) ──────────────────────┐
+│ World:   SinglePlayerWorld · PointsFightMatch · PvpWorld                                 │
+│ Enemies: EnemyManager · EnemyShip (Brain/Movement/Weapons) · Archetypen                  │
+│ Background: BackgroundDirector · SystemManager · Sterne/Planeten/Vordergrund             │
+│ Entities: PlayerShip · Laser/Torpedo · Asteroid · Explosion                              │
+│ Net: LanServer · LanClient · MultiplayerSession · PvpHostDriver/PvpClientDriver · Json   │
+│ Systems: Inventory · Items · QuestLog · CombatSystem   Save: SaveService                 │
+└───────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-## 4. Migration order
+Warum zwei Schichten? (1) Die Spielregeln lassen sich ohne Unity kompilieren und **gegen den echten Python-Code testen**. (2) Es gibt keine MonoBehaviour-„Riesenklasse“; Datenmodelle, Logik, Darstellung, Eingabe, Netzwerk und Speicherung sind getrennt. (3) Jede Welt ist eine eigene Instanz ⇒ der Punktekampf kann nichts teilen.
 
-### Phase 1 – already ported in this package
+## 3. Zentrale Entscheidungen
 
-- constants/balancing
-- pixel coordinate adapter
-- asset loading model
-- ship/player model
-- laser/torpedo model
-- asteroids
-- explosions
-- enemy movement
-- enemy tactical AI
-- enemy weapons
-- enemy manager
-- star systems / starfield / planets / background
-- main singleplayer session
-- HUD/menu controllers
-- inventory / items
-- quests
-- save system
-- reusable combat service
-- TCP LAN transport
-- local Punktekampf and Letzter-Überlebender session scaffolds
+| Thema | Entscheidung | Grund |
+|---|---|---|
+| Zeitbasis | Fester **60-Hz-Tick** (Akkumulator, max. 5 Ticks/Frame) mit `dt = 1/60`. Pygame-Mechaniken sind framebasiert (Asteroiden, Projektile) bzw. dt-basiert mit `dt ≈ 1/60` (KI) – beides bleibt identisch. | Verhalten unabhängig von der Bildwiederholrate, 1:1-Parität. |
+| Uhr | Jede Welt hat eine `SimClock` (ms), die pro Tick um 1000/60 wächst (statt `pygame.time.get_ticks()`). | Unverwundbarkeit, Respawn, Systemwechsel sind deterministisch und testbar. |
+| Koordinaten | Pygame-Pixel (oben links, y nach unten) in der Simulation; `Stage.P()` rechnet nach Unity (y nach oben). | Formeln des Originals bleiben unverändert. |
+| `pygame.Rect` | Eigene Struktur `RectI` mit Pygame-Semantik (Float-Abschneiden, `center` rundet, `colliderect`). `pygame.transform.scale_by` schneidet ab. | Am Original gemessen (Torpedo-Rechteck des TIE weicht sonst um 1 px ab). |
+| Hitboxen | Alpha-Bounding-Boxen und Sprite-Größen wurden mit **echtem Pygame** aus den Bildern gemessen und als `AssetMetrics` eingebettet. | Unabhängig von Unity-Import-Einstellungen, exakt wie das Original. |
+| Auflösung | Logische Spielfläche **800×600**, Letterbox im Fenster; Punktekampf je Welt 400×600. | Gleiche Spielbalance bei jeder Auflösung (das Original ist skalierbar, verändert aber das Spielfeld). |
+| Zufall | `ISimRandom` (austauschbar) | Deterministische Tests. |
+| Highscore/Speicher | JSON in `persistentDataPath`, atomar (temp → ersetzen), `.bak`, `.corrupt`, Versionsfeld, Import des alten Highscores. | Robustheit bei Abbruch/Beschädigung. |
+| JSON | Eigener minimaler Parser/Writer. | Unity-unabhängig, thread-sicher, keine Paketabhängigkeit. |
+| Netzwerk | TCP, JSON-Lines, Port **48732**, Protokollversion 1, Nachrichtenformat des Originals; Erweiterungen sind additiv (`host`, `remaining_ms`, `alive`). | Kompatibilität, siehe Abschnitt 5. |
+| UI | uGUI per Code aufgebaut; Szenen enthalten nur Kamera + Bootstrap. | Keine manuelle Inspector-Verdrahtung nötig. |
+| ScriptableObjects | Nur Items sind laufzeitrelevant; Schiffe/Gegner/Systeme sind Inspektions-Exporte. | Zwei Datenquellen für Spielwerte würden die Paritätsprüfung entwerten. |
+| asmdef | Nur `StarWars.Sim` (+ Tests). | Vermeidet Referenzfehler auf `UnityEngine.UI` in unbekannten Unity-Versionen. |
 
-### Phase 2 – scene/prefab authoring in Unity Editor
+## 4. Neue Systeme (nicht im Original)
 
-- import Pixelarts as Sprites with Pixels Per Unit = 1 and Filter Mode = Point
-- create Player/Enemy/Asteroid/Projectile prefabs
-- create Canvas/HUD prefabs
-- create six gameplay/menu scenes
-- wire serialized references
-- add Input System package
+* **Inventar** (12 Slots, Stapelgrößen, Kapazität, Ereignis `Changed`), **Items** (datengetrieben, 5 Kategorien), **QuestLog** (annehmen, Fortschritt über Spielereignisse, Abschluss, Belohnung genau einmal, Speicherung).
+* **CombatSystem**: zentrale Rüstungsformel `max(1, round(dmg·(1−Resistenz)))` (Originalregel) + `HitLedger` gegen doppelte Wertung eines Projektils. Die Arcade-Regeln wurden nicht verändert.
+* **Audio** (synthetisiert), **Rekord-/Einstellungs-Speicher**.
 
-### Phase 3 – final parity pass
+Die Quests werden im Einzelspieler mit Asteroiden-/Gegner-/Punkte-/Systemereignissen gefüttert und im Hauptmenü angezeigt. Ob/wie das Spiel dadurch bereichert wird, ist eine Designfrage; die Systeme verändern die Arcade-Mechanik nicht.
 
-- parity-test spawn timing against 60 FPS Pygame behavior
-- verify ship hitboxes from sprite alpha
-- verify enemy unlock warnings
-- verify every star-system transition
-- verify LAN snapshot frequency and host disconnect behavior
+## 5. LAN-Architektur
 
-## 5. Systems that were not present in the Python project
+* **Lobby:** Der Host erstellt `LanServer` und verbindet sich über 127.0.0.1 als normaler Client (Host-Rolle nur für diese Loopback-Verbindung – Fix gegen Wettlauf, siehe Test „Host-Rolle gehört dem Server-Ersteller“).
+* **Ablauf:** `hello` → `welcome` → `snapshot`-Broadcasts (50 ms) → `start_request` (nur Host; PvP nur mit genau 2 Spielern) → `setup_started` → `ready` → `countdown` (3 s) → `game_started`.
+* **PvP (Host-autoritativ):** Client sendet `pvp_input` (alle 50 ms) und `pvp_fire` (Waffe + Sequenznummer). Der Server verwirft doppelte/verspätete Sequenzen, Waffen außerhalb der Spielphase und unmögliche Schussfolgen (Laser < 80 ms, Torpedo < 200 ms) und begrenzt die Warteschlange (16). `PvpWorld` auf dem Host berechnet alles (Bewegung, Treffer, Punkte, Leben, Respawn, Ergebnis) und sendet `pvp_snapshot` (50 ms). Der Client simuliert nichts und rendert aus dem Snapshot (`PvpClientView`).
+* **Punktekampf:** Jeder Client simuliert seine eigene Welt; `points_state` (normierte Position, Schiff, Punkte, System) dient nur der Anzeige (Ghosts/Rangliste).
+* **Robustheit:** Zeilenlimit 16 384 B, Tiefenlimit im JSON-Parser, Werte werden begrenzt (`Json.Num/Int`), unbekannte Typen ignoriert, ungültiges JSON beendet nur die betreffende Verbindung; Host-Ende ⇒ `server_stopped` an alle; Client-Ende ⇒ Gegner gilt als eliminiert.
 
-Inventory, item, quest and generic combat subsystems do **not** exist in the uploaded Python code. Unity therefore provides them as isolated, optional systems. They do not alter the existing arcade-loop rules until explicitly connected to a game mode.
+## 6. Phasen (durchgeführt)
+
+1. Analyse von Python-Original und Vorgängerport → Befunde oben.
+2. Messung der Sprite-Metriken und Referenzwerte mit echtem Pygame.
+3. Sim-Schicht: Kern, Entitäten, KI, Hintergrund, Welten, Netzwerk, Speicher, Inventar/Quests.
+4. Tests (Golden gegen Python, Spielregeln, LAN über echte Sockets) – Fehler gefunden und behoben (Host-Wettlauf, Pygame-`center`-Rundung, Socket-Shutdown).
+5. Unity-Schicht (UI, Rendering, Eingabe, Controller, Audio), Compile-Check gegen API-Nachbildung.
+6. Szenen, Prefabs, Metas, Build Settings, Paketliste, ProjectSettings.
+7. Dokumentation, Paketierung.
+
+## 7. Noch auszuführen (benötigt Unity)
+
+Import/Kompilierung im Editor, Play-Test aller Szenen, Layout-Feinschliff, echter Zwei-Instanzen-Test mit Unity-Builds. Siehe `PARITY_STATUS.md`.

@@ -1,69 +1,60 @@
-# Unity setup
+# Unity-Einrichtung
 
-## Recommended project type
+## Version und Pakete
 
-Create a **2D Core** Unity project and copy this `Assets/` folder into it.
+| Punkt | Wert |
+|---|---|
+| Editor | 6000.6.6f1 (aus dem bereitgestellten Projekt übernommen) |
+| Scripting | .NET Standard 2.1, C# 9 (Sim-Code verwendet nur C# 9, keine `init`/Records) |
+| Pakete (neu) | `com.unity.ugui 2.0.0` – wird für das gesamte UI benötigt. Die mitgelieferte `manifest.json` enthält es; `packages-lock.json` wurde entfernt, damit Unity neu auflöst. |
+| Pakete (vorhanden) | IDE-Pakete, alle `com.unity.modules.*`. `com.unity.test-framework` wird über das Visual-Studio-IDE-Paket mitgezogen (für den Test Runner). |
+| Eingabe | **Active Input Handling = Input Manager (Old)** (Projekteinstellung bleibt unverändert). „Both“ funktioniert ebenfalls. Reines „Input System Package“ wird **nicht** unterstützt (der Code nutzt `UnityEngine.Input`). |
 
-Install the **Input System** package via Package Manager.
+> Falls eure Unity-Version uGUI bereits eingebaut mitliefert und der Package Manager `com.unity.ugui` bemängelt, die Zeile in `Packages/manifest.json` entfernen. Diese Annahme konnte ohne Editor nicht geprüft werden.
 
-## Pixel-art import settings
+## Architektur in Unity
 
-For every file under `Assets/Resources/Pixelarts/`:
+* `StarWars.Sim` (asmdef, `noEngineReferences`): gesamte Spielregel-Logik, Netzwerk, Speichern, Inventar, Quests.
+* Der Rest (`Scripts/Game`, `Scripts/Editor`) hat bewusst **keine** asmdef und landet in `Assembly-CSharp`, damit uGUI automatisch referenziert wird – unabhängig davon, wie die Assembly in der jeweiligen Unity-Version heißt.
+* `Assets/Tests/EditMode` hat eine eigene asmdef (nur Editor, referenziert `StarWars.Sim` + NUnit).
 
-- Texture Type: Sprite (2D and UI)
-- Sprite Mode: Single
-- Pixels Per Unit: **1**
-- Filter Mode: **Point (no filter)**
-- Compression: None
-- Generate Mip Maps: Off
+## Szenen
 
-This keeps the Python pixel measurements close to Unity screen units.
+Alle Szenen enthalten nur *Main Camera* + *SceneBootstrap*. Der Bootstrap baut anhand des Szenennamens Menü/Spiel/UI auf (uGUI-Canvas, Kameras, Sprite-Pools). Dadurch sind keine Inspector-Referenzen zu setzen.
 
-## Required scene names
+| Szene | Inhalt |
+|---|---|
+| MainMenu | Hauptmenü, Rekord, Quests & Inventar |
+| FactionSelection / DifficultySelection / ShipSelection | Auswahlfluss (lokal: je Spieler; LAN: nach Start-Anforderung) |
+| Singleplayer | Einzelspieler + Game-Over-Dialog |
+| MultiplayerMenu | Lokal/LAN, Regelwahl, LAN-Formular (Name, IP) |
+| LocalPointsFight / LocalLastSurvivor | lokale Modi |
+| LanLobby / LanGame | Lobby, Countdown, LAN-Spiel (Punktekampf oder Duell) |
 
-- `MainMenu`
-- `FactionSelection`
-- `DifficultySelection`
-- `ShipSelection`
-- `Singleplayer`
-- `MultiplayerMenu`
-- `LocalPointsFight`
-- `LocalLastSurvivor`
-- `LanLobby`
+Die Szenen sind in den Build Settings eingetragen (`ProjectSettings/EditorBuildSettings.asset`).
 
-## Singleplayer hierarchy
+## Prefabs
 
-```text
-Singleplayer
-├── Main Camera (PixelCamera)
-├── Systems
-│   ├── AssetLibrary
-│   ├── BackgroundManager
-│   ├── StarSystemManager
-│   ├── StarfieldController
-│   └── EnemyManager
-├── GameSession
-├── Player prefab instance
-└── HUD Canvas
-    └── GameHudController
-```
+`Assets/Resources/Prefabs/Pool_<name>.prefab` (19 Stück): jeweils GameObject + SpriteRenderer. Die Sprite-Pools instanziieren sie, wenn vorhanden (sonst wird ein GameObject per Code erzeugt). Damit lassen sich Material, Sorting Layer oder Shader pro Objekttyp zentral ändern.
 
-The player and enemy prefabs need `SpriteRenderer` + `Collider2D` and their relevant controller component.
+## ScriptableObjects
 
-## Input
+`Assets/Resources/Content/…` (Menü *Star Wars → ScriptableObject-Daten exportieren*): Items werden zur Laufzeit geladen (überschreiben gleichnamige Standard-Items). Schiffe, Gegner-Archetypen und Sternensysteme werden als **Inspektions-Assets** exportiert; die Spielwerte bleiben im getesteten Sim-Code die einzige Wahrheitsquelle (Begründung: `MIGRATION_PLAN.md`).
 
-The current scripts intentionally use the Unity Input System's `Keyboard.current` API so the controls stay close to the original Pygame bindings without recreating `pygame.event`.
+## Grafiken
 
-Singleplayer controls remain:
+* Import: Sprite (Single), Pixels Per Unit **1**, Filter **Point**, keine Mipmaps, unkomprimiert, Alpha ist Transparenz. Der Code erzeugt die Sprites zusätzlich selbst aus der Texture2D und setzt Point-Filter – er hängt also nicht von den Import-Einstellungen ab.
+* Planet „Sternzerstörer“ wurde zu ASCII `Sternzerstoerer.png` umbenannt; das im ZIP des Vorgängerports enthaltene Duplikat mit kaputtem Dateinamen entfällt.
+* Fehlende Bilder werden als magentafarbenes Quadrat dargestellt (plus Warnung im Log) statt als leeres Objekt.
 
-- A/D or Left/Right: move
-- Space/W/Up: laser
-- S/Down: torpedo
+## Audio
 
-## Multiplayer
+Das Original enthält **keine** Audiodateien. `SoundBank` synthetisiert einfache Effekte zur Laufzeit (Laser, Torpedo, Explosion, Treffer, Warnung, Klick). Eigene Clips unter `Resources/Audio/<laser|torpedo|explosion|hit|warning|click>` haben Vorrang. Die Lautstärke läuft über `AudioListener.volume` (Einstellung wird gespeichert); ein AudioMixer-Asset wurde nicht angelegt.
 
-LAN transport uses TCP on port `28000`. It is deliberately standard-library-only and does not require an external game server.
+## Speicherort
 
-## Inventory / Quests / Save
+`Application.persistentDataPath/savegame.json` (+ `.bak`, bei Beschädigung `.corrupt`). Ein vorhandenes altes `highscore.json` (`{"highscore": N}`) im selben Ordner wird einmalig importiert.
 
-These are optional systems because the Python project did not contain them. Attach `InventorySystem`, `QuestSystem` and `SaveGameCoordinator` to a persistent gameplay root when you decide to use them.
+## Eigenes Build
+
+*File → Build Profiles* (bzw. Build Settings) → Szenen sind eingetragen → Windows/macOS/Linux Standalone. Für LAN-Tests mit zwei Instanzen den Build neben dem Editor starten.

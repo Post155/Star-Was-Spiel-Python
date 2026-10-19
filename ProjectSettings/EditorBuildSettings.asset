@@ -4,5 +4,36 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 0f5af5147ce754b0953065b52a3300c2
+  - enabled: 1
+    path: Assets/Scenes/FactionSelection.unity
+    guid: 56c383773ee256439a9e13b1498bc0ff
+  - enabled: 1
+    path: Assets/Scenes/DifficultySelection.unity
+    guid: c1cf59bf086451b1876c7478d0606b89
+  - enabled: 1
+    path: Assets/Scenes/ShipSelection.unity
+    guid: aeb2a62dac1a594d9ff6f7720bdaefca
+  - enabled: 1
+    path: Assets/Scenes/Singleplayer.unity
+    guid: ca8a67e715535c809a316955b1987843
+  - enabled: 1
+    path: Assets/Scenes/MultiplayerMenu.unity
+    guid: 81030e278da65691ac8260183d852bb2
+  - enabled: 1
+    path: Assets/Scenes/LocalPointsFight.unity
+    guid: e03855a65b20591cb864508daf1647b4
+  - enabled: 1
+    path: Assets/Scenes/LocalLastSurvivor.unity
+    guid: 079a65c068bb5204baf53be9fb3a7b5c
+  - enabled: 1
+    path: Assets/Scenes/LanLobby.unity
+    guid: e0b4cf969f125ebf9f4a1129f4ed2870
+  - enabled: 1
+    path: Assets/Scenes/LanGame.unity
+    guid: 5d171dadc4a45605a42f4714ee78bd7a
   m_configObjects: {}
+  m_UseUCBPForAssetBundles: 0
