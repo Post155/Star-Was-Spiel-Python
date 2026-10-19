@@ -197,8 +197,7 @@ class LANServer:
         return sorted(addresses)
 
     def _accept_loop(self) -> None:
-        if self._socket is None:
-            raise AssertionError
+        assert self._socket is not None
         while not self._stop_event.is_set():
             try:
                 client_socket, address = self._socket.accept()

@@ -1,6 +1,11 @@
+import os
 import sys
+import time
 
 import pygame
+
+# Relative Asset-Pfade (Pixelarts/...) funktionieren nur im Projektordner.
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from game.assets import load_assets, set_window_icon
 from game.background import BackgroundManager
@@ -179,6 +184,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
     local_dead = False
     host_disconnected = False
     show_scoreboard = False
+    enemy_result = None
 
     try:
         background.notify_score_anchor(score)
@@ -218,7 +224,8 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
                     explosion.resize(HEIGHT)
 
             elif event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                sys.exit()
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_h:
@@ -235,8 +242,11 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
                 elif event.key == pygame.K_4:
                     new_ship_choice = "battledroid"
 
-                if new_ship_choice is not None and not (multiplayer is not None and local_dead):
+                # Nur im Einzelspieler; Leben bleiben erhalten (kein Cheat).
+                if new_ship_choice is not None and multiplayer is None and not local_dead:
+                    alte_leben = spieler.lives
                     spieler = create_player(new_ship_choice, WIDTH, HEIGHT)
+                    spieler.lives = alte_leben
                     ship_choice = new_ship_choice
                     laser_list.clear()
                     torpedo_list.clear()
@@ -391,7 +401,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
         # Enemy manager remains local.  A dead local player simply stops updating
         # while the network view and scoreboard continue to run.
         try:
-            if 'enemy_result' in locals() and enemy_result.warning_text and not local_dead:
+            if enemy_result is not None and enemy_result.warning_text and not local_dead:
                 draw_enemy_warning(
                     screen,
                     enemy_result.warning_text,
@@ -482,7 +492,7 @@ def wait_for_multiplayer_start(session, width, height):
             if event.type == pygame.VIDEORESIZE:
                 width = max(480, event.w)
                 height = max(360, event.h)
-                screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                set_dimensions(width, height)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return False
 
@@ -490,7 +500,6 @@ def wait_for_multiplayer_start(session, width, height):
         title = title_font.render("3  2  1  GO!", True, (255, 255, 255))
         screen.blit(title, title.get_rect(center=(width // 2, height // 2 - 50)))
 
-        import time
         remaining = max(0.0, session.client.started_at - time.time())
         if session.phase == "countdown" and remaining > 0:
             number = str(max(1, int(remaining) + 1))

@@ -15,6 +15,7 @@ from game.constants import (
     SYSTEM_PROGRESS_MAX_BONUS,
 )
 
+from game.constants import normalize_ship_scale
 from game.entities.explosion import Explosion
 
 from .base import EnemyBase
@@ -177,8 +178,8 @@ class EnemyManager:
         tier = self._unlocked_tier(score)
         scale = self._difficulty_scale(score, system_index)
 
-        # Standard tier: standard + fast. Heavy appears only at 3000,
-        # elite only at 6000.
+        # Standard tier: standard + fast. Heavy ab ENEMY_UNLOCK_HEAVY_POINTS,
+        # elite ab ENEMY_UNLOCK_ELITE_POINTS.
         if tier <= 0:
             return None
         if tier == 1:
@@ -270,8 +271,9 @@ class EnemyManager:
         archetype = self._balanced_archetype(base_archetype, score, system_index)
 
         ship_scale = SHIP_SCALE_BY_ASSET[asset_key]
-        approx_width = max(24, image.get_width() * ship_scale * archetype.visual_scale_multiplier)
-        approx_height = max(24, image.get_height() * ship_scale * archetype.visual_scale_multiplier)
+        real_scale = normalize_ship_scale(image, ship_scale * archetype.visual_scale_multiplier)
+        approx_width = max(24, image.get_width() * real_scale)
+        approx_height = max(24, image.get_height() * real_scale)
         spawn_x, spawn_y = self._spawn_position(approx_width, approx_height)
 
         enemy = EnemyBase(

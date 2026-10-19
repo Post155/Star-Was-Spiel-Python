@@ -359,7 +359,7 @@ class PvPDuelSession:
             return x, y, vx, vy
 
         if direction == "diag_left_bottom_to_right_top":
-            x = random.randint(-int(width * 0.25), -asteroid.width)
+            x = -asteroid.width - random.randint(0, int(width * 0.25))
             y = height + random.randint(20, int(height * 0.22))
             vx = random.uniform(1.0, 2.1)
             vy = -random.uniform(1.0, 1.9)
@@ -554,28 +554,6 @@ class PvPDuelSession:
 
         if len(self.projectiles) > PVP_MAX_PROJECTILES:
             self.projectiles = self.projectiles[-PVP_MAX_PROJECTILES:]
-
-    def _update_host_asteroids(self) -> None:
-        if self.background is None:
-            return
-        difficulty = self.background.get_current_difficulty()
-        profile = DIFFICULTY_SETTINGS[DEFAULT_DIFFICULTY]
-        system_bonus = float(difficulty.get("system_bonus", 0.0))
-        density = profile["asteroid_density"] * (1.0 + system_bonus * 0.80)
-        interval = max(
-            PVP_ASTEROID_MIN_SPAWN_INTERVAL,
-            int(PVP_ASTEROID_BASE_SPAWN_INTERVAL / max(0.35, density)),
-        )
-        interval = max(PVP_ASTEROID_MIN_SPAWN_INTERVAL, interval)
-        self._asteroid_spawn_timer += 1
-        if self._asteroid_spawn_timer >= interval:
-            self._spawn_safe_asteroid()
-            self._asteroid_spawn_timer = 0
-
-        for asteroid_id, asteroid in list(self.asteroids.items()):
-            asteroid.update()
-            if asteroid.y > self.source_height:
-                self.asteroids.pop(asteroid_id, None)
 
     def _handle_host_collisions(self) -> None:
         # Projectiles hit asteroids first. This mirrors the existing game's
