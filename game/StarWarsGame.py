@@ -20,7 +20,7 @@ from game.entities.explosion import Explosion
 from game.entities.ships import BattleDroid, MillenniumFalcon, Tiefighter, XWing
 from game.multiplayer import MultiplayerSession
 from game.network import NETWORK_DEBUG
-from game.scoreboard import draw_scoreboard, draw_live_ranking
+from game.scoreboard import draw_live_ranking, draw_scoreboard
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
 from game.ui.multiplayer import (
@@ -32,7 +32,8 @@ from game.ui.multiplayer import (
     pvp_mode_menu,
 )
 from game.pvp_duel import PvPDuelSession
-from game.local_pvp import LocalPvPDuelSession, LocalPointsFightSession
+from game.local_pvp import LocalPvPDuelSession
+from game.points_fight import LocalPointsFightSession
 from game.constants import (
     PVP_MAX_PLAYERS,
     PVP_SCORE_LIMIT_MS,

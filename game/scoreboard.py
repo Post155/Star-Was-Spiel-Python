@@ -5,6 +5,40 @@ import pygame
 from game.assets import get_font
 
 
+def draw_live_ranking(screen: pygame.Surface, players: list[dict], local_id: str | None) -> None:
+    """Compact live ranking overlay used during points matches."""
+    if not players:
+        return
+
+    width, height = screen.get_size()
+    row_h = max(22, int(min(width, height) * 0.032))
+    panel_w = min(width - 26, max(320, int(width * 0.52)))
+    panel_x = max(10, width - panel_w - 12)
+    panel_y = 42
+    panel_h = min(len(players) * row_h + 32, 180)
+
+    panel = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 55))
+    screen.blit(overlay, (0, 0))
+
+    pygame.draw.rect(screen, (17, 20, 35), panel, border_radius=10)
+    pygame.draw.rect(screen, (120, 210, 255), panel, 2, border_radius=10)
+
+    title_font = get_font(max(16, int(height * 0.025)))
+    text_font = get_font(max(14, int(height * 0.02)))
+    title = title_font.render("LIVE", True, (255, 255, 255))
+    screen.blit(title, (panel.x + 12, panel.y + 8))
+
+    for index, player in enumerate(players[:5], start=1):
+        y = panel.y + 30 + (index - 1) * row_h
+        row_color = (170, 235, 255) if str(player.get("id")) == str(local_id) else (220, 230, 240)
+        name = str(player.get("name") or "Spieler")[:18]
+        score = f"{max(0, int(player.get('score', 0))):,}".replace(",", ".")
+        surface = text_font.render(f"{index}. {name}  {score}", True, row_color)
+        screen.blit(surface, (panel.x + 14, y))
+
+
 def draw_scoreboard(screen: pygame.Surface, players: list[dict], local_id: str | None) -> None:
     width, height = screen.get_size()
     row_h = max(30, int(min(width, height) * 0.055))
