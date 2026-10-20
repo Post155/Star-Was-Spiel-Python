@@ -80,21 +80,20 @@ def _draw_faction_badge(screen, image, rect, accent_color, label=None):
 
 
 def main_menu(screen, clock, width, height):
-    """Top-level menu: exactly two selectable modes.
-
-    The game always enters this menu first. ESC remains the keyboard-only
-    quit shortcut so no third visible main-menu option is necessary.
-    """
+    """Show the cinematic main menu with faction-led styling and four actions."""
     background = BackgroundManager(width, height, MENU_ASSETS)
     font = get_font(max(26, int(min(width, height) * 0.052)), "sci_fi")
     title_font = get_font(max(54, int(min(width, height) * 0.12)), "sci_fi")
     subtitle_font = get_font(max(18, int(min(width, height) * 0.028)), "sci_fi")
 
-    button_y = int(height * 0.58)
+    button_y = int(height * 0.56)
     buttons = [
-        (pygame.Rect(width // 2 - 220, button_y, 440, 72), "Einzelspieler", "singleplayer", (66, 153, 255)),
-        (pygame.Rect(width // 2 - 220, button_y + 96, 440, 72), "Mehrspieler", "multiplayer", (228, 72, 72)),
+        (pygame.Rect(width // 2 - 220, button_y, 440, 64), "Einzelspieler", "singleplayer", (66, 153, 255)),
+        (pygame.Rect(width // 2 - 220, button_y + 80, 440, 64), "Mehrspieler", "multiplayer", (228, 72, 72)),
+        (pygame.Rect(width // 2 - 220, button_y + 160, 440, 64), "Einstellungen", "settings", (72, 178, 255)),
+        (pygame.Rect(width // 2 - 220, button_y + 240, 440, 64), "Beenden", "quit", (164, 172, 186)),
     ]
+    settings_open = False
 
     while True:
         mouse = pygame.mouse.get_pos()
@@ -111,16 +110,32 @@ def main_menu(screen, clock, width, height):
                 raise SystemExit
 
             if event.type == pygame.KEYDOWN:
+                if settings_open:
+                    if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
+                        settings_open = False
+                    continue
                 if event.key == pygame.K_1:
                     return "singleplayer"
                 if event.key == pygame.K_2:
                     return "multiplayer"
-                if event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_3:
+                    settings_open = True
+                if event.key == pygame.K_4 or event.key == pygame.K_ESCAPE:
                     return "quit"
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if settings_open:
+                    panel = pygame.Rect(width // 2 - 260, height // 2 - 120, 520, 240)
+                    close_rect = pygame.Rect(width // 2 + 120, height // 2 + 50, 120, 42)
+                    if close_rect.collidepoint(event.pos):
+                        settings_open = False
+                    continue
+
                 for rect, _, value, _ in buttons:
                     if rect.collidepoint(event.pos):
+                        if value == "settings":
+                            settings_open = True
+                            break
                         return value
 
         _draw_menu_background(screen, width, height, background)
@@ -151,11 +166,27 @@ def main_menu(screen, clock, width, height):
         subtitle = subtitle_font.render("KI-RAUMSCHIFFKAMPF", True, (180, 205, 227))
         screen.blit(subtitle, subtitle.get_rect(center=(width // 2, int(height * 0.31))))
 
-        for rect, text, _, accent in buttons:
-            _draw_button(screen, rect, text, font, rect.collidepoint(mouse), accent=accent, glow_scale=1.04)
+        if settings_open:
+            panel = pygame.Rect(width // 2 - 260, height // 2 - 120, 520, 240)
+            panel_surface = pygame.Surface((panel.width, panel.height), pygame.SRCALPHA)
+            pygame.draw.rect(panel_surface, (10, 15, 24, 220), panel_surface.get_rect(), border_radius=20)
+            pygame.draw.rect(panel_surface, (90, 150, 255, 160), panel_surface.get_rect(), 2, border_radius=20)
+            screen.blit(panel_surface, panel.topleft)
+
+            title = get_font(26, "sci_fi").render("EINSTELLUNGEN", True, (235, 240, 255))
+            screen.blit(title, title.get_rect(midtop=(width // 2, height // 2 - 90)))
+            audio = get_font(20, "sci_fi").render("Audio: Aktiviert", True, (180, 220, 255))
+            screen.blit(audio, audio.get_rect(midtop=(width // 2, height // 2 - 46)))
+            graphics = get_font(20, "sci_fi").render("Grafik: Hoch", True, (255, 170, 170))
+            screen.blit(graphics, graphics.get_rect(midtop=(width // 2, height // 2 - 10)))
+            close_rect = pygame.Rect(width // 2 + 120, height // 2 + 50, 120, 42)
+            _draw_button(screen, close_rect, "Zurück", get_font(20, "sci_fi"), close_rect.collidepoint(mouse), accent=(90, 180, 255))
+        else:
+            for rect, text, _, accent in buttons:
+                _draw_button(screen, rect, text, font, rect.collidepoint(mouse), accent=accent, glow_scale=1.04)
 
         hint = get_font(20, "sci_fi").render(
-            "1 = EINZELSPIELER   2 = MEHRSPIELER   ESC = BEENDEN",
+            "1 = EINZELSPIELER   2 = MEHRSPIELER   3 = EINSTELLUNGEN   4 = BEENDEN",
             True,
             (168, 180, 198),
         )

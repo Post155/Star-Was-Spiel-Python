@@ -26,7 +26,7 @@ from game.ui.difficulty import difficulty_selection
 from game.ui.multiplayer import (
     lobby_screen,
     local_pvp_player_prompt,
-    main_menu,
+    main_menu as cinematic_main_menu,
     multiplayer_menu,
     pvp_lan_menu,
     pvp_mode_menu,
@@ -836,7 +836,7 @@ def main():
     global screen, WIDTH, HEIGHT
 
     while True:
-        mode = main_menu(screen, clock, WIDTH, HEIGHT)
+        mode = cinematic_main_menu(screen, clock, WIDTH, HEIGHT)
         current_surface = pygame.display.get_surface()
         if current_surface is not None:
             screen = current_surface
