@@ -1064,9 +1064,5 @@ Bei Problemen sollte zunächst geprüft werden, ob:
 4. alle Projektdateien vorhanden sind,
 5. die verwendeten Assets an den erwarteten Speicherorten liegen,
 6. das Betriebssystem und die Firewall die erforderlichen Funktionen zulassen.
-
 ---
-
-## 🚀 Viel Spaß beim Spielen!
-
-**Star Wars: Galactic Assault** ist ein eigenständiges Lern- und Entwicklungsprojekt mit Fokus auf Python, Pygame, Spielentwicklung, KI, Netzwerkprogrammierung und Multiplayer-Systeme.
+<p align="center"> <em> “Sir, the possibility of successfully navigating an asteroid field is approximately<br> three thousand seven hundred and twenty to one!” </em><br> — C-3PO </p>
