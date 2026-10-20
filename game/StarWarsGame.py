@@ -33,7 +33,7 @@ from game.ui.multiplayer import (
 )
 from game.pvp_duel import PvPDuelSession
 from game.local_pvp import LocalPvPDuelSession
-from game.points_fight import LocalPointsFightSession
+from game.points_fight import LocalPointsFightSession, PointsPlayerConfig
 from game.constants import (
     PVP_MAX_PLAYERS,
     PVP_SCORE_LIMIT_MS,
@@ -730,12 +730,29 @@ def run_local_pvp_flow(duel_mode):
                 "ship": ship_choice,
             }
 
+
     if duel_mode == "points":
-        points = LocalPointsFightSession(player1, player2, assets, difficulty=points_difficulty)
+        points_configs = [
+            PointsPlayerConfig(
+                name=player1["name"],
+                ship=player1["ship"],
+                faction=player1["faction"],
+                difficulty=points_difficulty,
+            ),
+            PointsPlayerConfig(
+                name=player2["name"],
+                ship=player2["ship"],
+                faction=player2["faction"],
+                difficulty=points_difficulty,
+            ),
+        ]
+
+        points = LocalPointsFightSession(points_configs, assets)
         result = points.run(screen, clock)
     else:
         duel = LocalPvPDuelSession(player1, player2, assets, mode=duel_mode)
         result = duel.run(screen, clock)
+
     if result.get("quit"):
         return "menu"
     return "menu"
