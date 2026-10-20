@@ -19,6 +19,17 @@ PLANET_NAME_ALIASES = {
 }
 
 
+_font_cache = {}
+
+
+def get_font(size):
+    """Gibt die Standard-Schrift in der Groesse zurueck (wird nur einmal erzeugt)."""
+    size = int(size)
+    if size not in _font_cache:
+        _font_cache[size] = pygame.font.Font(None, size)
+    return _font_cache[size]
+
+
 def set_window_icon(icon_path=None):
     """Apply the configured game icon to the current window and taskbar."""
     if icon_path is None:

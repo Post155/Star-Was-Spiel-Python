@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, Optional
+from typing import Dict, Optional
 
 import pygame
+from game.assets import get_font
 
 from game.constants import (
     SHIP_SCALE_BATTLEDROID,
@@ -266,7 +267,7 @@ class MultiplayerSession:
             screen.blit(glow, (rect.x - 8, rect.y - 8))
             screen.blit(ghost, rect)
 
-            font = pygame.font.Font(None, 24)
+            font = get_font(24)
             label_text = remote.name if remote.alive else f"{remote.name} – GAME OVER"
             label = font.render(label_text, True, (230, 245, 255))
             label.set_alpha(220 if remote.alive else 150)

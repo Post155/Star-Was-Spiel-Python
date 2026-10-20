@@ -7,6 +7,7 @@ Responsibility:
 """
 from typing import List, Optional, Dict
 import pygame
+from game.assets import get_font
 import math
 import random
 
@@ -33,8 +34,8 @@ class TransitionManager:
         self._particles: List[Dict] = []
 
         try:
-            self.font_title = pygame.font.Font(None, 64)
-            self.font_sub = pygame.font.Font(None, 36)
+            self.font_title = get_font(64)
+            self.font_sub = get_font(36)
         except Exception:
             self.font_title = None
             self.font_sub = None

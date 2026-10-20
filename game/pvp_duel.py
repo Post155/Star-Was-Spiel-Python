@@ -9,7 +9,6 @@ Pygame wait for network traffic.
 """
 from __future__ import annotations
 
-import math
 import random
 import time
 import uuid
@@ -17,18 +16,16 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 import pygame
+from game.assets import get_font
 
 from game.background import BackgroundManager
 from game.constants import (
-    ASTEROID_MIN_SPAWN_INTERVAL,
     DEFAULT_DIFFICULTY,
     DIFFICULTY_SETTINGS,
     PVP_ASTEROID_BASE_SPAWN_INTERVAL,
     PVP_ASTEROID_MIN_SPAWN_INTERVAL,
     PVP_ASTEROID_PLAYER_SAFE_DISTANCE,
     PVP_ASTEROID_SPAWN_ATTEMPTS,
-    PVP_ASTEROID_SPAWN_MAX_Y_RATIO,
-    PVP_ASTEROID_SPAWN_MIN_Y,
     PVP_DEFAULT_MODE,
     PVP_EXPLOSION_DURATION_MS,
     PVP_HIT_SCORE,
@@ -40,7 +37,6 @@ from game.constants import (
     PVP_MAX_PLAYERS,
     PVP_MAX_PROJECTILES,
     PVP_PLAYER_BOTTOM_MARGIN,
-    PVP_PLAYER_HORIZONTAL_PADDING,
     PVP_PLAYER_TOP_MARGIN,
     PVP_RESPAWN_DELAY_MS,
     PVP_RESPAWN_INVULNERABILITY_MS,
@@ -49,8 +45,6 @@ from game.constants import (
     PVP_SNAPSHOT_INTERVAL_MS,
 )
 from game.entities.asteroid import Asteroid
-from game.entities.explosion import Explosion
-from game.entities.projectiles import Laser, Torpedo
 from game.entities.ships import BattleDroid, MillenniumFalcon, Tiefighter, XWing
 
 
@@ -332,11 +326,6 @@ class PvPDuelSession:
     def _spawn_lane_position(self, direction: str, asteroid: Asteroid):
         width = max(1, self.source_width)
         height = max(1, self.source_height)
-        ship_safe = max(60, int(PVP_ASTEROID_PLAYER_SAFE_DISTANCE * 1.2))
-        min_x = -asteroid.width * 2
-        max_x = width + asteroid.width * 2
-        min_y = -asteroid.height * 2
-        max_y = height + asteroid.height * 2
 
         if direction == "left_to_right":
             x = -asteroid.width - random.randint(12, 80)
@@ -1048,7 +1037,7 @@ class PvPDuelSession:
         return rect
 
     def _draw_label(self, screen, rect, text, alpha=220):
-        font = pygame.font.Font(None, max(20, int(screen.get_height() * 0.030)))
+        font = get_font(max(20, int(screen.get_height() * 0.030)))
         label = font.render(text, True, (235, 245, 255))
         label.set_alpha(alpha)
         label_rect = label.get_rect(center=(rect.centerx, rect.top - 10))
@@ -1247,7 +1236,7 @@ class PvPDuelSession:
             elapsed = int((self.latest_snapshot or {}).get("match_elapsed_ms", 0))
             remaining = max(0, PVP_SCORE_LIMIT_MS - elapsed)
             timer_text = f"  Zeit {remaining // 60000:02d}:{(remaining % 60000) // 1000:02d}" if self.mode == "points" else ""
-        font = pygame.font.Font(None, max(24, int(screen.get_height() * 0.034)))
+        font = get_font(max(24, int(screen.get_height() * 0.034)))
         label = font.render(f"Punkte: {score}   Leben: {lives}   {mode_text}{timer_text}", True, (255, 255, 255))
         screen.blit(label, (10, 10))
 
@@ -1292,8 +1281,8 @@ class PvPDuelSession:
         screen.blit(overlay, (0, 0))
         pygame.draw.rect(screen, (14, 18, 34), panel, border_radius=18)
         pygame.draw.rect(screen, (110, 215, 255), panel, 2, border_radius=18)
-        title_font = pygame.font.Font(None, max(30, int(height * 0.055)))
-        text_font = pygame.font.Font(None, max(22, int(height * 0.032)))
+        title_font = get_font(max(30, int(height * 0.055)))
+        text_font = get_font(max(22, int(height * 0.032)))
         title = title_font.render("PVP-DUELL", True, (255, 255, 255))
         screen.blit(title, title.get_rect(center=(panel.centerx, panel.y + 30)))
         header_y = panel.y + 57
@@ -1325,7 +1314,6 @@ class PvPDuelSession:
     def run(self, screen, clock) -> dict:
         running = True
         fire_events: List[str] = []
-        local_dead = False
         while running:
             dt = min(0.05, clock.tick(60) / 1000.0)
             width, height = screen.get_size()
@@ -1384,9 +1372,9 @@ class PvPDuelSession:
         overlay = pygame.Surface((width, height), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 185))
         screen.blit(overlay, (0, 0))
-        title_font = pygame.font.Font(None, max(48, int(height * 0.085)))
-        text_font = pygame.font.Font(None, max(22, int(height * 0.035)))
-        small_font = pygame.font.Font(None, max(20, int(height * 0.028)))
+        title_font = get_font(max(48, int(height * 0.085)))
+        text_font = get_font(max(22, int(height * 0.035)))
+        small_font = get_font(max(20, int(height * 0.028)))
 
         if self.result and self.result.get("host_stopped"):
             title = title_font.render("HOST HAT DAS SPIEL BEENDET", True, (255, 180, 140))

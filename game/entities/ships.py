@@ -34,7 +34,7 @@ class XWing(Player):
         return [l1, l2]
 
     def torpedo(self):
-        if self.torpedo_img is None:
+        if self.torpedo_img is None or not self.torpedo_ready():
             return None
         return Torpedo(self.hitbox.centerx, self.y, self.torpedo_img)
 
@@ -79,7 +79,7 @@ class Tiefighter(Player):
         return [l1, l2]
 
     def torpedo(self):
-        if self.torpedo_img is None:
+        if self.torpedo_img is None or not self.torpedo_ready():
             return None
         return Torpedo(self.x + self.width * 0.47, self.y + self.height * 0.12, self.torpedo_img)
 

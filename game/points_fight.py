@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import pygame
+from game.assets import get_font
 
 from game.background import BackgroundManager
 from game.constants import (
@@ -18,7 +19,8 @@ from game.constants import (
     ASTEROID_SPAWN_INTERVAL,
     BLACK,
     DIFFICULTY_SETTINGS,
-    DEFAULT_DIFFICULTY,
+    POINTS_GHOST_SCALE,
+    POINTS_MATCH_DURATION_MS,
 )
 from game.enemies import EnemyManager
 from game.entities.asteroid import Asteroid
@@ -59,6 +61,7 @@ class PointsFightWorld:
         self.spawn_timer = 0
         self.dead = False
         self.warning_text: Optional[str] = None
+        self.ghost_cache = {}
         self.background.notify_score_anchor(0)
 
     def _create_player(self, ship_name: str):
@@ -223,27 +226,19 @@ class PointsFightWorld:
         This method never creates a gameplay entity and never exposes a hitbox.
         The ghost is rendered from the other world solely as an overlay.
         """
-        asset_keys = {
-            "xwing": "x_wing_img",
-            "milleniumfalcon": "millennium_falcon_img",
-            "tiefighter": "tie_fighter_img",
-            "battledroid": "battle_droid_img",
-        }
-        image = self.assets.get(asset_keys.get(other_world.config.ship, "x_wing_img"))
-        if image is None:
-            return
-        ghost = pygame.transform.scale_by(image, {
-            "xwing": 0.20,
-            "milleniumfalcon": 0.75,
-            "tiefighter": 0.30,
-            "battledroid": 0.12,
-        }.get(other_world.config.ship, 0.20)).convert_alpha()
-        ghost.set_alpha(105)
-        nx = other_world.player.x / max(1, other_world.width)
-        ny = other_world.player.y / max(1, other_world.height)
-        rect = ghost.get_rect(center=(int(nx * self.width + ghost.get_width() / 2), int(ny * self.height + ghost.get_height() / 2)))
+        other_player = other_world.player
+        # Geist = das echte (bereits normalisierte) Schiffsbild, verkleinert.
+        # Einmal berechnen und merken, nicht in jedem Frame neu skalieren.
+        ghost = self.ghost_cache.get(other_world.config.ship)
+        if ghost is None:
+            ghost = pygame.transform.scale_by(other_player.image, POINTS_GHOST_SCALE)
+            ghost.set_alpha(105)
+            self.ghost_cache[other_world.config.ship] = ghost
+        nx = (other_player.x + other_player.width / 2) / max(1, other_world.width)
+        ny = (other_player.y + other_player.height / 2) / max(1, other_world.height)
+        rect = ghost.get_rect(center=(int(nx * self.width), int(ny * self.height)))
         target.blit(ghost, rect)
-        font = pygame.font.Font(None, 22)
+        font = get_font(22)
         label = font.render(f"{other_world.config.name} • {other_world.score} • {other_world.system_name}", True, (190, 220, 240))
         label.set_alpha(175)
         target.blit(label, label.get_rect(center=(rect.centerx, rect.bottom + 12)))
@@ -275,17 +270,28 @@ class LocalPointsFightSession:
         self.worlds: list[PointsFightWorld] = []
         self.result = None
         self.show_scoreboard = False
+        self.saber_icons = {}
 
     def _make_worlds(self, width: int, height: int) -> None:
         half = max(320, width // 2)
         self.worlds = [PointsFightWorld(cfg, self.assets, half, height) for cfg in self.configs]
+
+    def _sync_worlds(self, width: int, height: int) -> None:
+        """Welten bei Fenstergroessen-Aenderung anpassen, ohne den Spielstand zu verlieren."""
+        half = max(320, width // 2)
+        if not self.worlds:
+            self._make_worlds(width, height)
+            return
+        for world in self.worlds:
+            if world.width != half or world.height != max(360, height):
+                world.resize(half, height)
 
     def run(self, screen: pygame.Surface, clock: pygame.time.Clock) -> dict:
         self._make_worlds(*screen.get_size())
         running = True
         match_start = pygame.time.get_ticks()
         self._match_start = match_start
-        duration_ms = 180_000
+        duration_ms = POINTS_MATCH_DURATION_MS
 
         controls = [
             {"left": False, "right": False, "laser": False, "torpedo": False},
@@ -296,8 +302,7 @@ class LocalPointsFightSession:
             dt = min(0.05, clock.tick(60) / 1000.0)
             width, height = screen.get_size()
             half = max(320, width // 2)
-            if not self.worlds or self.worlds[0].width != half or self.worlds[0].height != height:
-                self._make_worlds(width, height)
+            self._sync_worlds(width, height)
 
             for state in controls:
                 state["laser"] = False
@@ -309,7 +314,7 @@ class LocalPointsFightSession:
                     raise SystemExit
                 if event.type == pygame.VIDEORESIZE:
                     screen = pygame.display.set_mode((max(640, event.w), max(360, event.h)), pygame.RESIZABLE)
-                    self._make_worlds(*screen.get_size())
+                    self._sync_worlds(*screen.get_size())
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         return {"quit": True}
@@ -367,7 +372,7 @@ class LocalPointsFightSession:
         return {"result": self.result, "quit": False}
 
     def _draw_hud(self, screen, half, height):
-        font = pygame.font.Font(None, max(22, int(height * 0.035)))
+        font = get_font(max(22, int(height * 0.035)))
         for i, world in enumerate(self.worlds):
             x = i * half + 10
             screen.blit(font.render(f"{world.config.name}  •  {world.score} Punkte", True, (235, 240, 250)), (x, 10))
@@ -377,15 +382,17 @@ class LocalPointsFightSession:
             if saber is not None:
                 target_h = 18
                 target_w = max(35, int(saber.get_width() * target_h / saber.get_height()))
-                icon = pygame.transform.smoothscale(saber, (target_w, target_h))
+                if saber_key not in self.saber_icons:
+                    self.saber_icons[saber_key] = pygame.transform.smoothscale(saber, (target_w, target_h))
+                icon = self.saber_icons[saber_key]
                 for life_index in range(max(0, world.player.lives)):
                     screen.blit(icon, (x + life_index * (target_w + 4), 66))
             if world.dead:
                 text = font.render("GAME OVER", True, (255, 130, 130))
                 screen.blit(text, text.get_rect(center=(i * half + half // 2, height // 2)))
 
-        remaining = max(0, 180_000 - (pygame.time.get_ticks() - getattr(self, "_match_start", pygame.time.get_ticks())))
-        font = pygame.font.Font(None, 28)
+        remaining = max(0, POINTS_MATCH_DURATION_MS - (pygame.time.get_ticks() - getattr(self, "_match_start", pygame.time.get_ticks())))
+        font = get_font(28)
         timer = font.render(f"{remaining // 60000:02d}:{(remaining % 60000) // 1000:02d}", True, (255, 255, 255))
         screen.blit(timer, timer.get_rect(center=(screen.get_width() // 2, 24)))
 
@@ -393,7 +400,7 @@ class LocalPointsFightSession:
         overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 190))
         screen.blit(overlay, (0, 0))
-        font = pygame.font.Font(None, 34)
+        font = get_font(34)
         title = font.render("PUNKTEKAMPF – RANGLISTE", True, (255, 255, 255))
         screen.blit(title, title.get_rect(center=(screen.get_width() // 2, 70)))
         rows = sorted(self.worlds, key=lambda w: w.score, reverse=True)

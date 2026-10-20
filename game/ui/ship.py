@@ -1,6 +1,7 @@
 import sys
 
 import pygame
+from game.assets import get_font
 
 from game.assets import set_window_icon
 
@@ -42,9 +43,9 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
             subtitle_text = "Wähle dein Schiff für die Mission"
             key_mapping = {pygame.K_1: "tiefighter", pygame.K_2: "battledroid"}
 
-        font = pygame.font.Font(None, max(24, int(min(width, height) * 0.05)))
-        small_font = pygame.font.Font(None, max(18, int(min(width, height) * 0.035)))
-        title_font = pygame.font.Font(None, max(26, int(min(width, height) * 0.065)))
+        font = get_font(max(24, int(min(width, height) * 0.05)))
+        small_font = get_font(max(18, int(min(width, height) * 0.035)))
+        title_font = get_font(max(26, int(min(width, height) * 0.065)))
 
         mouse_pos = pygame.mouse.get_pos()
         xwing_hover = xwing_rect.collidepoint(mouse_pos) if xwing_rect else False
@@ -88,7 +89,6 @@ def ship_selection(screen, clock, width, height, faction, faction_logo_img, x_wi
         subtitle = small_font.render(subtitle_text, True, (180, 180, 180))
         screen.blit(subtitle, (width // 2 - subtitle.get_width() // 2, 160))
 
-        base_scale = height / 600
         preview_max_width = min(card_width * 0.54, 170)
         preview_max_height = min(card_height * 0.52, 170)
 

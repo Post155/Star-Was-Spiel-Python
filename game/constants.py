@@ -51,7 +51,6 @@ ASSET_PATHS = {
     "nebula_blue": "Pixelarts/Systems/nebula_blue.png",
     "nebula_purple": "Pixelarts/Systems/nebula_purple.png",
     "xwing_squadron": "Pixelarts/Systems/xwing_squadron.png",
-    "tie_fighter": "Pixelarts/tie-fighter.png",
     "battle_explosion": "Pixelarts/Systems/battle_explosion.png",
     "hyperraum": "Pixelarts/Hyperraum.png",
 }
@@ -112,6 +111,10 @@ def normalize_ship_scale(image, scale=1.0, target_max_dimension=None):
         return float(scale)
 
     return float(scale) * (reference / height)
+
+# Asteroid speed range (min, max)
+# Mindestzeit zwischen zwei Torpedos eines Spielers (Millisekunden)
+TORPEDO_COOLDOWN_MS = 1200
 
 # Asteroid speed range (min, max)
 ASTEROID_SPEED_RANGE = (2, 8)
@@ -235,6 +238,9 @@ PVP_HIT_SCORE = 150
 PVP_KILL_SCORE = 1000
 PVP_MAX_PROJECTILES = 80
 PVP_SCORE_LIMIT_MS = 180000
+# Punktekampf (lokal): Spieldauer und Groesse der Geister-Schiffe (Faktor der echten Schiffsgroesse)
+POINTS_MATCH_DURATION_MS = 180000
+POINTS_GHOST_SCALE = 0.45
 PVP_DEFAULT_MODE = "last_survivor"
 PVP_TRANSITION_WARNING_MS = 500
 PVP_EXPLOSION_DURATION_MS = 500

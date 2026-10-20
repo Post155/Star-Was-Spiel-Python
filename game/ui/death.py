@@ -1,6 +1,7 @@
 import sys
 
 import pygame
+from game.assets import get_font
 
 from game.assets import set_window_icon
 from game.constants import BLACK
@@ -25,13 +26,17 @@ def death_screen(screen, clock, score, WIDTH, HEIGHT):
             new_record = False
 
     while True:
-        title_font = pygame.font.Font(None, int(HEIGHT * 0.16))
-        score_font = pygame.font.Font(None, int(HEIGHT * 0.10))
-        button_font = pygame.font.Font(None, int(HEIGHT * 0.06))
-        small_font = pygame.font.Font(None, int(HEIGHT * 0.03))
+        title_font = get_font(int(HEIGHT * 0.16))
+        score_font = get_font(int(HEIGHT * 0.10))
+        button_font = get_font(int(HEIGHT * 0.06))
+        small_font = get_font(max(14, int(HEIGHT * 0.035)))
 
-        restart_rect = pygame.Rect(WIDTH // 2 - 175, 350, 350, 70)
-        quit_rect = pygame.Rect(WIDTH // 2 - 175, 450, 350, 70)
+        # Alle Positionen relativ zur Fenstergroesse (funktioniert auch bei kleinen Fenstern)
+        button_width = min(350, WIDTH - 40)
+        card_width = min(400, WIDTH - 40)
+        restart_rect = pygame.Rect(WIDTH // 2 - button_width // 2, int(HEIGHT * 0.62), button_width, int(HEIGHT * 0.10))
+        quit_rect = pygame.Rect(WIDTH // 2 - button_width // 2, int(HEIGHT * 0.75), button_width, int(HEIGHT * 0.10))
+        score_card = pygame.Rect(WIDTH // 2 - card_width // 2, int(HEIGHT * 0.29), card_width, int(HEIGHT * 0.30))
 
         mouse_pos = pygame.mouse.get_pos()
         restart_hover = restart_rect.collidepoint(mouse_pos)
@@ -39,8 +44,8 @@ def death_screen(screen, clock, score, WIDTH, HEIGHT):
 
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
-                WIDTH = event.w
-                HEIGHT = event.h
+                WIDTH = max(480, event.w)
+                HEIGHT = max(360, event.h)
                 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
                 set_window_icon()
 
@@ -61,14 +66,10 @@ def death_screen(screen, clock, score, WIDTH, HEIGHT):
                     return False
 
         screen.fill(BLACK)
-        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180))
-        screen.blit(overlay, (0, 0))
 
         title = title_font.render("GAME OVER", True, (255, 80, 80))
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 60))
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, int(HEIGHT * 0.06)))
 
-        score_card = pygame.Rect(WIDTH // 2 - 200, 180, 400, 160)
         pygame.draw.rect(screen, (40, 40, 70), score_card, border_radius=20)
         pygame.draw.rect(screen, (255, 180, 0), score_card, 3, border_radius=20)
 
@@ -78,15 +79,15 @@ def death_screen(screen, clock, score, WIDTH, HEIGHT):
         record_title = small_font.render("PERSÖNLICHER REKORD", True, (180, 180, 180))
         record_text = small_font.render(str(personal_record), True, (255, 255, 255))
 
-        screen.blit(score_title, (WIDTH // 2 - score_title.get_width() // 2, 190))
-        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 225))
+        screen.blit(score_title, (WIDTH // 2 - score_title.get_width() // 2, score_card.y + int(HEIGHT * 0.02)))
+        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, score_card.y + int(HEIGHT * 0.06)))
 
-        screen.blit(record_title, (WIDTH // 2 - record_title.get_width() // 2, 270))
-        screen.blit(record_text, (WIDTH // 2 - record_text.get_width() // 2, 300))
+        screen.blit(record_title, (WIDTH // 2 - record_title.get_width() // 2, score_card.y + int(HEIGHT * 0.17)))
+        screen.blit(record_text, (WIDTH // 2 - record_text.get_width() // 2, score_card.y + int(HEIGHT * 0.215)))
 
         if new_record:
             badge = small_font.render("NEUER REKORD!", True, (255, 200, 0))
-            screen.blit(badge, (WIDTH // 2 - badge.get_width() // 2, 330))
+            screen.blit(badge, (WIDTH // 2 - badge.get_width() // 2, score_card.y + int(HEIGHT * 0.26)))
 
         pygame.draw.rect(screen, (0, 180, 255) if restart_hover else (40, 40, 70), restart_rect, border_radius=20)
         pygame.draw.rect(screen, (120, 220, 255), restart_rect, 3, border_radius=20)
@@ -99,7 +100,7 @@ def death_screen(screen, clock, score, WIDTH, HEIGHT):
         screen.blit(quit_text, (quit_rect.centerx - quit_text.get_width() // 2, quit_rect.centery - quit_text.get_height() // 2))
 
         hint = small_font.render("Mausklick oder R / ESC verwenden", True, (180, 180, 180))
-        screen.blit(hint, (WIDTH // 2 - hint.get_width() // 2, 550))
+        screen.blit(hint, (WIDTH // 2 - hint.get_width() // 2, int(HEIGHT * 0.92)))
 
         pygame.display.flip()
         clock.tick(60)

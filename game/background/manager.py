@@ -2,13 +2,13 @@ import random
 from typing import List, Optional
 
 import pygame
-import math
+from game.assets import get_font
 
 from game.constants import HEIGHT as DEFAULT_HEIGHT
 from game.constants import WIDTH as DEFAULT_WIDTH
 from game.constants import SYSTEM_SWITCH_POINTS, SYSTEM_SWITCH_TIME_MS
 from game.constants import HYPERSPACE_DURATION_MS
-from game.constants import DIFFICULTY_SETTINGS, DEFAULT_DIFFICULTY, SYSTEM_DIFFICULTY_BONUS, SYSTEM_PROGRESS_MAX_BONUS
+from game.constants import SYSTEM_DIFFICULTY_BONUS
 
 from .objects import ForegroundObject
 from .planet_manager import PlanetManager
@@ -63,8 +63,8 @@ class BackgroundManager:
 
         # fonts
         try:
-            self.font_title = pygame.font.Font(None, 64)
-            self.font_sub = pygame.font.Font(None, 36)
+            self.font_title = get_font(64)
+            self.font_sub = get_font(36)
         except Exception:
             self.font_title = None
             self.font_sub = None

@@ -23,3 +23,10 @@ StarWarsGame.exe
 .venv/
 __pycache__/
 *.pyc
+# macOS / Unity / Logs
+.DS_Store
+Library/
+Temp/
+Logs/
+# Persoenlicher Highscore
+game/highscore.json

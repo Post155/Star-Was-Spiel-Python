@@ -3,6 +3,7 @@ import sys
 import time
 
 import pygame
+from game.assets import get_font
 
 # Relative Asset-Pfade (Pixelarts/...) funktionieren nur im Projektordner.
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -29,7 +30,6 @@ from game.scoreboard import draw_scoreboard
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
 from game.ui.multiplayer import (
-    lan_menu,
     lobby_screen,
     local_pvp_player_prompt,
     main_menu,
@@ -66,7 +66,7 @@ asteroid_images = assets["asteroid_images"]
 torpedo_img = assets["torpedo_img"]
 explosion_img = assets["explosion_img"]
 
-font = pygame.font.Font(None, 40)
+font = get_font(40)
 lightsaber_blue_img = assets.get("lightsaber_blue_img")
 lightsaber_red_img = assets.get("lightsaber_red_img")
 
@@ -79,6 +79,9 @@ SHIP_NAME_BY_KEY = {
 }
 
 
+saber_cache = {}
+
+
 def draw_lives(screen, lives, faction="rebels", size=24, padding=8):
     """Draw the faction-specific lightsaber sprite as the life indicator."""
     saber_img = lightsaber_blue_img if faction == "rebels" else lightsaber_red_img
@@ -86,11 +89,14 @@ def draw_lives(screen, lives, faction="rebels", size=24, padding=8):
         return
 
     target_height = max(14, size)
-    scale = target_height / saber_img.get_height()
-    scaled_width = max(60, int(saber_img.get_width() * scale))
-    scaled_saber = pygame.transform.smoothscale(
-        saber_img, (scaled_width, target_height)
-    )
+    cache_key = (faction, target_height)
+    if cache_key not in saber_cache:
+        scale = target_height / saber_img.get_height()
+        scaled_width = max(60, int(saber_img.get_width() * scale))
+        saber_cache[cache_key] = pygame.transform.smoothscale(
+            saber_img, (scaled_width, target_height)
+        )
+    scaled_saber = saber_cache[cache_key]
 
     start_x = 6
     start_y = 30
@@ -143,8 +149,8 @@ def draw_enemy_warning(screen, text, width, height, remaining_ms):
     overlay.fill((120, 0, 0, 95))
     screen.blit(overlay, (0, 0))
 
-    warning_font = pygame.font.Font(None, max(44, int(min(width, height) * 0.075 * pulse)))
-    sub_font = pygame.font.Font(None, max(24, int(min(width, height) * 0.038)))
+    warning_font = get_font(max(44, int(min(width, height) * 0.075 * pulse)))
+    sub_font = get_font(max(24, int(min(width, height) * 0.038)))
 
     title = warning_font.render("!!! WARNUNG !!!", True, (255, 235, 120))
     message = sub_font.render(text, True, (255, 255, 255))
@@ -440,11 +446,11 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
 
         if multiplayer is not None:
             if local_dead:
-                dead_font = pygame.font.Font(None, max(34, int(min(WIDTH, HEIGHT) * 0.055)))
+                dead_font = get_font(max(34, int(min(WIDTH, HEIGHT) * 0.055)))
                 dead_text = dead_font.render("GAME OVER – ESC zum Verlassen", True, (255, 120, 120))
                 screen.blit(dead_text, dead_text.get_rect(center=(WIDTH // 2, int(HEIGHT * 0.72))))
             elif not multiplayer.connected:
-                net_text = pygame.font.Font(None, 28).render("Netzwerkverbindung verloren", True, (255, 160, 100))
+                net_text = get_font(28).render("Netzwerkverbindung verloren", True, (255, 160, 100))
                 screen.blit(net_text, net_text.get_rect(center=(WIDTH // 2, 30)))
 
             # TAB is intentionally a hold-to-show overlay, so it never pauses the game.
@@ -471,9 +477,8 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
 
 def wait_for_multiplayer_start(session, width, height):
     """Wait without blocking the Pygame loop until the synchronized game starts."""
-    global screen
-    title_font = pygame.font.Font(None, max(42, int(min(width, height) * 0.09)))
-    small_font = pygame.font.Font(None, 28)
+    title_font = get_font(max(42, int(min(width, height) * 0.09)))
+    small_font = get_font(28)
 
     while True:
         events = session.poll(width, height)
@@ -503,7 +508,7 @@ def wait_for_multiplayer_start(session, width, height):
         remaining = max(0.0, session.client.started_at - time.time())
         if session.phase == "countdown" and remaining > 0:
             number = str(max(1, int(remaining) + 1))
-            count_font = pygame.font.Font(None, max(70, int(min(width, height) * 0.18)))
+            count_font = get_font(max(70, int(min(width, height) * 0.18)))
             surface = count_font.render(number, True, (120, 220, 255))
             screen.blit(surface, surface.get_rect(center=(width // 2, height // 2 + 30)))
         else:
@@ -515,7 +520,6 @@ def wait_for_multiplayer_start(session, width, height):
 
 
 def run_singleplayer_flow():
-    global screen
     while True:
         faction_choice, new_width, new_height = faction_selection(
             screen,
@@ -553,6 +557,8 @@ def run_singleplayer_flow():
 
         result = run_game_session(faction_choice, difficulty_choice, ship_choice)
         restart = death_screen(screen, clock, result["score"], WIDTH, HEIGHT)
+        # Der Death-Screen kann die Fenstergroesse geaendert haben
+        set_dimensions(*pygame.display.get_surface().get_size())
         if not restart:
             return "menu"
 
@@ -566,7 +572,6 @@ def set_dimensions(width, height):
 
 
 def run_multiplayer_flow(config, game_mode="points"):
-    global screen
     session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode=game_mode, max_players=10)
 
     try:
@@ -643,7 +648,6 @@ def run_multiplayer_flow(config, game_mode="points"):
 
 def run_local_points_flow():
     """Run two completely independent single-player simulations side-by-side."""
-    global screen
     configs = []
 
     for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
@@ -683,7 +687,6 @@ def run_local_points_flow():
 
 def run_local_pvp_flow(duel_mode):
     """Start a local two-player PvP duel without creating a network connection."""
-    global screen
 
     for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
         if local_pvp_player_prompt(screen, clock, WIDTH, HEIGHT, player_number) is None:
@@ -735,7 +738,6 @@ def run_local_pvp_flow(duel_mode):
 
 
 def run_pvp_flow(config, duel_mode):
-    global screen
     session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode="pvp", max_players=PVP_MAX_PLAYERS)
 
     try:

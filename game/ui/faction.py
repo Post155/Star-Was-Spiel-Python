@@ -1,6 +1,7 @@
 import sys
 
 import pygame
+from game.assets import get_font
 
 from game.assets import set_window_icon
 
@@ -13,9 +14,9 @@ def faction_selection(screen, clock, width, height, rebel_logo_img, empire_logo_
         rebel_rect = pygame.Rect(int(width * 0.15), int(height * 0.28), card_width, card_height)
         empire_rect = pygame.Rect(int(width * 0.53), int(height * 0.28), card_width, card_height)
 
-        font = pygame.font.Font(None, max(24, int(min(width, height) * 0.05)))
-        small_font = pygame.font.Font(None, max(18, int(min(width, height) * 0.035)))
-        title_font = pygame.font.Font(None, max(28, int(min(width, height) * 0.08)))
+        font = get_font(max(24, int(min(width, height) * 0.05)))
+        small_font = get_font(max(18, int(min(width, height) * 0.035)))
+        title_font = get_font(max(28, int(min(width, height) * 0.08)))
 
         mouse_pos = pygame.mouse.get_pos()
         rebel_hover = rebel_rect.collidepoint(mouse_pos)

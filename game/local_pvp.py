@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 import pygame
+from game.assets import get_font
 
 from game.constants import (
     LOCAL_PVP_PLAYER1_NAME,
@@ -158,8 +159,8 @@ class LocalPvPDuelSession(PvPDuelSession):
 
     def draw_hud(self, screen: pygame.Surface) -> None:
         width, height = screen.get_size()
-        font = pygame.font.Font(None, max(22, int(height * 0.032)))
-        small_font = pygame.font.Font(None, max(19, int(height * 0.025)))
+        font = get_font(max(22, int(height * 0.032)))
+        small_font = get_font(max(19, int(height * 0.025)))
 
         p1 = self.players.get("local_p1")
         p2 = self.players.get("local_p2")

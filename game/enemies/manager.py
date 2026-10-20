@@ -91,7 +91,6 @@ class EnemyManager:
         return SYSTEM_DIFFICULTY_BONUS[-1]
 
     def _difficulty_scale(self, score, system_index):
-        profile = self._profile()
         system_bonus = self._system_bonus(system_index)
 
         # Gentle score pressure after enemies are unlocked; it is capped.

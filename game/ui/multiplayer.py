@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pygame
+from game.assets import get_font
 
 from game.network import LAN_PORT
 
@@ -29,8 +30,8 @@ def main_menu(screen, clock, width, height):
     The game always enters this menu first. ESC remains the keyboard-only
     quit shortcut so no third visible main-menu option is necessary.
     """
-    font = pygame.font.Font(None, max(28, int(min(width, height) * 0.055)))
-    title_font = pygame.font.Font(None, max(42, int(min(width, height) * 0.10)))
+    font = get_font(max(28, int(min(width, height) * 0.055)))
+    title_font = get_font(max(42, int(min(width, height) * 0.10)))
 
     buttons = [
         (
@@ -81,7 +82,7 @@ def main_menu(screen, clock, width, height):
         for rect, text, _ in buttons:
             _draw_button(screen, rect, text, font, rect.collidepoint(mouse))
 
-        hint = pygame.font.Font(None, 22).render(
+        hint = get_font(22).render(
             "1 = Einzelspieler   2 = Mehrspieler   ESC = Beenden",
             True,
             (150, 155, 170),
@@ -98,8 +99,8 @@ def multiplayer_menu(screen, clock, width, height):
     LAN access is only possible through the LAN Multiplayer entry below,
     while the local mode never creates a network connection.
     """
-    font = pygame.font.Font(None, max(28, int(min(width, height) * 0.050)))
-    title_font = pygame.font.Font(None, max(40, int(min(width, height) * 0.085)))
+    font = get_font(max(28, int(min(width, height) * 0.050)))
+    title_font = get_font(max(40, int(min(width, height) * 0.085)))
 
     buttons = [
         (
@@ -150,7 +151,7 @@ def multiplayer_menu(screen, clock, width, height):
         title = title_font.render("MEHRSPIELER", True, (255, 255, 255))
         screen.blit(title, title.get_rect(center=(width // 2, int(height * 0.18))))
 
-        subtitle = pygame.font.Font(None, 24).render(
+        subtitle = get_font(24).render(
             "Offline auf einem PC oder gemeinsam über das LAN",
             True,
             (165, 185, 215),
@@ -160,7 +161,7 @@ def multiplayer_menu(screen, clock, width, height):
         for rect, text, _ in buttons:
             _draw_button(screen, rect, text, font, rect.collidepoint(mouse))
 
-        hint = pygame.font.Font(None, 22).render(
+        hint = get_font(22).render(
             "1 = Lokal   2 = LAN   ESC = Zurück",
             True,
             (150, 155, 170),
@@ -172,9 +173,9 @@ def multiplayer_menu(screen, clock, width, height):
 
 def lan_menu(screen, clock, width, height):
     """Return {'action': 'host'/'join', 'name': ..., 'ip': ...} or None."""
-    font = pygame.font.Font(None, 34)
-    title_font = pygame.font.Font(None, max(38, int(min(width, height) * 0.08)))
-    small_font = pygame.font.Font(None, 24)
+    font = get_font(34)
+    title_font = get_font(max(38, int(min(width, height) * 0.08)))
+    small_font = get_font(24)
     name = "Spieler"
     ip = ""
     active = "name"
@@ -236,7 +237,7 @@ def lan_menu(screen, clock, width, height):
         screen.fill((7, 8, 20))
         title = title_font.render("LAN MULTIPLAYER", True, (255, 255, 255))
         screen.blit(title, title.get_rect(center=(width // 2, 90)))
-        screen.blit(pygame.font.Font(None, 24).render(f"Port: {LAN_PORT}", True, (150, 160, 180)), (width // 2 - 45, 125))
+        screen.blit(get_font(24).render(f"Port: {LAN_PORT}", True, (150, 160, 180)), (width // 2 - 45, 125))
 
         screen.blit(small_font.render("Spielername", True, (190, 200, 215)), (name_rect.x, name_rect.y - 28))
         _input_field(screen, name_rect, name, font, active == "name")
@@ -259,9 +260,9 @@ def lan_menu(screen, clock, width, height):
 
 def pvp_mode_menu(screen, clock, width, height):
     """Choose the PvP rule set before opening the LAN lobby."""
-    font = pygame.font.Font(None, 32)
-    title_font = pygame.font.Font(None, max(42, int(min(width, height) * 0.08)))
-    small_font = pygame.font.Font(None, 24)
+    font = get_font(32)
+    title_font = get_font(max(42, int(min(width, height) * 0.08)))
+    small_font = get_font(24)
     buttons = [
         (pygame.Rect(width // 2 - 220, int(height * 0.36), 440, 64), "Letzter Überlebender", "last_survivor"),
         (pygame.Rect(width // 2 - 220, int(height * 0.48), 440, 64), "Punktekampf", "points"),
@@ -306,9 +307,9 @@ def pvp_mode_menu(screen, clock, width, height):
 
 def pvp_lan_menu(screen, clock, width, height, duel_mode):
     """LAN host/join menu for the PvP duel."""
-    font = pygame.font.Font(None, 32)
-    title_font = pygame.font.Font(None, max(40, int(min(width, height) * 0.075)))
-    small_font = pygame.font.Font(None, 24)
+    font = get_font(32)
+    title_font = get_font(max(40, int(min(width, height) * 0.075)))
+    small_font = get_font(24)
     name = "Spieler"
     ip = ""
     active = "name"
@@ -390,9 +391,9 @@ def pvp_lan_menu(screen, clock, width, height, duel_mode):
 
 def lobby_screen(screen, clock, session, width, height, title_text="STAR WARS – LAN LOBBY", max_players=10, start_requires_full=False):
     """Show a shared lobby. Returns start/back/host_disconnected."""
-    font = pygame.font.Font(None, 30)
-    title_font = pygame.font.Font(None, max(42, int(min(width, height) * 0.085)))
-    small_font = pygame.font.Font(None, 24)
+    font = get_font(30)
+    title_font = get_font(max(42, int(min(width, height) * 0.085)))
+    small_font = get_font(24)
     status = "Verbinde..."
 
     while True:
@@ -480,9 +481,9 @@ def lobby_screen(screen, clock, session, width, height, title_text="STAR WARS �
 
 def local_pvp_player_prompt(screen, clock, width, height, player_number):
     """Explain which local player is selecting before faction/ship menus."""
-    font = pygame.font.Font(None, max(30, int(min(width, height) * 0.055)))
-    title_font = pygame.font.Font(None, max(46, int(min(width, height) * 0.09)))
-    small_font = pygame.font.Font(None, max(22, int(min(width, height) * 0.032)))
+    font = get_font(max(30, int(min(width, height) * 0.055)))
+    title_font = get_font(max(46, int(min(width, height) * 0.09)))
+    small_font = get_font(max(22, int(min(width, height) * 0.032)))
     if player_number == 1:
         title = "SPIELER 1"
         controls = "A / D = Bewegen     W = Laser     S = Torpedo"

@@ -1,5 +1,6 @@
 import sys
 import pygame
+from game.assets import get_font
 from game.assets import set_window_icon
 
 
@@ -16,9 +17,9 @@ def difficulty_selection(screen, clock, width, height, default="normal"):
     selected = next((i for i, item in enumerate(DIFFICULTIES) if item[0] == default), 1)
 
     while True:
-        font = pygame.font.Font(None, max(28, int(min(width, height) * 0.055)))
-        small = pygame.font.Font(None, max(20, int(min(width, height) * 0.033)))
-        title = pygame.font.Font(None, max(34, int(min(width, height) * 0.075)))
+        font = get_font(max(28, int(min(width, height) * 0.055)))
+        small = get_font(max(20, int(min(width, height) * 0.033)))
+        title = get_font(max(34, int(min(width, height) * 0.075)))
 
         cards = []
         card_w = int(width * 0.19)

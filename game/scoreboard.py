@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pygame
+from game.assets import get_font
 
 
 def draw_scoreboard(screen: pygame.Surface, players: list[dict], local_id: str | None) -> None:
@@ -20,9 +21,9 @@ def draw_scoreboard(screen: pygame.Surface, players: list[dict], local_id: str |
     pygame.draw.rect(screen, (17, 20, 35), panel, border_radius=18)
     pygame.draw.rect(screen, (120, 210, 255), panel, 2, border_radius=18)
 
-    title_font = pygame.font.Font(None, max(28, int(height * 0.055)))
-    text_font = pygame.font.Font(None, max(22, int(height * 0.036)))
-    small_font = pygame.font.Font(None, max(18, int(height * 0.028)))
+    title_font = get_font(max(28, int(height * 0.055)))
+    text_font = get_font(max(22, int(height * 0.036)))
+    small_font = get_font(max(18, int(height * 0.028)))
 
     title = title_font.render("MULTIPLAYER SCORE", True, (255, 255, 255))
     screen.blit(title, (panel.centerx - title.get_width() // 2, panel.y + 14))

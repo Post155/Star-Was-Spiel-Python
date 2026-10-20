@@ -10,7 +10,7 @@ Public classes:
 """
 import pygame
 
-from game.constants import PLAYER_BASE_SPEED, normalize_ship_scale
+from game.constants import PLAYER_BASE_SPEED, TORPEDO_COOLDOWN_MS, normalize_ship_scale
 
 
 class Player:
@@ -31,6 +31,7 @@ class Player:
         self.y = (window_height - self.height - 20)
 
         self.speed = PLAYER_BASE_SPEED
+        self.last_torpedo_time = -TORPEDO_COOLDOWN_MS
 
         # Lives and invulnerability
         self.lives = 3
@@ -82,6 +83,14 @@ class Player:
     def update_hitbox(self):
         self.hitbox.x = self.x + self.hitbox_offset_x
         self.hitbox.y = self.y + self.hitbox_offset_y
+
+    def torpedo_ready(self):
+        """True (und Cooldown startet), wenn wieder ein Torpedo abgefeuert werden darf."""
+        now = pygame.time.get_ticks()
+        if now - self.last_torpedo_time < TORPEDO_COOLDOWN_MS:
+            return False
+        self.last_torpedo_time = now
+        return True
 
     def is_invulnerable(self):
         return pygame.time.get_ticks() < getattr(self, 'invulnerable_until', 0)
