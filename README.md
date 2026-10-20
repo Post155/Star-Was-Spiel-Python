@@ -122,13 +122,25 @@ Die Struktur sieht anschließend beispielsweise so aus:
 Star-Wars-Spiel/
 │
 ├── .venv/
-├── install.bat
+├── main.py
 ├── start.bat
+├── tools/
+│   ├── install.bat
+│   └── start.bat
 ├── requirements.txt
-├── StarWarsGame.py
 ├── game/
-└── Pixelarts/
+│   ├── config.py
+│   ├── settings.py
+│   ├── core/
+│   ├── modes/
+│   ├── StarWarsGame.py
+│   └── ...
+├── Pixelarts/
+├── assets/
+└── tests/
 ```
+
+Die Refaktorierung hält die vorhandenen Spielmechaniken und das ursprüngliche Verhalten bei, während zentrale Konfiguration, Startpfade und Modulseparation klarer organisiert werden.
 
 > Die `.venv` sollte normalerweise **nicht in Git eingecheckt oder mit dem Projekt verteilt werden**. Sie kann auf jedem Computer mit `install.bat` neu erstellt werden.
 
@@ -182,6 +194,7 @@ Die aktuelle `requirements.txt` enthält:
 
 ```text
 pygame>=2.5
+pytest>=8.0
 ```
 
 ---
@@ -196,20 +209,20 @@ Nach der Installation kann das Spiel über:
 start.bat
 ```
 
-gestartet werden.
+oder direkt aus der Konsole mit:
 
-`start.bat` verwendet ausschließlich:
-
-```text
-.venv\Scripts\python.exe
+```bash
+python main.py
 ```
 
-und startet dadurch das Spiel innerhalb der virtuellen Umgebung.
+gestartet werden.
+
+`start.bat` und `tools\start.bat` verwenden die virtuelle Umgebung und starten das Spiel mit `main.py`, damit Asset-Pfade und Importpfade stabil bleiben.
 
 Alternativ kann das Spiel innerhalb der aktivierten virtuellen Umgebung manuell gestartet werden:
 
 ```bash
-python StarWarsGame.py
+python main.py
 ```
 
 ---

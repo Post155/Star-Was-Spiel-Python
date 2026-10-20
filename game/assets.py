@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
 
 import pygame
 
+from game.config import resolve_asset_path
 from game.constants import ASSET_PATHS
 
 
@@ -37,8 +39,12 @@ def get_font(size, font_name="default"):
     cache_key = (font_name, size)
     if cache_key not in _font_cache:
         font_path = _FONTS.get(font_name)
-        if font_path and os.path.exists(font_path):
-            _font_cache[cache_key] = pygame.font.Font(font_path, size)
+        if font_path:
+            resolved_font = resolve_asset_path(font_path)
+            if Path(resolved_font).exists():
+                _font_cache[cache_key] = pygame.font.Font(resolved_font, size)
+            else:
+                _font_cache[cache_key] = pygame.font.Font(None, size)
         else:
             _font_cache[cache_key] = pygame.font.Font(None, size)
     return _font_cache[cache_key]
@@ -49,8 +55,9 @@ def set_window_icon(icon_path=None):
     if icon_path is None:
         icon_path = ASSET_PATHS['window_icon']
 
+    resolved = resolve_asset_path(icon_path)
     try:
-        icon = pygame.image.load(icon_path).convert_alpha()
+        icon = pygame.image.load(resolved).convert_alpha()
         pygame.display.set_icon(icon)
         return icon
     except Exception:
@@ -64,7 +71,8 @@ def _safe_load(path, convert_alpha=True):
         if pygame.display.get_surface() is None:
             pygame.display.set_mode((1, 1))
 
-        surf = pygame.image.load(path)
+        resolved = resolve_asset_path(path)
+        surf = pygame.image.load(resolved)
         return surf.convert_alpha() if convert_alpha else surf.convert()
     except Exception:
         return None
@@ -80,7 +88,7 @@ def _normalize_asset_name(name):
 
 
 def _load_planet_assets():
-    planet_dir = os.path.join('Pixelarts', 'Planets')
+    planet_dir = resolve_asset_path(Path("Pixelarts") / "Planets")
     discovered = {}
 
     if not os.path.isdir(planet_dir):
