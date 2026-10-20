@@ -20,14 +20,28 @@ PLANET_NAME_ALIASES = {
 
 
 _font_cache = {}
+_FONTS = {
+    "default": None,
+    "sci_fi": os.path.join("assets", "fonts", "Orbitron-Bold.ttf"),
+}
 
 
-def get_font(size):
-    """Gibt die Standard-Schrift in der Groesse zurueck (wird nur einmal erzeugt)."""
+def get_font(size, font_name="default"):
+    """Return a cached font in the requested size.
+
+    The default behavior stays compatible with the existing code. The optional
+    sci-fi font is used for immersive UI screens and falls back to the system
+    default if the file is missing.
+    """
     size = int(size)
-    if size not in _font_cache:
-        _font_cache[size] = pygame.font.Font(None, size)
-    return _font_cache[size]
+    cache_key = (font_name, size)
+    if cache_key not in _font_cache:
+        font_path = _FONTS.get(font_name)
+        if font_path and os.path.exists(font_path):
+            _font_cache[cache_key] = pygame.font.Font(font_path, size)
+        else:
+            _font_cache[cache_key] = pygame.font.Font(None, size)
+    return _font_cache[cache_key]
 
 
 def set_window_icon(icon_path=None):

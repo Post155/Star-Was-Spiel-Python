@@ -17,6 +17,7 @@ ASSET_PATHS = {
     "torpedo": "Pixelarts/Torpedo.png",
     "explosion": "Pixelarts/Explosion.png",
     "lightsabers": "Pixelarts/lichtschwerter.png",
+    "science_font": "assets/fonts/Orbitron-Bold.ttf",
     "asteroid_frames": [
         "Pixelarts/Astroids/frame_00.png",
         "Pixelarts/Astroids/frame_01.png",
