@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+from typing import cast
 
 import pygame
 from game.assets import get_font
