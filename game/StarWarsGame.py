@@ -24,7 +24,6 @@ from game.scoreboard import draw_scoreboard, draw_live_ranking
 from game.ui import death_screen, faction_selection, ship_selection
 from game.ui.difficulty import difficulty_selection
 from game.ui.multiplayer import (
-    lan_menu,
     lobby_screen,
     local_pvp_player_prompt,
     main_menu,
@@ -564,7 +563,6 @@ def wait_for_multiplayer_start(session, width, height):
 
 
 def run_singleplayer_flow():
-    global screen
     while True:
         faction_choice, new_width, new_height = faction_selection(
             screen,
@@ -615,7 +613,6 @@ def set_dimensions(width, height):
 
 
 def run_multiplayer_flow(config):
-    global screen
     session = MultiplayerSession(debug=NETWORK_DEBUG)
 
     try:
@@ -692,8 +689,6 @@ def run_multiplayer_flow(config):
 
 def run_local_pvp_flow(duel_mode):
     """Start a local two-player PvP duel without creating a network connection."""
-    global screen
-
     points_difficulty = DEFAULT_DIFFICULTY
     for player_number, player_name in ((1, LOCAL_PVP_PLAYER1_NAME), (2, LOCAL_PVP_PLAYER2_NAME)):
         if local_pvp_player_prompt(screen, clock, WIDTH, HEIGHT, player_number) is None:
@@ -755,7 +750,6 @@ def run_local_pvp_flow(duel_mode):
 
 
 def run_pvp_flow(config, duel_mode):
-    global screen
     session = MultiplayerSession(debug=NETWORK_DEBUG, game_mode="pvp", max_players=PVP_MAX_PLAYERS)
 
     try:
