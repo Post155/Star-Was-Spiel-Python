@@ -22,7 +22,7 @@ from game.multiplayer import MultiplayerSession
 from game.network import NETWORK_DEBUG
 from game.scoreboard import draw_live_ranking, draw_scoreboard
 from game.ui import death_screen, faction_selection, ship_selection
-from game.ui.difficulty import difficulty_selection
+from game.settings import load_settings
 from game.ui.multiplayer import (
     lobby_screen,
     local_pvp_player_prompt,
@@ -44,7 +44,10 @@ from game.constants import (
 
 pygame.init()
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+_user_settings = load_settings()
+_initial_flags = pygame.FULLSCREEN if _user_settings.get("fullscreen", False) else pygame.RESIZABLE
+screen = pygame.display.set_mode((WIDTH, HEIGHT), _initial_flags)
+WIDTH, HEIGHT = screen.get_size()
 set_window_icon()
 pygame.display.set_caption(SCREEN_TITLE)
 clock = pygame.time.Clock()
@@ -181,6 +184,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
     show_scoreboard = False
     points_match_started_at = None
     points_match_over = False
+    show_fps = load_settings().get("show_fps", False)
 
     try:
         background.notify_score_anchor(score)
@@ -496,6 +500,10 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
             hint = small_font.render("ENTER / LEERTASTE / ESC = zurück zum Menü", True, (170, 180, 195))
             screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 35)))
 
+        if show_fps:
+            fps_surface = pygame.font.Font(None, 22).render(f"FPS {int(clock.get_fps())}", True, (155, 220, 255))
+            screen.blit(fps_surface, (WIDTH - fps_surface.get_width() - 12, 10))
+
         pygame.display.flip()
 
         if points_match_over and (keys[pygame.K_RETURN] or keys[pygame.K_SPACE] or keys[pygame.K_ESCAPE]):
@@ -575,14 +583,7 @@ def run_singleplayer_flow():
         )
         set_dimensions(new_width, new_height)
 
-        difficulty_choice, new_width, new_height = difficulty_selection(
-            screen,
-            clock,
-            WIDTH,
-            HEIGHT,
-            DEFAULT_DIFFICULTY,
-        )
-        set_dimensions(new_width, new_height)
+        difficulty_choice = load_settings()["difficulty"]
 
         faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
         ship_choice, new_width, new_height = ship_selection(
@@ -643,14 +644,7 @@ def run_multiplayer_flow(config):
         )
         set_dimensions(new_width, new_height)
 
-        difficulty_choice, new_width, new_height = difficulty_selection(
-            screen,
-            clock,
-            WIDTH,
-            HEIGHT,
-            DEFAULT_DIFFICULTY,
-        )
-        set_dimensions(new_width, new_height)
+        difficulty_choice = load_settings()["difficulty"]
 
         faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
         ship_choice, new_width, new_height = ship_selection(
@@ -696,10 +690,7 @@ def run_local_pvp_flow(duel_mode):
             return "menu"
 
         if duel_mode == "points" and player_number == 1:
-            points_difficulty, new_width, new_height = difficulty_selection(
-                screen, clock, WIDTH, HEIGHT, DEFAULT_DIFFICULTY
-            )
-            set_dimensions(new_width, new_height)
+            points_difficulty = load_settings()["difficulty"]
 
         faction_choice, new_width, new_height = faction_selection(
             screen,
@@ -785,10 +776,7 @@ def run_pvp_flow(config, duel_mode):
         faction_logo_img = rebel_logo_img if faction_choice == "rebels" else empire_logo_img
 
         if duel_mode == "points":
-            difficulty_choice, new_width, new_height = difficulty_selection(
-                screen, clock, WIDTH, HEIGHT, DEFAULT_DIFFICULTY
-            )
-            set_dimensions(new_width, new_height)
+            difficulty_choice = load_settings()["difficulty"]
         else:
             difficulty_choice = DEFAULT_DIFFICULTY
 

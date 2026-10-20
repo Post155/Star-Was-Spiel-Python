@@ -230,6 +230,19 @@ Die Installationsdateien von Python und Pygame stammen nicht aus diesem Projekt.
 
 ---
 
+## Spieleinstellungen
+
+Die Schwierigkeit wird zentral im Hauptmenü unter **Einstellungen** festgelegt und für neue Einzelspieler- und passende Mehrspieler-Spielrunden verwendet. Die frühere separate Schwierigkeitsauswahl nach der Fraktionswahl entfällt. Die Auswahl wird in `game/settings.json` gespeichert.
+
+Verfügbare Optionen:
+- **Schwierigkeit:** Einfach, Normal, Schwer oder Experte
+- **Vollbild:** Fenster- und Vollbildmodus umschalten
+- **FPS-Anzeige:** Bildrate während des Spiels anzeigen
+
+Die Einstellungen lassen sich per Mausklick ändern. Im Einstellungsfenster kann die Schwierigkeit außerdem über die Tasten `1` bis `4` gewählt werden; `Enter` oder `Esc` schließt das Fenster.
+
+---
+
 ## 🎮 Spielmodi
 
 Das Spiel besitzt mehrere voneinander getrennte Spielmodi:

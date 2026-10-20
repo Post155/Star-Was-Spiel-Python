@@ -8,6 +8,8 @@ from game.assets import get_font, load_assets
 from game.background import BackgroundManager
 
 from game.network import LAN_PORT
+from game.settings import load_settings, save_settings
+from game.constants import DIFFICULTY_SETTINGS
 
 MENU_ASSETS = load_assets()
 
@@ -44,59 +46,138 @@ def _input_field(screen, rect, text, font, active):
 
 
 def _draw_menu_background(screen, width, height, background):
-    """Render the cinematic space background from the existing background system."""
+    """Render a cinematic space battle backdrop with parallax motion and nebulae."""
     background.resize(width, height)
     background.starfield.update()
     background.planet_manager.maybe_spawn(True)
     background.planet_manager.update()
-    background.starfield.draw(screen)
-    background.planet_manager.draw(screen)
 
-    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
-    overlay.fill((3, 7, 20, 65))
-    screen.blit(overlay, (0, 0))
+    t = pygame.time.get_ticks() * 0.001
 
-    inner_vignette = pygame.Surface((width, height), pygame.SRCALPHA)
-    for i in range(14, 0, -1):
-        radius = max(20, width // 7 + i * 18)
-        pygame.draw.circle(inner_vignette, (0, 0, 0, max(0, 90 - i * 4)), (width // 2, height // 2), radius)
-    screen.blit(inner_vignette, (0, 0))
+    # Deep-space base and parallax star layers
+    sky = pygame.Surface((width, height), pygame.SRCALPHA)
+    sky.fill((6, 10, 22, 180))
+    background.starfield.draw(sky)
+    screen.blit(sky, (0, 0))
+
+    # Left blue nebula and right red nebula create the faction split
+    nebula = pygame.Surface((width, height), pygame.SRCALPHA)
+    left_center = (int(width * 0.16), int(height * 0.55))
+    right_center = (int(width * 0.84), int(height * 0.52))
+    pygame.draw.ellipse(nebula, (38, 110, 255, 95), (left_center[0] - 260, left_center[1] - 180, 520, 360))
+    pygame.draw.ellipse(nebula, (255, 80, 80, 90), (right_center[0] - 260, right_center[1] - 180, 520, 360))
+    screen.blit(nebula, (0, 0))
+
+    # Distant planet in the upper-right corner
+    planet_center = (int(width * 0.82), int(height * 0.22))
+    planet_radius = max(80, int(min(width, height) * 0.13))
+    pygame.draw.circle(screen, (70, 78, 105), planet_center, planet_radius)
+    pygame.draw.circle(screen, (120, 140, 190), planet_center, int(planet_radius * 0.82), 2)
+    pygame.draw.arc(screen, (180, 210, 255, 150), (planet_center[0] - planet_radius, planet_center[1] - planet_radius, planet_radius * 2, planet_radius * 2), 0.8, 2.3, 2)
+
+    # Asteroid field crossing diagonally
+    for i in range(14):
+        x = (i * 110 + int(t * 70)) % (width + 200) - 100
+        y = (i * 72 + int(t * 30)) % (height + 140) - 70
+        points = [
+            (x, y),
+            (x + 12, y + 8),
+            (x + 28, y + 2),
+            (x + 18, y + 18),
+            (x + 2, y + 14),
+        ]
+        pygame.draw.polygon(screen, (120, 130, 155, 140), points)
+        pygame.draw.lines(screen, (180, 200, 230, 80), True, points, 1)
+
+    # Distant battleground silhouettes
+    for i in range(3):
+        ship_y = int(height * (0.20 + i * 0.16))
+        x1 = -40 + i * 240 + int(t * 18) % 100
+        x2 = width + 30 + i * 160 - int(t * 12) % 100
+        pygame.draw.line(screen, (115, 145, 180, 90), (x1, ship_y), (x1 + 100, ship_y - 10), 2)
+        pygame.draw.line(screen, (115, 145, 180, 90), (x2, ship_y + 15), (x2 - 100, ship_y + 5), 2)
+
+    # Laser streaks and engine glows
+    for i in range(8):
+        offset = (i * 163 + int(t * 180)) % (width + 300)
+        yline = int(height * (0.34 + (i % 4) * 0.12))
+        alpha = 90 + (i % 3) * 20
+        if i % 2 == 0:
+            pygame.draw.line(screen, (110, 195, 255, alpha), (offset - 220, yline), (offset, yline - 20), 2)
+        else:
+            pygame.draw.line(screen, (255, 110, 110, alpha), (offset, yline + 8), (offset - 220, yline - 12), 2)
+
+    # Center darkening so the menu hierarchy remains readable
+    center_vignette = pygame.Surface((width, height), pygame.SRCALPHA)
+    for i in range(18, 0, -1):
+        radius = max(120, width // 2 + i * 22)
+        pygame.draw.circle(center_vignette, (0, 0, 0, max(0, 110 - i * 4)), (width // 2, height // 2), radius)
+    screen.blit(center_vignette, (0, 0))
+
+    # Small accent logos only, not dominant as oversized focal points
+    rebel_small = MENU_ASSETS.get("rebel_logo_img")
+    empire_small = MENU_ASSETS.get("empire_logo_img")
+    if rebel_small:
+        rebel_surf = pygame.transform.smoothscale(rebel_small, (64, 64))
+        screen.blit(rebel_surf, (width * 0.18 - 32, height * 0.12))
+    if empire_small:
+        empire_surf = pygame.transform.smoothscale(empire_small, (64, 64))
+        screen.blit(empire_surf, (width * 0.82 - 32, height * 0.12))
 
 
 def _draw_faction_badge(screen, image, rect, accent_color, label=None):
     glow = pygame.Surface((rect.width + 58, rect.height + 58), pygame.SRCALPHA)
     glow_rect = glow.get_rect(center=rect.center)
-    pygame.draw.ellipse(glow, accent_color + (72,), glow.get_rect().inflate(-12, -12))
+    pygame.draw.ellipse(glow, accent_color + (80,), glow.get_rect().inflate(-6, -6))
     screen.blit(glow, glow_rect)
 
     scaled = pygame.transform.smoothscale(image, (rect.width, rect.height))
     screen.blit(scaled, scaled.get_rect(center=rect.center))
 
-    frame = rect.inflate(8, 8)
-    pygame.draw.rect(screen, accent_color, frame, 2, border_radius=20)
     if label:
-        label_surf = get_font(max(16, int(rect.height * 0.14)), "sci_fi").render(label, True, (245, 247, 255))
-        screen.blit(label_surf, label_surf.get_rect(midbottom=(rect.centerx, rect.bottom + 24)))
+        label_surf = get_font(max(12, int(rect.height * 0.16)), "sci_fi").render(label, True, (240, 244, 255))
+        screen.blit(label_surf, label_surf.get_rect(midbottom=(rect.centerx, rect.bottom + 18)))
+
+
+def _draw_menu_button(screen, rect, text, font, hover=False, accent=(76, 175, 255), halo=(100, 200, 255)):
+    if hover:
+        draw_rect = rect.inflate(12, 10)
+        fill = (12, 18, 30)
+        border = accent
+        text_color = (245, 247, 255)
+        glow = pygame.Surface((draw_rect.width + 26, draw_rect.height + 26), pygame.SRCALPHA)
+        glow_rect = glow.get_rect(center=draw_rect.center)
+        pygame.draw.rect(glow, accent + (90,), glow.get_rect().inflate(-12, -12), border_radius=18)
+        screen.blit(glow, glow_rect)
+    else:
+        draw_rect = rect
+        fill = (12, 18, 30)
+        border = accent
+        text_color = (232, 236, 246)
+
+    pygame.draw.rect(screen, fill, draw_rect, border_radius=18)
+    pygame.draw.rect(screen, border, draw_rect, 2, border_radius=18)
+    label = font.render(text, True, text_color)
+    screen.blit(label, label.get_rect(center=draw_rect.center))
 
 
 def main_menu(screen, clock, width, height):
-    """Show a cleaner cinematic main menu with clear hierarchy and less visual clutter."""
+    """Show a cinematic star-war menu composition with strong central hierarchy."""
     background = BackgroundManager(width, height, MENU_ASSETS)
-    font = get_font(max(24, int(min(width, height) * 0.045)), "sci_fi")
-    title_font = get_font(max(58, int(min(width, height) * 0.13)), "sci_fi")
-    subtitle_font = get_font(max(16, int(min(width, height) * 0.024)), "sci_fi")
+    title_font = get_font(max(62, int(min(width, height) * 0.13)), "sci_fi")
+    subtitle_font = get_font(max(18, int(min(width, height) * 0.028)), "sci_fi")
+    button_font = get_font(max(22, int(min(width, height) * 0.04)), "sci_fi")
 
     settings_open = False
+    settings = load_settings()
+    button_panel_rect = pygame.Rect(width // 2 - 180, int(height * 0.52), 360, 220)
 
     while True:
         mouse = pygame.mouse.get_pos()
-
-        button_panel = pygame.Rect(width // 2 - 250, int(height * 0.54), 500, 180)
-        button_layout = [
-            (pygame.Rect(button_panel.x + 28, button_panel.y + 24, 200, 56), "Einzelspieler", "singleplayer", (66, 153, 255)),
-            (pygame.Rect(button_panel.x + 272, button_panel.y + 24, 200, 56), "Mehrspieler", "multiplayer", (228, 72, 72)),
-            (pygame.Rect(button_panel.x + 28, button_panel.y + 96, 200, 56), "Einstellungen", "settings", (72, 178, 255)),
-            (pygame.Rect(button_panel.x + 272, button_panel.y + 96, 200, 56), "Beenden", "quit", (164, 172, 186)),
+        buttons = [
+            (pygame.Rect(button_panel_rect.x + 30, button_panel_rect.y + 28, 300, 54), "Einzelspieler", "singleplayer", (66, 153, 255)),
+            (pygame.Rect(button_panel_rect.x + 30, button_panel_rect.y + 92, 300, 54), "Mehrspieler", "multiplayer", (228, 72, 72)),
+            (pygame.Rect(button_panel_rect.x + 30, button_panel_rect.y + 156, 300, 54), "Einstellungen", "settings", (72, 178, 255)),
         ]
 
         for event in pygame.event.get():
@@ -114,6 +195,9 @@ def main_menu(screen, clock, width, height):
                 if settings_open:
                     if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
                         settings_open = False
+                    elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4):
+                        settings["difficulty"] = ("easy", "normal", "hard", "expert")[event.key - pygame.K_1]
+                        save_settings(settings)
                     continue
                 if event.key == pygame.K_1:
                     return "singleplayer"
@@ -121,18 +205,38 @@ def main_menu(screen, clock, width, height):
                     return "multiplayer"
                 if event.key == pygame.K_3:
                     settings_open = True
-                if event.key == pygame.K_4 or event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_ESCAPE:
                     return "quit"
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if settings_open:
-                    panel = pygame.Rect(width // 2 - 260, height // 2 - 120, 520, 240)
-                    close_rect = pygame.Rect(width // 2 + 120, height // 2 + 50, 120, 42)
-                    if close_rect.collidepoint(event.pos):
+                    panel = pygame.Rect(width // 2 - min(390, width // 2 - 24), height // 2 - 190, min(780, width - 48), 380)
+                    card_w = max(110, (panel.width - 60) // 4)
+                    cards_y = panel.y + 105
+                    card_h = 100
+                    for i, key in enumerate(("easy", "normal", "hard", "expert")):
+                        card = pygame.Rect(panel.x + 12 + i * (card_w + 8), cards_y, card_w, card_h)
+                        if card.collidepoint(event.pos):
+                            settings["difficulty"] = key
+                            save_settings(settings)
+                    fullscreen_rect = pygame.Rect(panel.x + 28, panel.y + 245, panel.width - 56, 44)
+                    fps_rect = pygame.Rect(panel.x + 28, panel.y + 298, panel.width - 56, 38)
+                    close_rect = pygame.Rect(panel.right - 142, panel.bottom - 52, 120, 36)
+                    if fullscreen_rect.collidepoint(event.pos):
+                        settings["fullscreen"] = not settings["fullscreen"]
+                        flags = pygame.FULLSCREEN if settings["fullscreen"] else pygame.RESIZABLE
+                        screen = pygame.display.set_mode((width, height), flags)
+                        width, height = screen.get_size()
+                        save_settings(settings)
+                        return main_menu(screen, clock, width, height)
+                    elif fps_rect.collidepoint(event.pos):
+                        settings["show_fps"] = not settings["show_fps"]
+                        save_settings(settings)
+                    elif close_rect.collidepoint(event.pos):
                         settings_open = False
                     continue
 
-                for rect, _, value, _ in button_layout:
+                for rect, _, value, _ in buttons:
                     if rect.collidepoint(event.pos):
                         if value == "settings":
                             settings_open = True
@@ -141,58 +245,88 @@ def main_menu(screen, clock, width, height):
 
         _draw_menu_background(screen, width, height, background)
 
-        panel_surface = pygame.Surface((button_panel.width, button_panel.height), pygame.SRCALPHA)
-        pygame.draw.rect(panel_surface, (10, 16, 28, 150), panel_surface.get_rect(), border_radius=22)
-        pygame.draw.rect(panel_surface, (112, 145, 255, 120), panel_surface.get_rect(), 2, border_radius=22)
-        screen.blit(panel_surface, button_panel.topleft)
+        # Title with metallic glow and pulse
+        pulse = 1.0 + 0.05 * math.sin(pygame.time.get_ticks() / 280.0)
+        title_base = title_font.render("STAR WARS", True, (245, 248, 255))
+        title_glow = pygame.Surface((int(title_base.get_width() * pulse), int(title_base.get_height() * pulse)), pygame.SRCALPHA)
+        title_glow.blit(title_base, (0, 0))
+        title_rect = title_base.get_rect(center=(width // 2, int(height * 0.18)))
+        for dx, dy, color in [(-3, 0, (35, 118, 255)), (3, 0, (255, 76, 76)), (0, -2, (255, 255, 255))]:
+            shadow = title_base.copy()
+            shadow.fill(color + (120,), special_flags=pygame.BLEND_RGBA_MULT)
+            screen.blit(shadow, (title_rect.x + dx, title_rect.y + dy))
+        screen.blit(title_base, title_rect)
 
-        logo_w = max(120, int(width * 0.13))
-        logo_h = max(90, int(height * 0.18))
-        rebel_rect = pygame.Rect(int(width * 0.18) - logo_w // 2, int(height * 0.22), logo_w, logo_h)
-        empire_rect = pygame.Rect(int(width * 0.82) - logo_w // 2, int(height * 0.22), logo_w, logo_h)
+        subtitle = subtitle_font.render("REBELLION VS EMPIRE", True, (200, 214, 240))
+        screen.blit(subtitle, subtitle.get_rect(center=(width // 2, int(height * 0.29))))
+
+        # Small faction accents left and right of the menu
+        accent_rect_left = pygame.Rect(width // 2 - 260, int(height * 0.18), 80, 80)
+        accent_rect_right = pygame.Rect(width // 2 + 180, int(height * 0.18), 80, 80)
         rebel_logo = MENU_ASSETS.get("rebel_logo_img")
         empire_logo = MENU_ASSETS.get("empire_logo_img")
         if rebel_logo:
-            _draw_faction_badge(screen, rebel_logo, rebel_rect, (66, 153, 255), "REBELLEN")
+            _draw_faction_badge(screen, rebel_logo, accent_rect_left, (66, 153, 255), "REBELLION")
         if empire_logo:
-            _draw_faction_badge(screen, empire_logo, empire_rect, (255, 80, 80), "IMPERIUM")
+            _draw_faction_badge(screen, empire_logo, accent_rect_right, (255, 85, 85), "EMPIRE")
 
-        pulse = 1.0 + 0.04 * math.sin(pygame.time.get_ticks() / 350.0)
-        title_surface = title_font.render("STAR WARS", True, (245, 248, 255))
-        scaled_title = pygame.transform.smoothscale(
-            title_surface,
-            (
-                max(180, int(title_surface.get_width() * pulse)),
-                max(64, int(title_surface.get_height() * pulse)),
-            ),
-        )
-        title_rect = scaled_title.get_rect(center=(width // 2, int(height * 0.17)))
-        screen.blit(scaled_title, title_rect)
+        panel_surface = pygame.Surface((button_panel_rect.width, button_panel_rect.height), pygame.SRCALPHA)
+        pygame.draw.rect(panel_surface, (10, 16, 28, 165), panel_surface.get_rect(), border_radius=24)
+        pygame.draw.rect(panel_surface, (96, 148, 255, 140), panel_surface.get_rect(), 2, border_radius=24)
+        screen.blit(panel_surface, button_panel_rect.topleft)
 
-        subtitle = subtitle_font.render("GALACTIC WARFARE // REBEL ALLIANCE VS EMPIRE", True, (180, 205, 227))
-        screen.blit(subtitle, subtitle.get_rect(center=(width // 2, int(height * 0.29))))
+        for rect, text, _, accent in buttons:
+            hovered = rect.collidepoint(mouse)
+            _draw_menu_button(screen, rect, text, button_font, hover=hovered, accent=accent)
 
         if settings_open:
-            panel = pygame.Rect(width // 2 - 260, height // 2 - 120, 520, 240)
-            panel_surface = pygame.Surface((panel.width, panel.height), pygame.SRCALPHA)
-            pygame.draw.rect(panel_surface, (10, 15, 24, 220), panel_surface.get_rect(), border_radius=20)
-            pygame.draw.rect(panel_surface, (90, 150, 255, 160), panel_surface.get_rect(), 2, border_radius=20)
+            shade = pygame.Surface((width, height), pygame.SRCALPHA)
+            shade.fill((0, 0, 8, 185))
+            screen.blit(shade, (0, 0))
+            panel = pygame.Rect(width // 2 - min(390, width // 2 - 24), height // 2 - 190, min(780, width - 48), 380)
+            panel_surface = pygame.Surface(panel.size, pygame.SRCALPHA)
+            pygame.draw.rect(panel_surface, (8, 15, 30, 248), panel_surface.get_rect(), border_radius=22)
+            pygame.draw.rect(panel_surface, (78, 166, 255, 220), panel_surface.get_rect(), 2, border_radius=22)
             screen.blit(panel_surface, panel.topleft)
 
-            title = get_font(26, "sci_fi").render("EINSTELLUNGEN", True, (235, 240, 255))
-            screen.blit(title, title.get_rect(midtop=(width // 2, height // 2 - 90)))
-            audio = get_font(20, "sci_fi").render("Audio: Aktiviert", True, (180, 220, 255))
-            screen.blit(audio, audio.get_rect(midtop=(width // 2, height // 2 - 46)))
-            graphics = get_font(20, "sci_fi").render("Grafik: Hoch", True, (255, 170, 170))
-            screen.blit(graphics, graphics.get_rect(midtop=(width // 2, height // 2 - 10)))
-            close_rect = pygame.Rect(width // 2 + 120, height // 2 + 50, 120, 42)
-            _draw_button(screen, close_rect, "Zurück", get_font(20, "sci_fi"), close_rect.collidepoint(mouse), accent=(90, 180, 255))
-        else:
-            for rect, text, _, accent in button_layout:
-                _draw_button(screen, rect, text, font, rect.collidepoint(mouse), accent=accent, glow_scale=1.06)
+            heading = get_font(30, "sci_fi").render("SYSTEMEINSTELLUNGEN", True, (236, 244, 255))
+            screen.blit(heading, heading.get_rect(center=(panel.centerx, panel.y + 38)))
+            section = get_font(18, "sci_fi").render("SCHWIERIGKEIT  ·  gilt für neue Spielrunden", True, (150, 205, 255))
+            screen.blit(section, section.get_rect(center=(panel.centerx, panel.y + 76)))
 
-        hint = get_font(16, "sci_fi").render("1/2/3/4", True, (168, 180, 198))
-        screen.blit(hint, hint.get_rect(center=(width // 2, height - 30)))
+            card_w = max(110, (panel.width - 60) // 4)
+            cards_y = panel.y + 105
+            descriptions = {
+                "easy": "Weniger Druck", "normal": "Ausgewogen",
+                "hard": "Aggressivere Gegner", "expert": "Maximale Herausforderung",
+            }
+            for i, key in enumerate(("easy", "normal", "hard", "expert")):
+                card = pygame.Rect(panel.x + 12 + i * (card_w + 8), cards_y, card_w, 100)
+                active = settings["difficulty"] == key
+                hover = card.collidepoint(mouse)
+                pygame.draw.rect(screen, (22, 48, 75) if active else (16, 24, 40), card, border_radius=12)
+                pygame.draw.rect(screen, (74, 190, 255) if active else ((100, 135, 175) if hover else (58, 76, 100)), card, 2 if active else 1, border_radius=12)
+                label = get_font(20, "sci_fi").render(DIFFICULTY_SETTINGS[key]["name"].upper(), True, (245, 249, 255))
+                screen.blit(label, label.get_rect(center=(card.centerx, card.y + 32)))
+                desc_font = get_font(13, "sci_fi")
+                desc = desc_font.render(descriptions[key], True, (170, 187, 210))
+                screen.blit(desc, desc.get_rect(center=(card.centerx, card.y + 66)))
+                if active:
+                    marker = get_font(13, "sci_fi").render("AKTIV", True, (90, 210, 255))
+                    screen.blit(marker, marker.get_rect(center=(card.centerx, card.y + 86)))
+
+            fullscreen_rect = pygame.Rect(panel.x + 28, panel.y + 220, panel.width - 56, 42)
+            fps_rect = pygame.Rect(panel.x + 28, panel.y + 270, panel.width - 56, 38)
+            _draw_menu_button(screen, fullscreen_rect, "Vollbild: " + ("AN" if settings["fullscreen"] else "AUS"), get_font(17, "sci_fi"), fullscreen_rect.collidepoint(mouse), accent=(80, 175, 255))
+            _draw_menu_button(screen, fps_rect, "FPS-Anzeige: " + ("AN" if settings["show_fps"] else "AUS"), get_font(16, "sci_fi"), fps_rect.collidepoint(mouse), accent=(130, 150, 190))
+            close_rect = pygame.Rect(panel.right - 142, panel.bottom - 48, 120, 34)
+            _draw_menu_button(screen, close_rect, "FERTIG", get_font(16, "sci_fi"), close_rect.collidepoint(mouse), accent=(80, 200, 150))
+            footer = get_font(13, "sci_fi").render("1–4: Schwierigkeit   ·   ENTER / ESC: Schließen", True, (150, 165, 188))
+            screen.blit(footer, footer.get_rect(midleft=(panel.x + 24, panel.bottom - 28)))
+
+        hint = get_font(16, "sci_fi").render("1 = EINZELSPIELER   2 = MEHRSPIELER   3 = EINSTELLUNGEN   ESC = BEENDEN", True, (178, 188, 204))
+        screen.blit(hint, hint.get_rect(center=(width // 2, height - 26)))
+
         pygame.display.flip()
         clock.tick(60)
 
