@@ -2,6 +2,7 @@ import sys
 
 import pygame
 
+from audio_manager import get_audio_manager
 from game.assets import load_assets, set_window_icon
 from game.background import BackgroundManager
 from game.constants import (
@@ -153,6 +154,7 @@ def draw_enemy_warning(screen, text, width, height, remaining_ms):
 
 def destroy_asteroid(asteroid, explosion_list):
     """Remove an asteroid and create its visual explosion."""
+    get_audio_manager().play_sfx("explosion")
     explosion_list.append(
         Explosion(
             asteroid.x + asteroid.width // 2,
@@ -185,6 +187,9 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
     points_match_started_at = None
     points_match_over = False
     show_fps = load_settings().get("show_fps", False)
+    audio = get_audio_manager()
+    audio.apply_settings(load_settings())
+    audio.set_game_state(state="gameplay", enemy_count=0, player_lives=getattr(spieler, "lives", 0))
 
     try:
         background.notify_score_anchor(score)
@@ -260,6 +265,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
                         new_lasers = spieler.shoot()
                         if new_lasers:
                             laser_list.extend(new_lasers)
+                            get_audio_manager().play_sfx("laser")
 
                     if event.key in (pygame.K_s, pygame.K_DOWN):
                         torpedo = spieler.torpedo()
@@ -369,6 +375,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
                         continue
 
                     died = spieler.take_damage()
+                    get_audio_manager().play_sfx("damage")
                     destroy_asteroid(asteroid, explosion_list)
 
                     if asteroid in asteroid_list:
@@ -376,6 +383,7 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
 
                     if died:
                         local_dead = True
+                        get_audio_manager().set_game_state(mission_status="game_over")
                     break
 
             # ------------------------------------------------------------
@@ -390,15 +398,22 @@ def run_game_session(faction_choice, difficulty_choice, ship_choice, multiplayer
                 player_torpedoes=torpedo_list,
             )
             score += enemy_result.score_delta
+            audio.set_game_state(
+                state="gameplay",
+                enemy_count=len(enemy_manager.enemies),
+                player_lives=getattr(spieler, "lives", 0),
+            )
 
             if enemy_result.player_dead or spieler.lives <= 0:
                 local_dead = True
+                get_audio_manager().set_game_state(mission_status="game_over")
 
         if points_match and not points_match_over:
             import time
             elapsed_ms = int(max(0.0, time.time() - points_match_started_at) * 1000) if points_match_started_at else 0
             if elapsed_ms >= PVP_SCORE_LIMIT_MS:
                 points_match_over = True
+                get_audio_manager().set_game_state(mission_status="victory")
 
         # ------------------------------------------------------------
         # RENDERING

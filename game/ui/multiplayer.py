@@ -10,6 +10,7 @@ from game.background import BackgroundManager
 from game.network import LAN_PORT
 from game.settings import load_settings, save_settings
 from game.constants import DIFFICULTY_SETTINGS
+from audio_manager import get_audio_manager
 
 MENU_ASSETS = load_assets()
 
@@ -170,6 +171,9 @@ def main_menu(screen, clock, width, height):
 
     settings_open = False
     settings = load_settings()
+    audio = get_audio_manager()
+    audio.apply_settings(settings)
+    audio.set_game_state(state="menu")
     button_panel_rect = pygame.Rect(width // 2 - 180, int(height * 0.52), 360, 220)
 
     while True:
@@ -210,7 +214,7 @@ def main_menu(screen, clock, width, height):
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if settings_open:
-                    panel = pygame.Rect(width // 2 - min(390, width // 2 - 24), height // 2 - 190, min(780, width - 48), 380)
+                    panel = pygame.Rect(width // 2 - min(390, width // 2 - 24), height // 2 - 280, min(780, width - 48), 560)
                     card_w = max(110, (panel.width - 60) // 4)
                     cards_y = panel.y + 105
                     card_h = 100
@@ -219,9 +223,25 @@ def main_menu(screen, clock, width, height):
                         if card.collidepoint(event.pos):
                             settings["difficulty"] = key
                             save_settings(settings)
-                    fullscreen_rect = pygame.Rect(panel.x + 28, panel.y + 245, panel.width - 56, 44)
-                    fps_rect = pygame.Rect(panel.x + 28, panel.y + 298, panel.width - 56, 38)
-                    close_rect = pygame.Rect(panel.right - 142, panel.bottom - 52, 120, 36)
+                    fullscreen_rect = pygame.Rect(panel.x + 28, panel.y + 220, panel.width - 56, 38)
+                    fps_rect = pygame.Rect(panel.x + 28, panel.y + 264, panel.width - 56, 38)
+                    slider_y = panel.y + 326
+                    slider_rects = {
+                        "master_volume": pygame.Rect(panel.x + 230, slider_y, panel.width - 258, 18),
+                        "music_volume": pygame.Rect(panel.x + 230, slider_y + 38, panel.width - 258, 18),
+                        "sfx_volume": pygame.Rect(panel.x + 230, slider_y + 76, panel.width - 258, 18),
+                        "menu_volume": pygame.Rect(panel.x + 230, slider_y + 114, panel.width - 258, 18),
+                    }
+                    for key, rect in slider_rects.items():
+                        if rect.inflate(12, 12).collidepoint(event.pos):
+                            ratio = max(0.0, min(1.0, (event.pos[0] - rect.x) / max(1, rect.width)))
+                            settings[key] = ratio
+                            audio.set_volume(key, ratio)
+                            save_settings(settings)
+                    dynamic_rect = pygame.Rect(panel.x + 28, panel.y + 470, 220, 34)
+                    mute_rect = pygame.Rect(panel.x + 258, panel.y + 470, 220, 34)
+                    reset_rect = pygame.Rect(panel.x + 28, panel.y + 510, panel.width - 56, 34)
+                    close_rect = pygame.Rect(panel.right - 142, panel.y + 448, 120, 34)
                     if fullscreen_rect.collidepoint(event.pos):
                         settings["fullscreen"] = not settings["fullscreen"]
                         flags = pygame.FULLSCREEN if settings["fullscreen"] else pygame.RESIZABLE
@@ -232,12 +252,22 @@ def main_menu(screen, clock, width, height):
                     elif fps_rect.collidepoint(event.pos):
                         settings["show_fps"] = not settings["show_fps"]
                         save_settings(settings)
+                    elif dynamic_rect.collidepoint(event.pos):
+                        settings["dynamic_music"] = not settings["dynamic_music"]
+                        audio.set_dynamic_music(settings["dynamic_music"])
+                    elif mute_rect.collidepoint(event.pos):
+                        settings["muted"] = not settings["muted"]
+                        audio.set_muted(settings["muted"])
+                    elif reset_rect.collidepoint(event.pos):
+                        audio.reset_to_defaults()
+                        settings = load_settings()
                     elif close_rect.collidepoint(event.pos):
                         settings_open = False
                     continue
 
                 for rect, _, value, _ in buttons:
                     if rect.collidepoint(event.pos):
+                        audio.play_sfx("button", "menu")
                         if value == "settings":
                             settings_open = True
                             break
@@ -283,7 +313,7 @@ def main_menu(screen, clock, width, height):
             shade = pygame.Surface((width, height), pygame.SRCALPHA)
             shade.fill((0, 0, 8, 185))
             screen.blit(shade, (0, 0))
-            panel = pygame.Rect(width // 2 - min(390, width // 2 - 24), height // 2 - 190, min(780, width - 48), 380)
+            panel = pygame.Rect(width // 2 - min(390, width // 2 - 24), height // 2 - 280, min(780, width - 48), 560)
             panel_surface = pygame.Surface(panel.size, pygame.SRCALPHA)
             pygame.draw.rect(panel_surface, (8, 15, 30, 248), panel_surface.get_rect(), border_radius=22)
             pygame.draw.rect(panel_surface, (78, 166, 255, 220), panel_surface.get_rect(), 2, border_radius=22)
@@ -296,10 +326,7 @@ def main_menu(screen, clock, width, height):
 
             card_w = max(110, (panel.width - 60) // 4)
             cards_y = panel.y + 105
-            descriptions = {
-                "easy": "Weniger Druck", "normal": "Ausgewogen",
-                "hard": "Aggressivere Gegner", "expert": "Maximale Herausforderung",
-            }
+            descriptions = {"easy": "Weniger Druck", "normal": "Ausgewogen", "hard": "Aggressivere Gegner", "expert": "Maximale Herausforderung"}
             for i, key in enumerate(("easy", "normal", "hard", "expert")):
                 card = pygame.Rect(panel.x + 12 + i * (card_w + 8), cards_y, card_w, 100)
                 active = settings["difficulty"] == key
@@ -308,21 +335,35 @@ def main_menu(screen, clock, width, height):
                 pygame.draw.rect(screen, (74, 190, 255) if active else ((100, 135, 175) if hover else (58, 76, 100)), card, 2 if active else 1, border_radius=12)
                 label = get_font(20, "sci_fi").render(DIFFICULTY_SETTINGS[key]["name"].upper(), True, (245, 249, 255))
                 screen.blit(label, label.get_rect(center=(card.centerx, card.y + 32)))
-                desc_font = get_font(13, "sci_fi")
-                desc = desc_font.render(descriptions[key], True, (170, 187, 210))
+                desc = get_font(13, "sci_fi").render(descriptions[key], True, (170, 187, 210))
                 screen.blit(desc, desc.get_rect(center=(card.centerx, card.y + 66)))
-                if active:
-                    marker = get_font(13, "sci_fi").render("AKTIV", True, (90, 210, 255))
-                    screen.blit(marker, marker.get_rect(center=(card.centerx, card.y + 86)))
 
-            fullscreen_rect = pygame.Rect(panel.x + 28, panel.y + 220, panel.width - 56, 42)
-            fps_rect = pygame.Rect(panel.x + 28, panel.y + 270, panel.width - 56, 38)
+            fullscreen_rect = pygame.Rect(panel.x + 28, panel.y + 220, panel.width - 56, 38)
+            fps_rect = pygame.Rect(panel.x + 28, panel.y + 264, panel.width - 56, 38)
             _draw_menu_button(screen, fullscreen_rect, "Vollbild: " + ("AN" if settings["fullscreen"] else "AUS"), get_font(17, "sci_fi"), fullscreen_rect.collidepoint(mouse), accent=(80, 175, 255))
             _draw_menu_button(screen, fps_rect, "FPS-Anzeige: " + ("AN" if settings["show_fps"] else "AUS"), get_font(16, "sci_fi"), fps_rect.collidepoint(mouse), accent=(130, 150, 190))
-            close_rect = pygame.Rect(panel.right - 142, panel.bottom - 48, 120, 34)
+
+            slider_y = panel.y + 326
+            slider_labels = (("master_volume", "Gesamtlautstärke"), ("music_volume", "Musiklautstärke"), ("sfx_volume", "Effektlautstärke"), ("menu_volume", "Menülautstärke"))
+            for index, (key, label) in enumerate(slider_labels):
+                y = slider_y + index * 38
+                label_surface = get_font(15, "sci_fi").render(label, True, (210, 220, 235))
+                screen.blit(label_surface, (panel.x + 28, y - 2))
+                rect = pygame.Rect(panel.x + 230, y, panel.width - 258, 18)
+                pygame.draw.rect(screen, (40, 48, 62), rect, border_radius=9)
+                fill = pygame.Rect(rect.x, rect.y, int(rect.width * settings[key]), rect.height)
+                pygame.draw.rect(screen, (82, 176, 255), fill, border_radius=9)
+                knob_x = rect.x + int(rect.width * settings[key])
+                pygame.draw.circle(screen, (235, 245, 255), (knob_x, rect.centery), 8)
+
+            dynamic_rect = pygame.Rect(panel.x + 28, panel.y + 470, 220, 34)
+            mute_rect = pygame.Rect(panel.x + 258, panel.y + 470, 220, 34)
+            reset_rect = pygame.Rect(panel.x + 28, panel.y + 510, panel.width - 56, 34)
+            _draw_menu_button(screen, dynamic_rect, "Dynamische Musik: " + ("AN" if settings["dynamic_music"] else "AUS"), get_font(13, "sci_fi"), dynamic_rect.collidepoint(mouse), accent=(90, 190, 255))
+            _draw_menu_button(screen, mute_rect, "Audio: " + ("AUS" if settings["muted"] else "AN"), get_font(13, "sci_fi"), mute_rect.collidepoint(mouse), accent=(255, 140, 140))
+            _draw_menu_button(screen, reset_rect, "STANDARDEINSTELLUNGEN WIEDERHERSTELLEN", get_font(13, "sci_fi"), reset_rect.collidepoint(mouse), accent=(120, 190, 150))
+            close_rect = pygame.Rect(panel.right - 142, panel.y + 448, 120, 34)
             _draw_menu_button(screen, close_rect, "FERTIG", get_font(16, "sci_fi"), close_rect.collidepoint(mouse), accent=(80, 200, 150))
-            footer = get_font(13, "sci_fi").render("1–4: Schwierigkeit   ·   ENTER / ESC: Schließen", True, (150, 165, 188))
-            screen.blit(footer, footer.get_rect(midleft=(panel.x + 24, panel.bottom - 28)))
 
         hint = get_font(16, "sci_fi").render("1 = EINZELSPIELER   2 = MEHRSPIELER   3 = EINSTELLUNGEN   ESC = BEENDEN", True, (178, 188, 204))
         screen.blit(hint, hint.get_rect(center=(width // 2, height - 26)))
@@ -629,6 +670,7 @@ def pvp_lan_menu(screen, clock, width, height, duel_mode):
 
 
 def lobby_screen(screen, clock, session, width, height, title_text="STAR WARS – LAN LOBBY", max_players=10, start_requires_full=False):
+    get_audio_manager().set_game_state(state="lobby")
     """Show a shared lobby. Returns start/back/host_disconnected."""
     font = get_font(30)
     title_font = get_font(max(42, int(min(width, height) * 0.085)))

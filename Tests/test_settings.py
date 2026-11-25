@@ -7,12 +7,15 @@ from game.settings import DEFAULT_SETTINGS, load_settings, save_settings
 def test_load_settings_returns_defaults_for_missing_file(tmp_path, monkeypatch):
     settings_file = tmp_path / "settings.json"
     monkeypatch.setattr("game.settings.SETTINGS_PATH", settings_file)
+    monkeypatch.setattr("game.settings._LEGACY_SETTINGS_PATH", tmp_path / "legacy-missing.json")
 
     actual = load_settings()
 
     assert actual["difficulty"] == DEFAULT_SETTINGS["difficulty"]
     assert actual["fullscreen"] is False
     assert actual["show_fps"] is False
+    assert actual["master_volume"] == DEFAULT_SETTINGS["master_volume"]
+    assert actual["dynamic_music"] is True
 
 
 def test_save_settings_validates_and_persists(tmp_path, monkeypatch):

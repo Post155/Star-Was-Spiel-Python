@@ -795,10 +795,17 @@ Die Projektstruktur kann je nach Entwicklungsstand leicht variieren.
 
 Eine typische Struktur des Projekts ist:
 
+## 🔊 Audio-System
+
+Alle Musik- und Soundeffektzugriffe laufen zentral über `audio_manager.py`. Das System unterstützt persistente Lautstärke- und Stummschaltungseinstellungen, Fade-Übergänge, parallele SFX-Wiedergabe und adaptive Musik anhand von Spielereignissen. Fehlende oder beschädigte Dateien deaktivieren betroffene Audiofunktionen, ohne das Spiel abzubrechen.
+
+Audioeinstellungen werden plattformabhängig außerhalb des Projektordners gespeichert (`AppData`, `~/.config` bzw. `~/Library/Application Support`). Dateien werden unter `assets/audio/music/` und `assets/audio/sfx/` abgelegt. Diese Ordner sind absichtlich fehlertolerant: Ohne Dateien bleiben Menü und Gameplay vollständig nutzbar.
+
 ```text
 Star-Wars-Spiel-Python/
 │
 ├── StarWarsGame.py
+├── audio_manager.py
 ├── README.md
 ├── requirements.txt
 ├── install.bat
@@ -850,6 +857,11 @@ Star-Wars-Spiel-Python/
 │       ├── faction.py
 │       ├── multiplayer.py
 │       └── ship.py
+│
+├── assets/
+│   └── audio/
+│       ├── music/
+│       └── sfx/
 │
 └── Pixelarts/
     ├── Astroids/

@@ -779,8 +779,8 @@ class StartingScreen:
     def dispose(self) -> None:
         """Release any allocated resources and stop music if active."""
         self.running = False
-        if pygame.mixer.get_init() is not None:
-            pygame.mixer.music.stop()
+        from audio_manager import get_audio_manager
+        get_audio_manager().stop_music()
 
 
 if __name__ == "__main__":
